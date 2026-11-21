@@ -25,6 +25,8 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private var shifted = false
     private var symbols = false
     private var emojiMode = false
+    private var clipboardMode = false
+    private var clipboardItems = emptyList<String>()
     private var downKeyIndex = -1
     private var downSuggestionIndex = -1
     private var downTime = 0L
@@ -63,10 +65,12 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         invalidate()
     }
 
-    fun setMode(value: Mode) { mode = value; symbols = false; emojiMode = false; symbolsPage = 0; rebuild(); invalidate() }
+    fun setMode(value: Mode) { mode = value; symbols = false; emojiMode = false; clipboardMode = false; symbolsPage = 0; rebuild(); invalidate() }
     fun setShifted(value: Boolean) { shifted = value; rebuild(); invalidate() }
-    fun setSymbols(value: Boolean) { symbols = value; emojiMode = false; symbolsPage = 0; rebuild(); invalidate() }
-    fun setEmoji(value: Boolean) { emojiMode = value; symbols = false; rebuild(); invalidate() }
+    fun setSymbols(value: Boolean) { symbols = value; emojiMode = false; clipboardMode = false; symbolsPage = 0; rebuild(); invalidate() }
+    fun setEmoji(value: Boolean) { emojiMode = value; clipboardMode = false; symbols = false; rebuild(); invalidate() }
+    fun setClipboard(value: Boolean) { clipboardMode = value; emojiMode = false; symbols = false; rebuild(); invalidate() }
+    fun setClipboardItems(value: List<String>) { clipboardItems = value.take(5); invalidate() }
     fun nextSymbolsPage() { if (symbols) { symbolsPage = 1 - symbolsPage; rebuild(); invalidate() } }
     fun setComposition(value: String) { composition = value; invalidate() }
     fun setPreview(value: String) { preview = value; invalidate() }
@@ -75,7 +79,11 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private fun rebuild() {
         rows.clear()
         flatKeys.clear()
-        if (emojiMode) {
+        if (clipboardMode) {
+            if (clipboardItems.isEmpty()) rows.add(listOf(Key("No saved clips", "CLIP_EMPTY", 1f, true)))
+            else clipboardItems.forEachIndexed { index, item -> rows.add(listOf(Key(item.replace("\n", " ").take(32), "CLIP_ITEM:$index", 1f, true))) }
+            rows.add(listOf(Key("Clear history", "CLIP_CLEAR", 1.4f, true), Key("ABC", "CLIP_CLOSE", 1f, true)))
+        } else if (emojiMode) {
             listOf(
                 listOf("😀","😃","😄","😁","😆","😅","😂","🤣"),
                 listOf("😊","😇","🙂","🙃","😉","😍","🥰","😘"),
@@ -108,7 +116,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 Key(if (mode == Mode.ENGLISH) "EN" else if (mode == Mode.BANGLA_PHONETIC) "বাংলা" else "অক্ষর", "MODE", 1.4f, true),
                 Key("⌫", "DELETE", 1.2f, true)))
             rows.add(listOf(Key("?123", "SYMBOLS", 1.1f, true), Key(",", ",", .7f),
-                Key("English / বাংলা", "SPACE", 3.5f, true), Key(".", ".", .7f), Key("😊", "EMOJI", .8f, true), Key("↵", "ENTER", 1.1f, true)))
+                Key("English / বাংলা", "SPACE", 3.5f, true), Key(".", ".", .7f), Key("😊", "EMOJI", .8f, true), Key("📋", "CLIP", .8f, true), Key("↵", "ENTER", 1.1f, true)))
         }
         rows.forEach { flatKeys.addAll(it) }
     }

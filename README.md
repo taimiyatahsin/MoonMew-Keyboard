@@ -11,6 +11,7 @@ A lightweight, offline-first Android keyboard with English, Bangla phonetic, and
 - Adjustable keyboard height (160–320 dp).
 - Light/dark keyboard themes and optional key sounds.
 - Shift, backspace, space, enter, and symbol layout.
+- Optional clipboard history: off by default; explicit opt-in; reads plain text only when the 📋 key is tapped; stores up to 5 items locally for up to 24 hours; disabled in password fields.
 - Compact keyboard layout in portrait and landscape (device testing still required).
 - Android 6.0 (API 23) and newer.
 
@@ -30,7 +31,8 @@ On Samsung, the setting is usually **Settings → General management → Keyboar
 
 ## Privacy
 
-- No `INTERNET` permission, network client, analytics, or keystroke storage.
+- No `INTERNET` permission, network client, or analytics. Ordinary keystrokes are not stored.
+- Optional clipboard history is off by default and requires explicit opt-in in settings. When enabled, tapping 📋 reads the current plain-text clipboard and stores up to 5 items locally for up to 24 hours. Turning it off clears saved items. Do not copy passwords or sensitive information; clipboard history is disabled in password fields.
 - Password fields are detected from Android input types and switch to the plain English layout.
 - As with any third-party keyboard, avoid using it for highly sensitive input until you have reviewed and tested the app yourself.
 
