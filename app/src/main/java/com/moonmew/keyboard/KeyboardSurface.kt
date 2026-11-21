@@ -19,7 +19,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val keyTypeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
     private val preferences = context.getSharedPreferences("moonmew_settings", Context.MODE_PRIVATE)
-    private var roseTheme = preferences.getBoolean("rose_theme", true)
+    private var themeId = preferences.getInt("theme_id", if (preferences.getBoolean("rose_theme", true)) 0 else 1)
     private var keySound = preferences.getBoolean("key_sound", false)
     private var mode = Mode.ENGLISH
     private var shifted = false
@@ -48,7 +48,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
 
     init {
         isClickable = true
-        setBackgroundColor(if (roseTheme) 0xFF17151B.toInt() else 0xFF101820.toInt())
+        setBackgroundColor(backgroundBottomColor())
         applyHeight()
         rebuild()
     }
@@ -65,11 +65,37 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     }
 
     fun refreshPreferences() {
-        roseTheme = preferences.getBoolean("rose_theme", true)
+        themeId = preferences.getInt("theme_id", if (preferences.getBoolean("rose_theme", true)) 0 else 1).coerceIn(0, 2)
         keySound = preferences.getBoolean("key_sound", false)
-        setBackgroundColor(if (roseTheme) 0xFF17151B.toInt() else 0xFF101820.toInt())
+        setBackgroundColor(backgroundBottomColor())
         applyHeight()
         invalidate()
+    }
+
+    private fun backgroundTopColor() = when (themeId) {
+        1 -> 0xFF172B43.toInt()
+        2 -> 0xFF30213F.toInt()
+        else -> 0xFF352333.toInt()
+    }
+    private fun backgroundBottomColor() = when (themeId) {
+        1 -> 0xFF0B1422.toInt()
+        2 -> 0xFF171020.toInt()
+        else -> 0xFF17121B.toInt()
+    }
+    private fun accentColor() = when (themeId) {
+        1 -> 0xFFB9DFFF.toInt()
+        2 -> 0xFFE0C8FF.toInt()
+        else -> 0xFFFFC6D9.toInt()
+    }
+    private fun keyColor(special: Boolean, modeKey: Boolean = false) = when (themeId) {
+        1 -> if (modeKey) 0xFF416B8B.toInt() else if (special) 0xFF2B405B.toInt() else 0xFF1D2B3E.toInt()
+        2 -> if (modeKey) 0xFF795A99.toInt() else if (special) 0xFF49365F.toInt() else 0xFF302541.toInt()
+        else -> if (modeKey) 0xFF85536D.toInt() else if (special) 0xFF503548.toInt() else 0xFF342633.toInt()
+    }
+    private fun keyTextColor() = when (themeId) {
+        1 -> 0xFFEAF5FF.toInt()
+        2 -> 0xFFF4EAFF.toInt()
+        else -> 0xFFFFF0F5.toInt()
     }
 
     fun setSwipeEnabled(value: Boolean) { swipeEnabled = value; if (!value) resetSwipeTracking() }
@@ -139,12 +165,28 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         if (rows.isEmpty()) return
+        paint.shader = android.graphics.LinearGradient(0f, 0f, 0f, height.toFloat(),
+            backgroundTopColor(), backgroundBottomColor(), android.graphics.Shader.TileMode.CLAMP)
+        canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
+        paint.shader = null
+        paint.color = accentColor()
+        paint.alpha = 58
+        val stars = arrayOf(0.08f to 0.12f, 0.22f to 0.05f, 0.78f to 0.09f, 0.93f to 0.22f, 0.13f to 0.86f, 0.88f to 0.82f)
+        stars.forEachIndexed { index, point ->
+            canvas.drawCircle(width * point.first, height * point.second, dp(if (index % 2 == 0) 1.4f else 1f), paint)
+        }
+        paint.alpha = 255
+        val moonX = width - dp(18f)
+        val moonY = dp(12f)
+        canvas.drawCircle(moonX, moonY, dp(6f), paint)
+        paint.color = backgroundTopColor()
+        canvas.drawCircle(moonX + dp(3f), moonY - dp(2f), dp(5.5f), paint)
         val pad = dp(5f)
         val top = dp(7f)
         val previewHeight = if (composition.isNotEmpty()) dp(49f) else dp(5f)
         suggestionBounds.clear()
         if (composition.isNotEmpty()) {
-            paint.color = 0xFFE9B7C8.toInt()
+            paint.color = accentColor()
             paint.textSize = dp(12f)
             paint.textAlign = Paint.Align.LEFT
             canvas.drawText(composition + "  →  " + preview, pad * 2, top + dp(15f), paint)
@@ -156,9 +198,9 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                     val left = pad + index * (itemWidth + gap)
                     val rect = RectF(left, top + dp(23f), left + itemWidth, top + dp(45f))
                     suggestionBounds.add(rect)
-                    paint.color = if (roseTheme) 0xFF49303E.toInt() else 0xFF293D4B.toInt()
+                    paint.color = keyColor(special = true)
                     canvas.drawRoundRect(rect, dp(6f), dp(6f), paint)
-                    paint.color = if (roseTheme) 0xFFFFF0F5.toInt() else 0xFFEAF4FA.toInt()
+                    paint.color = keyTextColor()
                     paint.textAlign = Paint.Align.CENTER
                     paint.textSize = dp(13f)
                     canvas.drawText(word, rect.centerX(), rect.centerY() - (paint.ascent() + paint.descent()) / 2, paint)
@@ -177,13 +219,16 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 val rect = RectF(x, top + previewHeight + rowIndex * rowHeight + dp(2f),
                     x + w, top + previewHeight + (rowIndex + 1) * rowHeight - dp(3f))
                 bounds.add(rect)
-                paint.color = if (roseTheme) {
-                    if (key.value == "MODE") 0xFF704356.toInt() else if (key.special) 0xFF49303E.toInt() else 0xFF30232E.toInt()
-                } else {
-                    if (key.value == "MODE") 0xFF36566A.toInt() else if (key.special) 0xFF293D4B.toInt() else 0xFF202D38.toInt()
-                }
-                canvas.drawRoundRect(rect, dp(8f), dp(8f), paint)
-                paint.color = if (roseTheme) 0xFFFFF0F5.toInt() else 0xFFEAF4FA.toInt()
+                paint.color = keyColor(special = key.special, modeKey = key.value == "MODE")
+                canvas.drawRoundRect(rect, dp(10f), dp(10f), paint)
+                paint.style = Paint.Style.STROKE
+                paint.strokeWidth = dp(0.7f)
+                paint.color = accentColor()
+                paint.alpha = if (key.special) 82 else 48
+                canvas.drawRoundRect(rect, dp(10f), dp(10f), paint)
+                paint.style = Paint.Style.FILL
+                paint.alpha = 255
+                paint.color = keyTextColor()
                 paint.textAlign = Paint.Align.CENTER
                 paint.textSize = if (key.label.length > 5) dp(11f) else dp(18f)
                 paint.typeface = keyTypeface
