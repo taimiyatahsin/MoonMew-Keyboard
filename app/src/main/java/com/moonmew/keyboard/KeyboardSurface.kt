@@ -26,11 +26,14 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private var symbols = false
     private var emojiMode = false
     private var downKeyIndex = -1
+    private var downSuggestionIndex = -1
     private var downTime = 0L
     private var symbolsPage = 0
     private var composition = ""
     private var preview = ""
+    private var suggestions = emptyList<String>()
     private val bounds = mutableListOf<RectF>()
+    private val suggestionBounds = mutableListOf<RectF>()
     private val rows = mutableListOf<List<Key>>()
     private val flatKeys = mutableListOf<Key>()
 
@@ -67,6 +70,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     fun nextSymbolsPage() { if (symbols) { symbolsPage = 1 - symbolsPage; rebuild(); invalidate() } }
     fun setComposition(value: String) { composition = value; invalidate() }
     fun setPreview(value: String) { preview = value; invalidate() }
+    fun setSuggestions(value: List<String>) { suggestions = value.take(3); invalidate() }
 
     private fun rebuild() {
         rows.clear()
@@ -106,7 +110,6 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             rows.add(listOf(Key("?123", "SYMBOLS", 1.1f, true), Key(",", ",", .7f),
                 Key("English / বাংলা", "SPACE", 3.5f, true), Key(".", ".", .7f), Key("😊", "EMOJI", .8f, true), Key("↵", "ENTER", 1.1f, true)))
         }
-        // Keep the hit-test list in exactly the same row/key order as the drawn keys.
         rows.forEach { flatKeys.addAll(it) }
     }
 
@@ -115,12 +118,29 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         if (rows.isEmpty()) return
         val pad = dp(5f)
         val top = dp(7f)
-        val previewHeight = if (composition.isNotEmpty()) dp(27f) else dp(5f)
+        val previewHeight = if (composition.isNotEmpty()) dp(49f) else dp(5f)
+        suggestionBounds.clear()
         if (composition.isNotEmpty()) {
             paint.color = 0xFFE9B7C8.toInt()
-            paint.textSize = dp(14f)
+            paint.textSize = dp(12f)
             paint.textAlign = Paint.Align.LEFT
-            canvas.drawText(composition + "   " + preview, pad * 2, top + dp(17f), paint)
+            canvas.drawText(composition + "  →  " + preview, pad * 2, top + dp(15f), paint)
+            val shown = suggestions.take(3)
+            if (shown.isNotEmpty()) {
+                val gap = dp(5f)
+                val itemWidth = (width - pad * 2 - gap * (shown.size - 1)) / shown.size
+                shown.forEachIndexed { index, word ->
+                    val left = pad + index * (itemWidth + gap)
+                    val rect = RectF(left, top + dp(23f), left + itemWidth, top + dp(45f))
+                    suggestionBounds.add(rect)
+                    paint.color = if (roseTheme) 0xFF49303E.toInt() else 0xFF293D4B.toInt()
+                    canvas.drawRoundRect(rect, dp(6f), dp(6f), paint)
+                    paint.color = if (roseTheme) 0xFFFFF0F5.toInt() else 0xFFEAF4FA.toInt()
+                    paint.textAlign = Paint.Align.CENTER
+                    paint.textSize = dp(13f)
+                    canvas.drawText(word, rect.centerX(), rect.centerY() - (paint.ascent() + paint.descent()) / 2, paint)
+                }
+            }
         }
         val rowHeight = (height - top - previewHeight - pad) / rows.size
         bounds.clear()
@@ -154,23 +174,30 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
+                downSuggestionIndex = suggestionBounds.indexOfFirst { it.contains(event.x, event.y) }
                 downKeyIndex = bounds.indexOfFirst { it.contains(event.x, event.y) }
                 downTime = SystemClock.elapsedRealtime()
             }
             MotionEvent.ACTION_UP -> {
-                val index = bounds.indexOfFirst { it.contains(event.x, event.y) }
-                if (index >= 0 && index == downKeyIndex) {
-                    if (keySound) playSoundEffect(SoundEffectConstants.CLICK)
-                    performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-                    flatKeys.getOrNull(index)?.let { key ->
-                        val held = SystemClock.elapsedRealtime() - downTime >= 450L
-                        listener.onKey(if (held && key.longPressValue != null) "LONG:${key.longPressValue}" else key.value)
+                val suggestionIndex = suggestionBounds.indexOfFirst { it.contains(event.x, event.y) }
+                if (suggestionIndex >= 0 && suggestionIndex == downSuggestionIndex) {
+                    suggestions.getOrNull(suggestionIndex)?.let { listener.onKey("SUGGEST:$it") }
+                } else {
+                    val index = bounds.indexOfFirst { it.contains(event.x, event.y) }
+                    if (index >= 0 && index == downKeyIndex) {
+                        if (keySound) playSoundEffect(SoundEffectConstants.CLICK)
+                        performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                        flatKeys.getOrNull(index)?.let { key ->
+                            val held = SystemClock.elapsedRealtime() - downTime >= 450L
+                            listener.onKey(if (held && key.longPressValue != null) "LONG:${key.longPressValue}" else key.value)
+                        }
                     }
                 }
                 downKeyIndex = -1
+                downSuggestionIndex = -1
                 performClick()
             }
-            MotionEvent.ACTION_CANCEL -> { downKeyIndex = -1; return true }
+            MotionEvent.ACTION_CANCEL -> { downKeyIndex = -1; downSuggestionIndex = -1; return true }
         }
         return true
     }

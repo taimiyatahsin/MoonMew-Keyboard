@@ -1,27 +1,76 @@
 package com.moonmew.keyboard
 
 /**
- * Small deterministic offline starter mapping. It is not an Avro-compatible
- * transliteration engine; spelling and conjunct handling are intentionally limited.
+ * Offline Bangla phonetic converter.
+ *
+ * This is a lightweight rule-based starter, not an Avro-compatible engine.
+ * A small common-word dictionary is applied first; otherwise roman letters
+ * are converted using longest-match consonant and vowel rules.
  */
 object BanglaTransliterator {
-    private val map = linkedMapOf(
-        "kh" to "খ", "gh" to "ঘ", "ch" to "চ", "jh" to "ঝ", "th" to "থ",
-        "dh" to "ধ", "ph" to "ফ", "bh" to "ভ", "sh" to "শ", "ng" to "ং",
-        "a" to "আ", "b" to "ব", "c" to "ক", "d" to "দ", "e" to "এ",
-        "f" to "ফ", "g" to "গ", "h" to "হ", "i" to "ই", "j" to "জ",
-        "k" to "ক", "l" to "ল", "m" to "ম", "n" to "ন", "o" to "ও",
-        "p" to "প", "q" to "ক", "r" to "র", "s" to "স", "t" to "ত",
-        "u" to "উ", "v" to "ভ", "w" to "ও", "x" to "ক্স", "y" to "য়", "z" to "য"
+    private val consonants = linkedMapOf(
+        "ksh" to "ক্ষ", "chh" to "ছ", "kh" to "খ", "gh" to "ঘ",
+        "ch" to "চ", "jh" to "ঝ", "th" to "থ", "dh" to "ধ",
+        "ph" to "ফ", "bh" to "ভ", "sh" to "শ", "ng" to "ং",
+        "ny" to "ঞ", "kkh" to "ক্ষ",
+        "k" to "ক", "g" to "গ", "c" to "ক", "j" to "জ",
+        "t" to "ত", "d" to "দ", "n" to "ন", "p" to "প",
+        "f" to "ফ", "b" to "ব", "m" to "ম", "r" to "র",
+        "l" to "ল", "s" to "স", "h" to "হ", "y" to "য়",
+        "w" to "ও", "v" to "ভ", "z" to "য", "q" to "ক",
+        "x" to "ক্স"
     )
+    private val vowelSigns = linkedMapOf(
+        "aa" to "া", "ii" to "ী", "ee" to "ী", "uu" to "ূ", "oo" to "ূ",
+        "oi" to "ৈ", "ou" to "ৌ", "a" to "া", "i" to "ি", "e" to "ে",
+        "u" to "ু", "o" to "ো"
+    )
+    private val independentVowels = linkedMapOf(
+        "aa" to "আ", "ii" to "ঈ", "ee" to "ঈ", "uu" to "ঊ", "oo" to "ঊ",
+        "oi" to "ঐ", "ou" to "ঔ", "a" to "আ", "i" to "ই", "e" to "এ",
+        "u" to "উ", "o" to "ও"
+    )
+
     fun convert(input: String): String {
+        if (input.isEmpty()) return ""
+        val lower = input.lowercase()
+        BanglaWordSuggestions.exact(lower)?.let { return it }
+
         val out = StringBuilder()
-        var i = 0
-        while (i < input.length) {
-            val pair = if (i + 1 < input.length) input.substring(i, i + 2) else ""
-            val paired = map[pair]
-            if (paired != null) { out.append(paired); i += 2 }
-            else { out.append(map[input.substring(i, i + 1)] ?: input[i]); i++ }
+        var index = 0
+        var previousWasConsonant = false
+        while (index < lower.length) {
+            val remaining = lower.substring(index)
+            val consonant = consonants.keys.firstOrNull { remaining.startsWith(it) }
+            if (consonant != null) {
+                out.append(consonants.getValue(consonant))
+                index += consonant.length
+                previousWasConsonant = true
+                val vowel = vowelSigns.keys.firstOrNull { lower.substring(index).startsWith(it) }
+                if (vowel != null) {
+                    out.append(vowelSigns.getValue(vowel))
+                    index += vowel.length
+                    previousWasConsonant = false
+                }
+                continue
+            }
+
+            val vowelMap = if (previousWasConsonant) vowelSigns else independentVowels
+            val vowel = vowelMap.keys.firstOrNull { remaining.startsWith(it) }
+            if (vowel != null) {
+                out.append(vowelMap.getValue(vowel))
+                index += vowel.length
+                previousWasConsonant = false
+                continue
+            }
+
+            val ch = lower[index]
+            when (ch) {
+                ' ' -> out.append(' ')
+                else -> out.append(ch)
+            }
+            previousWasConsonant = false
+            index++
         }
         return out.toString()
     }
