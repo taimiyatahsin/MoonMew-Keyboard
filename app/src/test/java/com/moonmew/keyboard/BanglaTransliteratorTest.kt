@@ -32,6 +32,19 @@ class BanglaTransliteratorTest {
         assertTrue(BanglaWordSuggestions.suggest("shu", 5).contains("শুধু"))
     }
 
+    @Test fun newerEverydayAndMobileWordsUseOfflineDictionary() {
+        assertEquals("আসলে", BanglaTransliterator.convert("ashole"))
+        assertEquals("চিন্তা", BanglaTransliterator.convert("chinta"))
+        assertEquals("ডাউনলোড", BanglaTransliterator.convert("download"))
+        assertEquals("পাসওয়ার্ড", BanglaTransliterator.convert("password"))
+        assertEquals("শুভ সকাল", BanglaTransliterator.convert("shubhosokal"))
+    }
+
+    @Test fun newerWordsAreAvailableAsPrefixSuggestions() {
+        assertTrue(BanglaWordSuggestions.suggest("down").contains("ডাউনলোড"))
+        assertTrue(BanglaWordSuggestions.suggest("pass").contains("পাসওয়ার্ড"))
+    }
+
     @Test fun suggestionsAreLocalAndPrefixMatched() {
         val suggestions = BanglaWordSuggestions.suggest("am")
         assertEquals(listOf("আমি", "আমার", "আমরা"), suggestions)
