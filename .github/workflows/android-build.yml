@@ -47,6 +47,7 @@ jobs:
             keytool -genkeypair -v \
               -keystore ~/.android/debug.keystore \
               -storepass android \
+              -storetype JKS \
               -alias androiddebugkey \
               -keypass android \
               -keyalg RSA \
