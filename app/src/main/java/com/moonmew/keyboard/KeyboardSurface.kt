@@ -71,36 +71,35 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 listOf("1234567890", "!@#$%^&*()", "-_=+[]{}<>", "?/;:,.~")
             else
                 listOf("1234567890", "`£€¥₹¢©®", "±×÷√∞≠≤≥", "\\|_~^%#@")
-            lines.forEach { line ->
-                rows.add(line.map { ch -> Key(ch.toString(), ch.toString()) })
-            }
+            lines.forEach { line -> rows.add(line.map { ch -> Key(ch.toString(), ch.toString()) }) }
             rows.add(listOf(Key("ABC", "ABC", 1.2f, true), Key("☾", "MODE", 1.1f, true),
                 Key("⌫", "DELETE", 1.2f, true)))
             rows.add(listOf(Key(if (symbolsPage == 0) "=\\<" else "123", "SYMBOLS_MORE", 1.1f, true),
                 Key(",", ",", .7f), Key("English / বাংলা", "SPACE", 4.6f, true),
                 Key(".", ".", .7f), Key("↵", "ENTER", 1.1f, true)))
-            rows.forEach { flatKeys.addAll(it) }
-            return
+        } else {
+            val lines = if (mode == Mode.BANGLA_DIRECT)
+                listOf("ািীুূৃেৈোৌংঃ", "কখগঘঙচছজঝঞ", "টঠডঢণতথদধন", "পফবভমযরলশষসহ")
+            else listOf("qwertyuiop", "asdfghjkl", "zxcvbnm")
+            lines.forEach { line ->
+                rows.add(line.map { ch ->
+                    val label = if (mode == Mode.ENGLISH && shifted) ch.uppercaseChar().toString() else ch.toString()
+                    Key(label, ch.toString())
+                })
+            }
+            rows.add(listOf(Key("⇧", "SHIFT", 1.2f, true), Key("☾", "MODE", 1.1f, true),
+                Key(if (mode == Mode.ENGLISH) "EN" else if (mode == Mode.BANGLA_PHONETIC) "বাংলা" else "অক্ষর", "MODE", 1.4f, true),
+                Key("⌫", "DELETE", 1.2f, true)))
+            rows.add(listOf(Key("?123", "SYMBOLS", 1.1f, true), Key(",", ",", .7f),
+                Key("English / বাংলা", "SPACE", 4.6f, true), Key(".", ".", .7f), Key("↵", "ENTER", 1.1f, true)))
         }
-        val lines = if (mode == Mode.BANGLA_DIRECT)
-            listOf("ািীুূৃেৈোৌংঃ", "কখগঘঙচছজঝঞ", "টঠডঢণতথদধন", "পফবভমযরলশষসহ")
-        else listOf("qwertyuiop", "asdfghjkl", "zxcvbnm")
-        lines.forEach { line ->
-            rows.add(line.map { ch ->
-                val label = if (mode == Mode.ENGLISH && shifted) ch.uppercaseChar().toString() else ch.toString()
-                Key(label, ch.toString())
-            })
-        }
-        rows.add(listOf(Key("⇧", "SHIFT", 1.2f, true), Key("☾", "MODE", 1.1f, true),
-            Key(if (mode == Mode.ENGLISH) "EN" else if (mode == Mode.BANGLA_PHONETIC) "বাংলা" else "অক্ষর", "MODE", 1.4f, true),
-            Key("⌫", "DELETE", 1.2f, true)))
-        rows.add(listOf(Key("?123", "SYMBOLS", 1.1f, true), Key(",", ",", .7f),
-            Key("English / বাংলা", "SPACE", 4.6f, true), Key(".", ".", .7f), Key("↵", "ENTER", 1.1f, true)))
+        // Keep the hit-test list in exactly the same row/key order as the drawn keys.
         rows.forEach { flatKeys.addAll(it) }
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
+        if (rows.isEmpty()) return
         val pad = dp(5f)
         val top = dp(7f)
         val previewHeight = if (composition.isNotEmpty()) dp(27f) else dp(5f)
