@@ -2,23 +2,17 @@ package com.moonmew.keyboard
 
 /**
  * Offline Bangla phonetic converter.
- *
- * This is a lightweight rule-based starter, not an Avro-compatible engine.
- * A small common-word dictionary is applied first; otherwise roman letters
- * are converted using longest-match consonant and vowel rules.
+ * This lightweight rule-based starter is not an Avro-compatible engine.
  */
 object BanglaTransliterator {
     private val consonants = linkedMapOf(
-        "ksh" to "ক্ষ", "chh" to "ছ", "kh" to "খ", "gh" to "ঘ",
+        "ksh" to "ক্ষ", "kkh" to "ক্ষ", "chh" to "ছ", "kh" to "খ", "gh" to "ঘ",
         "ch" to "চ", "jh" to "ঝ", "th" to "থ", "dh" to "ধ",
-        "ph" to "ফ", "bh" to "ভ", "sh" to "শ", "ng" to "ং",
-        "ny" to "ঞ", "kkh" to "ক্ষ",
-        "k" to "ক", "g" to "গ", "c" to "ক", "j" to "জ",
-        "t" to "ত", "d" to "দ", "n" to "ন", "p" to "প",
-        "f" to "ফ", "b" to "ব", "m" to "ম", "r" to "র",
-        "l" to "ল", "s" to "স", "h" to "হ", "y" to "য়",
-        "w" to "ও", "v" to "ভ", "z" to "য", "q" to "ক",
-        "x" to "ক্স"
+        "ph" to "ফ", "bh" to "ভ", "sh" to "শ", "ng" to "ং", "ny" to "ঞ",
+        "k" to "ক", "g" to "গ", "c" to "ক", "j" to "জ", "t" to "ত",
+        "d" to "দ", "n" to "ন", "p" to "প", "f" to "ফ", "b" to "ব",
+        "m" to "ম", "r" to "র", "l" to "ল", "s" to "স", "h" to "হ",
+        "y" to "য়", "w" to "ও", "v" to "ভ", "z" to "য", "q" to "ক", "x" to "ক্স"
     )
     private val vowelSigns = linkedMapOf(
         "aa" to "া", "ii" to "ী", "ee" to "ী", "uu" to "ূ", "oo" to "ূ",
@@ -35,7 +29,6 @@ object BanglaTransliterator {
         if (input.isEmpty()) return ""
         val lower = input.lowercase()
         BanglaWordSuggestions.exact(lower)?.let { return it }
-
         val out = StringBuilder()
         var index = 0
         var previousWasConsonant = false
@@ -54,7 +47,6 @@ object BanglaTransliterator {
                 }
                 continue
             }
-
             val vowelMap = if (previousWasConsonant) vowelSigns else independentVowels
             val vowel = vowelMap.keys.firstOrNull { remaining.startsWith(it) }
             if (vowel != null) {
@@ -63,12 +55,8 @@ object BanglaTransliterator {
                 previousWasConsonant = false
                 continue
             }
-
             val ch = lower[index]
-            when (ch) {
-                ' ' -> out.append(' ')
-                else -> out.append(ch)
-            }
+            if (ch == ' ') out.append(' ') else out.append(ch)
             previousWasConsonant = false
             index++
         }
