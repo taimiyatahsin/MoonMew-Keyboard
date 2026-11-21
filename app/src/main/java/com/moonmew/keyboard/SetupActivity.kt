@@ -81,10 +81,10 @@ class SetupActivity : Activity() {
                 override fun onStopTrackingTouch(seekBar: SeekBar?) {}
             })
         }
-        val themeNames = listOf("Moonlit Rose", "Midnight Blue", "Lavender Dream")
+        val themeNames = listOf("Pink Plush", "Moonlit Blue", "Lavender Dream", "Glass Candy")
         lateinit var themeButton: Button
-        themeButton = actionButton("Theme: " + themeNames[preferences.getInt("theme_id", if (preferences.getBoolean("rose_theme", true)) 0 else 1).coerceIn(0, 2)] + "  ·  Tap to change") {
-            val current = preferences.getInt("theme_id", if (preferences.getBoolean("rose_theme", true)) 0 else 1).coerceIn(0, 2)
+        themeButton = actionButton("Theme: " + themeNames[preferences.getInt("theme_id", if (preferences.getBoolean("rose_theme", true)) 0 else 1).coerceIn(0, 3)] + "  ·  Tap to change") {
+            val current = preferences.getInt("theme_id", if (preferences.getBoolean("rose_theme", true)) 0 else 1).coerceIn(0, 3)
             val next = (current + 1) % themeNames.size
             preferences.edit().putInt("theme_id", next).putBoolean("rose_theme", next == 0).apply()
             themeButton.text = "Theme: " + themeNames[next] + "  ·  Tap to change"
