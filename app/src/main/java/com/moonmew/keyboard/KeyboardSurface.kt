@@ -211,6 +211,14 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 Key(",", ",", .7f), Key("English / বাংলা", "SPACE", 4.6f, true),
                 Key(".", ".", .7f), Key("↵", "ENTER", 1.1f, true)))
         } else {
+            // A compact action strip keeps common tools reachable without adding
+            // another full-height row of oversized controls.
+            rows.add(buildList {
+                add(Key("☾ MoonMew", "TOOLBAR_BRAND", 2.1f, true))
+                add(Key("😊", "EMOJI", 0.9f, true))
+                if (!passwordField) add(Key("📋", "CLIP", 0.9f, true))
+                add(Key(if (mode == Mode.ENGLISH) "বাংলা" else "EN", "MODE", 1.1f, true))
+            })
             val lines = if (mode == Mode.BANGLA_DIRECT)
                 listOf(
                     "অআইঈউঊএঐওঔ",
@@ -231,12 +239,9 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 Key("⌫", "DELETE", 1.2f, true)))
             val bottomRow = mutableListOf(
                 Key("?123", "SYMBOLS", 1.1f, true), Key(",", ",", .7f),
-                Key("English / বাংলা", "SPACE", 3.5f, true), Key(".", ".", .7f),
-                Key("😊", "EMOJI", .8f, true)
+                Key("English / বাংলা", "SPACE", 4.2f, true),
+                Key(".", ".", .7f), Key("↵", "ENTER", 1.1f, true)
             )
-            // Do not display clipboard access at all while a password field is focused.
-            if (!passwordField) bottomRow.add(Key("📋", "CLIP", .8f, true))
-            bottomRow.add(Key("↵", "ENTER", 1.1f, true))
             rows.add(bottomRow)
         }
         rows.forEach { flatKeys.addAll(it) }
