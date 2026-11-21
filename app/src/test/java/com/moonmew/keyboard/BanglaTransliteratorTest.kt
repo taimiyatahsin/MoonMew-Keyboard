@@ -29,7 +29,7 @@ class BanglaTransliteratorTest {
 
     @Test fun expandedWordsAppearInPrefixSuggestions() {
         assertTrue(BanglaWordSuggestions.suggest("acc").contains("আচ্ছা"))
-        assertTrue(BanglaWordSuggestions.suggest("sho", 5).contains("শুধু"))
+        assertTrue(BanglaWordSuggestions.suggest("shu", 5).contains("শুধু"))
     }
 
     @Test fun suggestionsAreLocalAndPrefixMatched() {
