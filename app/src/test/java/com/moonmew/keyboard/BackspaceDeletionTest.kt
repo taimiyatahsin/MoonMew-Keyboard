@@ -36,6 +36,12 @@ class BackspaceDeletionTest {
         assertEquals("🇧🇩".length, BackspaceDeletion.utf16UnitsBeforeCursor("🇧🇩"))
     }
 
+
+    @Test fun longJoinedEmojiSequenceDeletesAsOneUnit() {
+        val sequence = List(6) { "👨‍👩‍👧‍👦" }.joinToString("\u200D")
+        assertEquals(sequence.length, BackspaceDeletion.utf16UnitsBeforeCursor(sequence))
+    }
+
     @Test fun emptyOrUnavailableCursorTextUsesSafeSingleUnitFallback() {
         assertEquals(1, BackspaceDeletion.utf16UnitsBeforeCursor(""))
         assertEquals(1, BackspaceDeletion.utf16UnitsBeforeCursor(null))
