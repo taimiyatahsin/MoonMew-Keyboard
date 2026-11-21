@@ -97,7 +97,7 @@ class SetupActivity : Activity() {
             )
             val pair = colors[id.coerceIn(0, 4)]
             themePreview.text = "Aa   ♥   ☾   ✦"
-            themePreview.setTextColor(if (id == 3) 0xFF713B60.toInt() else 0xFFF8F2FF.toInt())
+            themePreview.setTextColor(if (id == 0 || id == 3) 0xFF713B60.toInt() else 0xFFF8F2FF.toInt())
             themePreview.background = GradientDrawable(
                 GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(pair.first, pair.second)
             ).apply { cornerRadius = dp(18).toFloat() }
