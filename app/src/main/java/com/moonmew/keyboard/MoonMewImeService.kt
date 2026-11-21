@@ -41,6 +41,7 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
 
         currentInputConnection?.finishComposingText()
         if (passwordField) mode = KeyboardSurface.Mode.ENGLISH
+        keyboard?.setSwipeEnabled(!passwordField)
         composing = ""
         swipePending = false
         keyboard?.refreshPreferences()
