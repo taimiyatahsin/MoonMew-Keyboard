@@ -133,9 +133,20 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         rows.clear()
         flatKeys.clear()
         if (clipboardMode) {
-            if (clipboardItems.isEmpty()) rows.add(listOf(Key("No saved clips", "CLIP_EMPTY", 1f, true)))
-            else clipboardItems.forEachIndexed { index, item -> rows.add(listOf(Key(item.replace("\n", " ").take(32), if (item == "Enable in MoonMew settings") "CLIP_NOTICE" else "CLIP_ITEM:$index", 1f, true))) }
-            rows.add(listOf(Key("Clear history", "CLIP_CLEAR", 1.4f, true), Key("ABC", "CLIP_CLOSE", 1f, true)))
+            if (clipboardItems.isEmpty()) {
+                val enabled = preferences.getBoolean("clipboard_history_enabled", false)
+                rows.add(listOf(Key(
+                    if (enabled) "No saved clips" else "Enable in MoonMew settings",
+                    if (enabled) "CLIP_EMPTY" else "CLIP_NOTICE",
+                    1f, true
+                )))
+                rows.add(listOf(Key("ABC", "CLIP_CLOSE", 1f, true)))
+            } else {
+                clipboardItems.forEachIndexed { index, item ->
+                    rows.add(listOf(Key(item.replace("\n", " ").take(32), "CLIP_ITEM:$index", 1f, true)))
+                }
+                rows.add(listOf(Key("Clear history", "CLIP_CLEAR", 1.4f, true), Key("ABC", "CLIP_CLOSE", 1f, true)))
+            }
         } else if (emojiMode) {
             listOf(
                 listOf("😀","😃","😄","😁","😆","😅","😂","🤣"),

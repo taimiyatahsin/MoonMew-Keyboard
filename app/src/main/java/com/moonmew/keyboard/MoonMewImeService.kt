@@ -168,7 +168,7 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
         if (passwordField) return
         val prefs = getSharedPreferences("moonmew_settings", MODE_PRIVATE)
         if (!prefs.getBoolean("clipboard_history_enabled", false)) {
-            keyboard?.setClipboardItems(listOf("Enable in MoonMew settings"))
+            keyboard?.setClipboardItems(emptyList())
             keyboard?.setClipboard(true)
             return
         }
