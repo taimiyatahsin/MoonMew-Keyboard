@@ -42,13 +42,13 @@ jobs:
           path: app/build/outputs/apk/debug/app-debug.apk
           retention-days: 90
       - name: Publish latest test APK to GitHub Releases
-        if: github.event_name == 'push' && github.ref == 'refs/heads/codex/moonmew-foundation'
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/codex/moonmew-foundation')
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
           name: MoonMew Keyboard - Latest test build
           body: |
-            Automatically generated debug APK from the latest successful MoonMew development build.
+            Automatically generated debug APK from the latest successful MoonMew build.
             This is a test build, not a signed Play Store release.
           prerelease: true
           make_latest: false
