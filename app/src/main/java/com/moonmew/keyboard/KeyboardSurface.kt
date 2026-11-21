@@ -11,6 +11,7 @@ import android.os.SystemClock
 import android.view.SoundEffectConstants
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 
 class KeyboardSurface(context: Context, private val listener: Listener) : View(context) {
     interface Listener { fun onKey(key: String) }
@@ -39,6 +40,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private var swipeDetected = false
     private var swipeEnabled = true
     private var passwordField = false
+    private var editorAction = EditorInfo.IME_ACTION_NONE
     private var symbolsPage = 0
     private var composition = ""
     private var preview = ""
@@ -140,6 +142,16 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     }
 
     fun setSwipeEnabled(value: Boolean) { swipeEnabled = value; if (!value) resetSwipeTracking() }
+    fun setEditorAction(value: Int) { editorAction = value and EditorInfo.IME_MASK_ACTION; rebuild(); invalidate() }
+    private fun editorActionLabel(): String = when (editorAction) {
+        EditorInfo.IME_ACTION_GO -> "Go"
+        EditorInfo.IME_ACTION_SEARCH -> "Search"
+        EditorInfo.IME_ACTION_SEND -> "Send"
+        EditorInfo.IME_ACTION_NEXT -> "Next"
+        EditorInfo.IME_ACTION_DONE -> "Done"
+        EditorInfo.IME_ACTION_PREVIOUS -> "Prev"
+        else -> "↵"
+    }
     fun setPasswordField(value: Boolean) {
         passwordField = value
         if (value) {
@@ -215,7 +227,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 Key("⌫", "DELETE", 1.2f, true)))
             rows.add(listOf(Key(if (symbolsPage == 0) "=\\<" else "123", "SYMBOLS_MORE", 1.1f, true),
                 Key(",", ",", .7f), Key("English / বাংলা", "SPACE", 4.6f, true),
-                Key(".", ".", .7f), Key("↵", "ENTER", 1.1f, true)))
+                Key(".", ".", .7f), Key(editorActionLabel(), "ENTER", 1.1f, true)))
         } else if (mode == Mode.BANGLA_DIRECT) {
             // Dedicated compact Direct Bangla layout: four character rows and one action row.
             // Independent vowels stay on tap; their matching vowel signs are available on long press.
@@ -242,7 +254,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 Key("ঃ", "ঃ", 0.8f),
                 Key("⌫", "DELETE", 1.0f, true),
                 Key("Space", "SPACE", 2.8f, true),
-                Key("↵", "ENTER", 0.9f, true)
+                Key(editorActionLabel(), "ENTER", 0.9f, true)
             ))
         } else {
             // A compact action strip keeps common tools reachable without adding
@@ -264,7 +276,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             rows.add(listOf(
                 Key("?123", "SYMBOLS", 1.1f, true), Key(",", ",", .7f),
                 Key("English / বাংলা", "SPACE", 4.2f, true),
-                Key(".", ".", .7f), Key("↵", "ENTER", 1.1f, true)
+                Key(".", ".", .7f), Key(editorActionLabel(), "ENTER", 1.1f, true)
             ))
         }
         rows.forEach { flatKeys.addAll(it) }
