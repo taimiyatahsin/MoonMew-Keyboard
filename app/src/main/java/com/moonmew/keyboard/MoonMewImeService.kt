@@ -23,6 +23,7 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
         return KeyboardSurface(this, this).also {
             keyboard = it
             it.setMode(mode)
+            it.setEditorAction(currentInputEditorInfo?.imeOptions ?: 0)
             it.setShifted(shifted)
             it.setPasswordField(passwordField)
             it.setSwipeEnabled(!passwordField)
@@ -60,6 +61,7 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
         shifted = false
         keyboard?.setShifted(false)
         keyboard?.setMode(mode)
+        keyboard?.setEditorAction(attribute?.imeOptions ?: 0)
         keyboard?.setPasswordField(passwordField)
         keyboard?.setSwipeEnabled(!passwordField)
     }
