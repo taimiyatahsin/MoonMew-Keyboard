@@ -37,6 +37,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private var lastTouchY = 0f
     private var swipeDetected = false
     private var swipeEnabled = true
+    private var passwordField = false
     private var symbolsPage = 0
     private var composition = ""
     private var preview = ""
@@ -99,6 +100,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     }
 
     fun setSwipeEnabled(value: Boolean) { swipeEnabled = value; if (!value) resetSwipeTracking() }
+    fun setPasswordField(value: Boolean) { passwordField = value; rebuild(); invalidate() }
     private fun resetSwipeTracking() { swipePath.setLength(0); lastSwipeKeyIndex = -1; swipeTravel = 0f; swipeDetected = false }
     fun setMode(value: Mode) { mode = value; symbols = false; emojiMode = false; clipboardMode = false; symbolsPage = 0; rebuild(); invalidate() }
     fun setShifted(value: Boolean) { shifted = value; rebuild(); invalidate() }
@@ -156,8 +158,15 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             rows.add(listOf(Key("⇧", "SHIFT", 1.2f, true),
                 Key(if (mode == Mode.ENGLISH) "EN" else if (mode == Mode.BANGLA_PHONETIC) "বাংলা" else "অক্ষর", "MODE", 1.4f, true),
                 Key("⌫", "DELETE", 1.2f, true)))
-            rows.add(listOf(Key("?123", "SYMBOLS", 1.1f, true), Key(",", ",", .7f),
-                Key("English / বাংলা", "SPACE", 3.5f, true), Key(".", ".", .7f), Key("😊", "EMOJI", .8f, true), Key("📋", "CLIP", .8f, true), Key("↵", "ENTER", 1.1f, true)))
+            val bottomRow = mutableListOf(
+                Key("?123", "SYMBOLS", 1.1f, true), Key(",", ",", .7f),
+                Key("English / বাংলা", "SPACE", 3.5f, true), Key(".", ".", .7f),
+                Key("😊", "EMOJI", .8f, true)
+            )
+            // Do not display clipboard access at all while a password field is focused.
+            if (!passwordField) bottomRow.add(Key("📋", "CLIP", .8f, true))
+            bottomRow.add(Key("↵", "ENTER", 1.1f, true))
+            rows.add(bottomRow)
         }
         rows.forEach { flatKeys.addAll(it) }
     }
