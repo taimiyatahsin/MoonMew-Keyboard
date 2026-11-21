@@ -49,6 +49,7 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
         keyboard?.setSuggestions(emptyList())
         keyboard?.setShifted(false)
         keyboard?.setMode(mode)
+        keyboard?.setSwipeEnabled(!passwordField)
     }
 
     override fun onKey(key: String) {
