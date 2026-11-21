@@ -63,7 +63,36 @@ object BanglaWordSuggestions {
         "ekshathe" to "একসাথে", "ekshathei" to "একসাথেই", "shotti" to "সত্যি",
         "shotyi" to "সত্যি", "mittha" to "মিথ্যা", "shomossa" to "সমস্যা",
         "somossa" to "সমস্যা", "shomadhan" to "সমাধান", "uttor" to "উত্তর",
-        "proshno" to "প্রশ্ন", "bikel" to "বিকেল", "rat" to "রাত", "shokal" to "সকাল"
+        "proshno" to "প্রশ্ন", "bikel" to "বিকেল", "rat" to "রাত", "shokal" to "সকাল",
+        // More everyday conversation, polite forms, and common mobile/computing terms.
+        "apnara" to "আপনারা", "apnader" to "আপনাদের", "oder" to "ওদের", "ora" to "ওরা",
+        "tora" to "তোরা", "toder" to "তোদের", "amaderke" to "আমাদেরকে", "tomaderke" to "তোমাদেরকে",
+        "ekhankar" to "এখানকার", "sekhaney" to "সেখানে", "okhankar" to "ওখানকার",
+        "kothay" to "কোথায়", "kothaycho" to "কোথায়ছো", "kothayachen" to "কোথায় আছেন",
+        "ashole" to "আসলে", "asole" to "আসলে", "monekor" to "মনে কর",
+        "bhabchi" to "ভাবছি", "vabchi" to "ভাবছি", "bhabna" to "ভাবনা",
+        "chinta" to "চিন্তা", "chinta koro" to "চিন্তা করো", "oshubidha" to "অসুবিধা",
+        "subidha" to "সুবিধা", "shoja" to "সোজা", "kothin" to "কঠিন",
+        "shuru" to "শুরু", "shesh" to "শেষ", "sheshhoyeche" to "শেষ হয়েছে",
+        "proyojon" to "প্রয়োজন", "proyojone" to "প্রয়োজনে", "shombhob" to "সম্ভব",
+        "somvob" to "সম্ভব", "oshombhob" to "অসম্ভব", "nishchoi" to "নিশ্চয়ই",
+        "nischoy" to "নিশ্চয়", "hoyto" to "হয়তো", "monehochhe" to "মনে হচ্ছে",
+        "bhalo lage" to "ভালো লাগে", "bhalo lagche" to "ভালো লাগছে",
+        "valo lagche" to "ভালো লাগছে", "khub bhalo" to "খুব ভালো",
+        "onek dhonnobad" to "অনেক ধন্যবাদ", "shubho" to "শুভ", "shuvo" to "শুভ",
+        "shubhoratri" to "শুভরাত্রি", "shubhosokal" to "শুভ সকাল", "shubhoratri" to "শুভরাত্রি",
+        "message" to "মেসেজ", "msg" to "মেসেজ", "chat" to "চ্যাট", "internet" to "ইন্টারনেট",
+        "online" to "অনলাইন", "offline" to "অফলাইন", "download" to "ডাউনলোড",
+        "upload" to "আপলোড", "file" to "ফাইল", "photo" to "ছবি", "chobi" to "ছবি",
+        "video" to "ভিডিও", "link" to "লিংক", "website" to "ওয়েবসাইট",
+        "password" to "পাসওয়ার্ড", "account" to "অ্যাকাউন্ট", "settings" to "সেটিংস",
+        "update" to "আপডেট", "install" to "ইনস্টল", "delete" to "ডিলিট",
+        "save" to "সেভ", "share" to "শেয়ার", "search" to "সার্চ",
+        "typing" to "টাইপিং", "lekha" to "লেখা", "likhte" to "লিখতে",
+        "poriborton" to "পরিবর্তন", "shundor kore" to "সুন্দর করে",
+        "ekhoni" to "এখনই", "akhoni" to "এখনই", "porey" to "পরে",
+        "kalke" to "কালকে", "ajke" to "আজকে", "prottek" to "প্রত্যেক",
+        "protিদিন" to "প্রতিদিন", "shobshomoy" to "সবসময়", "shobsomoy" to "সবসময়"
     )
 
     /** Exact dictionary lookup, tolerant of accidental surrounding spaces/case. */
