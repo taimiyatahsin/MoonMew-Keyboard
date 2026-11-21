@@ -104,7 +104,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 Key(if (mode == Mode.ENGLISH) "EN" else if (mode == Mode.BANGLA_PHONETIC) "বাংলা" else "অক্ষর", "MODE", 1.4f, true),
                 Key("⌫", "DELETE", 1.2f, true)))
             rows.add(listOf(Key("?123", "SYMBOLS", 1.1f, true), Key(",", ",", .7f),
-                Key("English / বাংলা", "SPACE", 4.2f, true), Key("😊", "EMOJI", .8f, true), Key("↵", "ENTER", 1.1f, true)))
+                Key("English / বাংলা", "SPACE", 3.5f, true), Key(".", ".", .7f), Key("😊", "EMOJI", .8f, true), Key("↵", "ENTER", 1.1f, true)))
         }
         // Keep the hit-test list in exactly the same row/key order as the drawn keys.
         rows.forEach { flatKeys.addAll(it) }
