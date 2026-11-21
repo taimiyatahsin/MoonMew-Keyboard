@@ -105,7 +105,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     fun setSymbols(value: Boolean) { symbols = value; emojiMode = false; clipboardMode = false; symbolsPage = 0; rebuild(); invalidate() }
     fun setEmoji(value: Boolean) { emojiMode = value; clipboardMode = false; symbols = false; rebuild(); invalidate() }
     fun setClipboard(value: Boolean) { clipboardMode = value; emojiMode = false; symbols = false; rebuild(); invalidate() }
-    fun setClipboardItems(value: List<String>) { clipboardItems = value.take(5); invalidate() }
+    fun setClipboardItems(value: List<String>) { clipboardItems = value.take(5); if (clipboardMode) rebuild(); invalidate() }
     fun nextSymbolsPage() { if (symbols) { symbolsPage = 1 - symbolsPage; rebuild(); invalidate() } }
     fun setComposition(value: String) { composition = value; invalidate() }
     fun setPreview(value: String) { preview = value; invalidate() }
