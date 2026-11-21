@@ -21,34 +21,47 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private var mode = Mode.ENGLISH
     private var shifted = false
     private var symbols = false
+    private var symbolsPage = 0
     private var composition = ""
     private var preview = ""
     private val bounds = mutableListOf<RectF>()
     private val rows = mutableListOf<List<Key>>()
 
-    init { isClickable = true; setBackgroundColor(if (roseTheme) 0xFF17151B.toInt() else 0xFF101820.toInt()); rebuild() }
+    init {
+        isClickable = true
+        setBackgroundColor(if (roseTheme) 0xFF17151B.toInt() else 0xFF101820.toInt())
+        rebuild()
+    }
+
     fun refreshPreferences() {
         roseTheme = preferences.getBoolean("rose_theme", true)
         keySound = preferences.getBoolean("key_sound", false)
         setBackgroundColor(if (roseTheme) 0xFF17151B.toInt() else 0xFF101820.toInt())
         invalidate()
     }
-    fun setMode(value: Mode) { mode = value; symbols = false; rebuild(); invalidate() }
+
+    fun setMode(value: Mode) { mode = value; symbols = false; symbolsPage = 0; rebuild(); invalidate() }
     fun setShifted(value: Boolean) { shifted = value; rebuild(); invalidate() }
-    fun setSymbols(value: Boolean) { symbols = value; rebuild(); invalidate() }
+    fun setSymbols(value: Boolean) { symbols = value; symbolsPage = 0; rebuild(); invalidate() }
+    fun nextSymbolsPage() { if (symbols) { symbolsPage = 1 - symbolsPage; rebuild(); invalidate() } }
     fun setComposition(value: String) { composition = value; invalidate() }
     fun setPreview(value: String) { preview = value; invalidate() }
 
     private fun rebuild() {
         rows.clear()
         if (symbols) {
-            listOf("1234567890", "!@#$%^&*()", "-_=+[]{}<>", "?/;:,.~").forEach { line ->
+            val lines = if (symbolsPage == 0)
+                listOf("1234567890", "!@#$%^&*()", "-_=+[]{}<>", "?/;:,.~")
+            else
+                listOf("1234567890", "`£€¥₹¢©®", "±×÷√∞≠≤≥", "\\|_~^%#@")
+            lines.forEach { line ->
                 rows.add(line.map { ch -> Key(ch.toString(), ch.toString()) })
             }
             rows.add(listOf(Key("ABC", "ABC", 1.2f, true), Key("☾", "MODE", 1.1f, true),
                 Key("⌫", "DELETE", 1.2f, true)))
-            rows.add(listOf(Key("=\\<", "SYMBOLS_MORE", 1.1f, true), Key(",", ",", .7f),
-                Key("English / বাংলা", "SPACE", 4.6f, true), Key(".", "." , .7f), Key("↵", "ENTER", 1.1f, true)))
+            rows.add(listOf(Key(if (symbolsPage == 0) "=\\<" else "123", "SYMBOLS_MORE", 1.1f, true),
+                Key(",", ",", .7f), Key("English / বাংলা", "SPACE", 4.6f, true),
+                Key(".", ".", .7f), Key("↵", "ENTER", 1.1f, true)))
             return
         }
         val lines = if (mode == Mode.BANGLA_DIRECT)
@@ -60,11 +73,11 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 Key(label, ch.toString())
             })
         }
-        rows.add(listOf(Key("⇧","SHIFT",1.2f,true), Key("☾","MODE",1.1f,true),
-            Key(if (mode == Mode.ENGLISH) "EN" else if (mode == Mode.BANGLA_PHONETIC) "বাংলা" else "অক্ষর","MODE",1.4f,true),
-            Key("⌫","DELETE",1.2f,true)))
-        rows.add(listOf(Key("?123","SYMBOLS",1.1f,true), Key(",",",",.7f),
-            Key("English / বাংলা","SPACE",4.6f,true), Key(".", ".",.7f), Key("↵","ENTER",1.1f,true)))
+        rows.add(listOf(Key("⇧", "SHIFT", 1.2f, true), Key("☾", "MODE", 1.1f, true),
+            Key(if (mode == Mode.ENGLISH) "EN" else if (mode == Mode.BANGLA_PHONETIC) "বাংলা" else "অক্ষর", "MODE", 1.4f, true),
+            Key("⌫", "DELETE", 1.2f, true)))
+        rows.add(listOf(Key("?123", "SYMBOLS", 1.1f, true), Key(",", ",", .7f),
+            Key("English / বাংলা", "SPACE", 4.6f, true), Key(".", ".", .7f), Key("↵", "ENTER", 1.1f, true)))
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -108,18 +121,21 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        if (event.action == MotionEvent.ACTION_UP) {
-            val index = bounds.indexOfFirst { it.contains(event.x, event.y) }
-            if (index >= 0) {
-                if (keySound) playSoundEffect(SoundEffectConstants.CLICK)
-                performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-                rows.flatten().getOrNull(index)?.let { listener.onKey(it.value) }
+        when (event.actionMasked) {
+            MotionEvent.ACTION_UP -> {
+                val index = bounds.indexOfFirst { it.contains(event.x, event.y) }
+                if (index >= 0) {
+                    if (keySound) playSoundEffect(SoundEffectConstants.CLICK)
+                    performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                    rows.flatten().getOrNull(index)?.let { listener.onKey(it.value) }
+                }
+                performClick()
             }
-            performClick()
-            return true
+            MotionEvent.ACTION_CANCEL -> return true
         }
         return true
     }
+
     override fun performClick(): Boolean { super.performClick(); return true }
     private fun dp(value: Float) = value * resources.displayMetrics.density
 }
