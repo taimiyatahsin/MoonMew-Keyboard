@@ -118,8 +118,13 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
                     updateComposition()
                 } else {
                     val connection = currentInputConnection
-                    if (android.os.Build.VERSION.SDK_INT >= 24) connection?.deleteSurroundingTextInCodePoints(1, 0)
-                    else connection?.deleteSurroundingText(1, 0)
+                    if (android.os.Build.VERSION.SDK_INT >= 24) {
+                        connection?.deleteSurroundingTextInCodePoints(1, 0)
+                    } else {
+                        val beforeCursor = connection?.getTextBeforeCursor(2, 0)
+                        val units = BackspaceDeletion.utf16UnitsBeforeCursor(beforeCursor)
+                        connection?.deleteSurroundingText(units, 0)
+                    }
                 }
             }
             key == "SPACE" -> commitPending(" ")
