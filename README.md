@@ -1,31 +1,52 @@
 # MoonMew Keyboard
 
-A native Android `InputMethodService` keyboard with English, English-letter Bangla phonetic, and direct Bangla modes. The crescent Moon Switch cycles through all three.
+A lightweight, offline-first Android keyboard with English, Bangla phonetic, and direct Bangla layouts.
+
+## Features
+
+- English QWERTY keyboard and direct Bangla character layout.
+- Starter Bangla phonetic typing with live composing preview.
+- Emoji panel with Unicode-safe emoji characters.
+- Long-press English letter keys for common number and symbol alternatives.
+- Adjustable keyboard height (160–320 dp).
+- Light/dark keyboard themes and optional key sounds.
+- Shift, backspace, space, enter, and symbol layout.
+- Compact keyboard layout in portrait and landscape (device testing still required).
+- Android 6.0 (API 23) and newer.
+
+## Download and install
+
+**[Download the latest MoonMew test APK](https://github.com/taimiyatahsin0-png/MoonMew-Keyboard/releases/download/latest/app-debug.apk)**
+
+If the direct link does not start, open the [Latest Test Build page](https://github.com/taimiyatahsin0-png/MoonMew-Keyboard/releases/tag/latest) and choose `app-debug.apk` under **Assets**.
+
+1. Download `app-debug.apk` on your Android phone.
+2. Open the downloaded file. If Android asks, allow installation from that browser or file manager.
+3. Tap **Install**.
+4. Open **MoonMew Keyboard** and follow the setup instructions.
+5. In Android keyboard settings, enable MoonMew and select it as the default keyboard.
+
+On Samsung, the setting is usually **Settings → General management → Keyboard list and default**. Menu names may vary by Android version and manufacturer.
 
 ## Privacy
 
 - No `INTERNET` permission, network client, analytics, or keystroke storage.
-- Password text fields are detected using Android's input type. Secure fields switch to the plain English layout.
-- Android controls secure-field display and may hide or alter keyboard behavior. Verify with the device's password fields before relying on any third-party IME.
+- Password fields are detected from Android input types and switch to the plain English layout.
+- As with any third-party keyboard, avoid using it for highly sensitive input until you have reviewed and tested the app yourself.
 
-## Download the Android APK from GitHub
+## Bangla typing limitations
 
-**Easy download:** open [MoonMew Latest Test APK](https://github.com/taimiyatahsin0-png/MoonMew-Keyboard/releases/tag/latest), scroll to **Assets**, and tap `app-debug.apk`. No ZIP extraction is needed. The release is updated automatically after each successful development-branch build.
+Phonetic mode currently uses a small deterministic offline mapping. It is an early starter implementation, **not** a complete Avro-compatible engine. Spelling rules, conjuncts, vowel signs, word suggestions, and context-aware conversion still need improvement. Direct Bangla mode currently offers a compact character layout.
 
-If the release is not available yet, open the [MoonMew Actions page](https://github.com/taimiyatahsin0-png/MoonMew-Keyboard/actions), select the latest successful run, then download `moonmew-debug-apk` under **Artifacts** and extract `app-debug.apk` from the ZIP.
+## Build from source
 
-This is a debug/test APK, not a signed Play Store release. Android may show its normal warning for apps installed outside the Play Store.
+1. Open this repository in Android Studio.
+2. Allow Gradle sync to finish.
+3. Select **Build → Build APK(s)**.
+4. Find the debug APK at `app/build/outputs/apk/debug/app-debug.apk`.
 
-## Build locally with Android Studio
+GitHub Actions also builds every push to `main`. Successful main-branch builds automatically update the latest test APK release.
 
-1. Open this repository folder in Android Studio and allow Gradle sync.
-2. Choose **Build > Build APK(s)**.
-3. The debug APK appears at `app/build/outputs/apk/debug/app-debug.apk`.
+## Test-build notice
 
-## Enable the keyboard
-
-On Samsung, open **Settings > General management > Keyboard list and default**, enable MoonMew Keyboard, then select it as the default keyboard. Menu labels may vary by Android/One UI version.
-
-## Current typing behavior
-
-Phonetic mode converts typed Latin letter sequences using an embedded, deterministic offline transliteration table. It is an initial implementation, not a complete Avro-compatible engine; spellings, conjuncts, and context-sensitive vowel signs need further refinement. Direct Bangla mode currently provides a compact character layout.
+This APK is an automatically generated **debug/test build**, not a signed Play Store release. Android may show its normal warning when installing apps from outside the Play Store. Physical-device testing is still required across different manufacturers, screen sizes, and Android versions.
