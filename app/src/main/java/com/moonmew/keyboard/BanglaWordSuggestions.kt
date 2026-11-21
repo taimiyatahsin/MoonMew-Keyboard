@@ -80,7 +80,7 @@ object BanglaWordSuggestions {
         "bhalo lage" to "ভালো লাগে", "bhalo lagche" to "ভালো লাগছে",
         "valo lagche" to "ভালো লাগছে", "khub bhalo" to "খুব ভালো",
         "onek dhonnobad" to "অনেক ধন্যবাদ", "shubho" to "শুভ", "shuvo" to "শুভ",
-        "shubhoratri" to "শুভরাত্রি", "shubhosokal" to "শুভ সকাল", "shubhoratri" to "শুভরাত্রি",
+        "shubhoratri" to "শুভরাত্রি", "shubhosokal" to "শুভ সকাল",
         "message" to "মেসেজ", "msg" to "মেসেজ", "chat" to "চ্যাট", "internet" to "ইন্টারনেট",
         "online" to "অনলাইন", "offline" to "অফলাইন", "download" to "ডাউনলোড",
         "upload" to "আপলোড", "file" to "ফাইল", "photo" to "ছবি", "chobi" to "ছবি",
@@ -92,7 +92,7 @@ object BanglaWordSuggestions {
         "poriborton" to "পরিবর্তন", "shundor kore" to "সুন্দর করে",
         "ekhoni" to "এখনই", "akhoni" to "এখনই", "porey" to "পরে",
         "kalke" to "কালকে", "ajke" to "আজকে", "prottek" to "প্রত্যেক",
-        "protিদিন" to "প্রতিদিন", "shobshomoy" to "সবসময়", "shobsomoy" to "সবসময়"
+        "protidin" to "প্রতিদিন", "shobshomoy" to "সবসময়", "shobsomoy" to "সবসময়"
     )
 
     /** Exact dictionary lookup, tolerant of accidental surrounding spaces/case. */
