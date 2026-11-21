@@ -12,8 +12,28 @@ class BackspaceDeletionTest {
         assertEquals(1, BackspaceDeletion.utf16UnitsBeforeCursor("abc"))
     }
 
-    @Test fun banglaCharacterDeletesOneUnit() {
-        assertEquals(1, BackspaceDeletion.utf16UnitsBeforeCursor("বাংলা"))
+    @Test fun banglaVowelSignStaysWithItsConsonant() {
+        assertEquals("লা".length, BackspaceDeletion.utf16UnitsBeforeCursor("বাংলা"))
+    }
+
+    @Test fun combiningCharacterDeletesAsOneUnit() {
+        assertEquals(2, BackspaceDeletion.utf16UnitsBeforeCursor("e\u0301"))
+    }
+
+    @Test fun banglaConjunctDeletesAsOneUnit() {
+        assertEquals("ক্ষ".length, BackspaceDeletion.utf16UnitsBeforeCursor("ক্ষ"))
+    }
+
+    @Test fun emojiWithSkinToneDeletesAsOneUnit() {
+        assertEquals("👍🏽".length, BackspaceDeletion.utf16UnitsBeforeCursor("👍🏽"))
+    }
+
+    @Test fun familyEmojiJoinedWithZeroWidthJoinersDeletesAsOneUnit() {
+        assertEquals("👨‍👩‍👧‍👦".length, BackspaceDeletion.utf16UnitsBeforeCursor("👨‍👩‍👧‍👦"))
+    }
+
+    @Test fun flagDeletesAsOneUnit() {
+        assertEquals("🇧🇩".length, BackspaceDeletion.utf16UnitsBeforeCursor("🇧🇩"))
     }
 
     @Test fun emptyOrUnavailableCursorTextUsesSafeSingleUnitFallback() {

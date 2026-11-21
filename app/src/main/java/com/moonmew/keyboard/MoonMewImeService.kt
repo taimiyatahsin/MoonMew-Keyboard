@@ -118,13 +118,10 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
                     updateComposition()
                 } else {
                     val connection = currentInputConnection
-                    if (android.os.Build.VERSION.SDK_INT >= 24) {
-                        connection?.deleteSurroundingTextInCodePoints(1, 0)
-                    } else {
-                        val beforeCursor = connection?.getTextBeforeCursor(2, 0)
-                        val units = BackspaceDeletion.utf16UnitsBeforeCursor(beforeCursor)
-                        connection?.deleteSurroundingText(units, 0)
-                    }
+                    // Delete a whole user-perceived character (including joined emoji and flags).
+                    val beforeCursor = connection?.getTextBeforeCursor(32, 0)
+                    val units = BackspaceDeletion.utf16UnitsBeforeCursor(beforeCursor)
+                    connection?.deleteSurroundingText(units, 0)
                 }
             }
             key == "SPACE" -> commitPending(" ")

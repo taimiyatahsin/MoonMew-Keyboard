@@ -1,12 +1,79 @@
 package com.moonmew.keyboard
 
-/** Number of UTF-16 code units occupied by the code point before the cursor. */
+/** UTF-16 length of the complete user-perceived character immediately before the cursor. */
 internal object BackspaceDeletion {
     fun utf16UnitsBeforeCursor(textBeforeCursor: CharSequence?): Int {
         if (textBeforeCursor.isNullOrEmpty()) return 1
-        val last = textBeforeCursor[textBeforeCursor.length - 1]
-        if (Character.isLowSurrogate(last) && textBeforeCursor.length >= 2 &&
-            Character.isHighSurrogate(textBeforeCursor[textBeforeCursor.length - 2])) return 2
-        return 1
+
+        val codePoints = mutableListOf<Int>()
+        val offsets = mutableListOf<Int>()
+        var offset = 0
+        while (offset < textBeforeCursor.length) {
+            offsets.add(offset)
+            val codePoint = Character.codePointAt(textBeforeCursor, offset)
+            codePoints.add(codePoint)
+            offset += Character.charCount(codePoint)
+        }
+        if (codePoints.isEmpty()) return 1
+
+        var start = codePoints.lastIndex
+        val last = codePoints[start]
+
+        // A flag is a pair of regional-indicator code points.
+        if (isRegionalIndicator(last) && start > 0 && isRegionalIndicator(codePoints[start - 1])) {
+            start--
+            return textBeforeCursor.length - offsets[start]
+        }
+
+        // Include combining marks, variation selectors, emoji modifiers, and tag characters.
+        while (start > 0 && isExtend(codePoints[start])) start--
+
+        // Walk backwards over joined emoji sequences (for example, family emoji).
+        while (start > 0 && codePoints[start - 1] == ZERO_WIDTH_JOINER) {
+            start = (start - 2).coerceAtLeast(0)
+            while (start > 0 && isExtend(codePoints[start])) start--
+        }
+
+        // Keep Indic virama conjuncts (for example, Bengali ক্ষ) together.
+        while (start > 0 && isVirama(codePoints[start - 1])) {
+            start--
+            if (start > 0) {
+                start--
+                while (start > 0 && isExtend(codePoints[start])) start--
+            }
+        }
+
+        // A malformed/trailing joiner should be removed with the preceding character too.
+        if (codePoints[start] == ZERO_WIDTH_JOINER && start > 0) start--
+
+        return textBeforeCursor.length - offsets[start]
     }
+
+    private fun isExtend(codePoint: Int): Boolean {
+        val type = Character.getType(codePoint)
+        return type == Character.NON_SPACING_MARK.toInt() ||
+            type == Character.COMBINING_SPACING_MARK.toInt() ||
+            type == Character.ENCLOSING_MARK.toInt() ||
+            codePoint in 0xFE00..0xFE0F ||
+            codePoint in 0xE0100..0xE01EF ||
+            codePoint in 0x1F3FB..0x1F3FF ||
+            codePoint in 0xE0020..0xE007F ||
+            codePoint == 0x20E3
+    }
+
+    private fun isRegionalIndicator(codePoint: Int) = codePoint in 0x1F1E6..0x1F1FF
+
+    private fun isVirama(codePoint: Int) = codePoint in setOf(
+        0x094D, 0x09CD, 0x0A4D, 0x0ACD, 0x0B4D, 0x0BCD,
+        0x0C4D, 0x0CCD, 0x0D3B, 0x0D3C, 0x0D4D, 0x0DCA,
+        0x1039, 0x103A, 0x1714, 0x1734, 0x17D2, 0x1A60,
+        0x1B44, 0x1BAA, 0x1BAB, 0xA806, 0xA8C4, 0xA953,
+        0xA9C0, 0xAAF6, 0xABED, 0x10A3F, 0x11046, 0x11070,
+        0x11133, 0x111C0, 0x11235, 0x112EA, 0x1134D, 0x11442,
+        0x114C2, 0x115BF, 0x1163F, 0x116B6, 0x1172B, 0x11839,
+        0x1193D, 0x119E0, 0x11A34, 0x11A47, 0x11A99, 0x11C3F,
+        0x11D44, 0x11D45, 0x11D97
+    )
+
+    private const val ZERO_WIDTH_JOINER = 0x200D
 }
