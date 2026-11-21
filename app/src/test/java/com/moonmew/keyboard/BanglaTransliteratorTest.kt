@@ -24,4 +24,21 @@ class BanglaTransliteratorTest {
         assertEquals(listOf("আমি", "আমার", "আমরা"), suggestions)
         assertTrue(BanglaWordSuggestions.suggest("").isEmpty())
     }
+
+    @Test fun suggestionsNormalizeCaseAndWhitespace() {
+        assertEquals("আমি", BanglaWordSuggestions.exact(" AMI "))
+        assertEquals(
+            BanglaWordSuggestions.suggest("ami"),
+            BanglaWordSuggestions.suggest(" AMI ")
+        )
+    }
+
+    @Test fun suggestionLimitIsSafeAndNeverReturnsDuplicateSpellings() {
+        assertTrue(BanglaWordSuggestions.suggest("am", -1).isEmpty())
+        assertTrue(BanglaWordSuggestions.suggest("am", 0).isEmpty())
+        assertEquals(1, BanglaWordSuggestions.suggest("am", 1).size)
+        val expanded = BanglaWordSuggestions.suggest("am", 5)
+        assertEquals(expanded.size, expanded.distinct().size)
+        assertTrue(expanded.size <= 5)
+    }
 }

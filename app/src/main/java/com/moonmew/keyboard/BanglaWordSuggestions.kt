@@ -37,17 +37,29 @@ object BanglaWordSuggestions {
         "shukriya" to "শুকরিয়া", "assalamu" to "আসসালামু", "alaikum" to "আলাইকুম"
     )
 
-    fun exact(roman: String): String? = words[roman]
+    /** Exact dictionary lookup, tolerant of accidental surrounding spaces/case. */
+    fun exact(roman: String): String? = words[roman.trim().lowercase()]
 
+    /**
+     * Returns a small, deterministic candidate list for the current roman prefix.
+     * Exact matches rank first; duplicate Bangla spellings are collapsed so the
+     * suggestion strip never wastes slots on aliases (for example, "ami"/"ami").
+     */
     fun suggest(prefix: String, limit: Int = 3): List<String> {
-        val query = prefix.lowercase()
-        if (query.isBlank()) return emptyList()
-        val matches = words.entries
+        val query = prefix.trim().lowercase()
+        val safeLimit = limit.coerceIn(0, 5)
+        if (query.isBlank() || safeLimit == 0) return emptyList()
+
+        return words.entries.asSequence()
             .filter { it.key.startsWith(query) }
-            .sortedWith(compareByDescending<Map.Entry<String, String>> { it.key == query }
-                .thenBy { it.key.length })
-            .take(limit)
+            .sortedWith(
+                compareByDescending<Map.Entry<String, String>> { it.key == query }
+                    .thenBy { it.key.length }
+                    .thenBy { it.key }
+            )
             .map { it.value }
-        return matches.distinct()
+            .distinct()
+            .take(safeLimit)
+            .toList()
     }
 }
