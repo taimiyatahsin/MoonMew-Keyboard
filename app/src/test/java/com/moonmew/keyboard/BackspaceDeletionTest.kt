@@ -36,6 +36,14 @@ class BackspaceDeletionTest {
         assertEquals("🇧🇩".length, BackspaceDeletion.utf16UnitsBeforeCursor("🇧🇩"))
     }
 
+    @Test fun trailingRegionalIndicatorInOddRunDeletesAlone() {
+        assertEquals(2, BackspaceDeletion.utf16UnitsBeforeCursor("🇧🇩🇺"))
+    }
+
+    @Test fun finalFlagInEvenRegionalIndicatorRunDeletesAsPair() {
+        assertEquals("🇺🇸".length, BackspaceDeletion.utf16UnitsBeforeCursor("🇧🇩🇺🇸"))
+    }
+
 
     @Test fun longJoinedEmojiSequenceDeletesAsOneUnit() {
         val sequence = List(6) { "👨‍👩‍👧‍👦" }.joinToString("\u200D")
