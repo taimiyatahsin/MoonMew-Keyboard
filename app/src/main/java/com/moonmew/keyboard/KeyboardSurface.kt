@@ -242,6 +242,21 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             canvas.drawCircle(width * point.first, height * point.second, dp(if (index % 2 == 0) 1.4f else 1f), paint)
         }
         paint.alpha = 255
+        // Decorative candy dots and tiny bow-like accents for the kawaii palettes.
+        if (themeId == 0 || themeId == 3) {
+            val accents = arrayOf(0.08f to 0.08f, 0.27f to 0.07f, 0.73f to 0.07f, 0.92f to 0.08f,
+                0.05f to 0.92f, 0.95f to 0.92f)
+            accents.forEachIndexed { index, point ->
+                val cx = width * point.first
+                val cy = height * point.second
+                paint.color = if (index % 2 == 0) 0xFFFF8FB9.toInt() else 0xFFFFFFFF.toInt()
+                paint.alpha = 185
+                canvas.drawCircle(cx - dp(2f), cy, dp(2.4f), paint)
+                canvas.drawCircle(cx + dp(2f), cy, dp(2.4f), paint)
+                canvas.drawCircle(cx, cy, dp(1.5f), paint)
+            }
+            paint.alpha = 255
+        }
         val moonX = width - dp(18f)
         val moonY = dp(12f)
         canvas.drawCircle(moonX, moonY, dp(6f), paint)
