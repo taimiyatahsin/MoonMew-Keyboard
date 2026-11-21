@@ -70,6 +70,7 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
             key == "EMOJI_BACK" -> keyboard?.setEmoji(false)
             key == "CLIP" -> openClipboardHistory()
             key == "CLIP_CLOSE" -> keyboard?.setClipboard(false)
+            key == "CLIP_NOTICE" -> Unit
             key == "CLIP_CLEAR" -> { saveClipboardItems(emptyList()); keyboard?.setClipboardItems(emptyList()) }
             key.startsWith("CLIP_ITEM:") -> {
                 val index = key.substringAfter(":").toIntOrNull() ?: -1
