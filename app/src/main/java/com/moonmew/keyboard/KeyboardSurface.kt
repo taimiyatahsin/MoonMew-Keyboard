@@ -54,15 +54,33 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         rebuild()
     }
 
+    private fun configuredHeightDp(): Int =
+        preferences.getInt("keyboard_height_dp", 210).coerceIn(140, 280)
+
     private fun applyHeight() {
-        val heightDp = preferences.getInt("keyboard_height_dp", 240).coerceIn(160, 320)
         val params = layoutParams ?: ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, dp(heightDp.toFloat()).toInt()
+            ViewGroup.LayoutParams.MATCH_PARENT, dp(configuredHeightDp().toFloat()).toInt()
         )
-        params.height = dp(heightDp.toFloat()).toInt()
+        params.height = dp(configuredHeightDp().toFloat()).toInt()
         params.width = ViewGroup.LayoutParams.MATCH_PARENT
         layoutParams = params
         requestLayout()
+    }
+
+    // IME parents on some Android builds measure their input view at almost the
+    // full display height. Do not let that turn the keyboard into a full-screen view.
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        val displayHeightPx = resources.displayMetrics.heightPixels
+        val screenCapPx = (displayHeightPx * 0.44f).toInt().coerceAtLeast(dp(120f).toInt())
+        val parentCapPx = if (MeasureSpec.getMode(heightMeasureSpec) == MeasureSpec.UNSPECIFIED) {
+            screenCapPx
+        } else {
+            MeasureSpec.getSize(heightMeasureSpec).coerceAtLeast(1)
+        }
+        val desiredPx = dp(configuredHeightDp().toFloat()).toInt()
+        val measuredHeight = minOf(desiredPx, screenCapPx, parentCapPx).coerceAtLeast(1)
+        val measuredWidth = resolveSize(suggestedMinimumWidth, widthMeasureSpec)
+        setMeasuredDimension(measuredWidth, measuredHeight)
     }
 
     fun refreshPreferences() {
@@ -365,8 +383,10 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         val dy = endY - startY
         val distance = Math.hypot(dx.toDouble(), dy.toDouble()).toFloat()
         val stepSize = dp(8f).coerceAtLeast(1f)
-        val steps = kotlin.math.ceil(distance / stepSize).toInt().coerceAtLeast(1)
+        // Bound work for unusually large MotionEvent jumps on slow devices.
+        val steps = kotlin.math.ceil(distance / stepSize).toInt().coerceIn(1, 64)
         for (step in 1..steps) {
+            if (swipePath.length >= 32) return
             val fraction = step.toFloat() / steps
             appendSwipeKey(startX + dx * fraction, startY + dy * fraction)
         }
@@ -377,7 +397,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         if (index < 0 || index == lastSwipeKeyIndex) return
         val value = flatKeys.getOrNull(index)?.value ?: return
         if (value.length == 1 && value[0] in 'a'..'z') {
-            swipePath.append(value)
+            if (swipePath.length < 32) swipePath.append(value)
             lastSwipeKeyIndex = index
         }
     }
