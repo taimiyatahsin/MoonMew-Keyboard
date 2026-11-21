@@ -15,6 +15,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     enum class Mode { ENGLISH, BANGLA_PHONETIC, BANGLA_DIRECT }
     private data class Key(val label: String, val value: String, val weight: Float = 1f, val special: Boolean = false)
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val keyTypeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
     private val preferences = context.getSharedPreferences("moonmew_settings", Context.MODE_PRIVATE)
     private var roseTheme = preferences.getBoolean("rose_theme", true)
     private var keySound = preferences.getBoolean("key_sound", false)
@@ -26,6 +27,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private var preview = ""
     private val bounds = mutableListOf<RectF>()
     private val rows = mutableListOf<List<Key>>()
+    private val flatKeys = mutableListOf<Key>()
 
     init {
         isClickable = true
@@ -49,6 +51,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
 
     private fun rebuild() {
         rows.clear()
+        flatKeys.clear()
         if (symbols) {
             val lines = if (symbolsPage == 0)
                 listOf("1234567890", "!@#$%^&*()", "-_=+[]{}<>", "?/;:,.~")
@@ -62,6 +65,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             rows.add(listOf(Key(if (symbolsPage == 0) "=\\<" else "123", "SYMBOLS_MORE", 1.1f, true),
                 Key(",", ",", .7f), Key("English / বাংলা", "SPACE", 4.6f, true),
                 Key(".", ".", .7f), Key("↵", "ENTER", 1.1f, true)))
+            rows.forEach { flatKeys.addAll(it) }
             return
         }
         val lines = if (mode == Mode.BANGLA_DIRECT)
@@ -112,7 +116,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 paint.color = if (roseTheme) 0xFFFFF0F5.toInt() else 0xFFEAF4FA.toInt()
                 paint.textAlign = Paint.Align.CENTER
                 paint.textSize = if (key.label.length > 5) dp(11f) else dp(18f)
-                paint.typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+                paint.typeface = keyTypeface
                 val baseline = rect.centerY() - (paint.ascent() + paint.descent()) / 2
                 canvas.drawText(key.label, rect.centerX(), baseline, paint)
                 x += w + gap
@@ -127,7 +131,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 if (index >= 0) {
                     if (keySound) playSoundEffect(SoundEffectConstants.CLICK)
                     performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-                    rows.flatten().getOrNull(index)?.let { listener.onKey(it.value) }
+                    flatKeys.getOrNull(index)?.let { listener.onKey(it.value) }
                 }
                 performClick()
             }
