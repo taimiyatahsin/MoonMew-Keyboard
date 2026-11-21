@@ -102,6 +102,7 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
                 commitPending("")
                 currentInputConnection?.commitText(key.removePrefix("LONG:"), 1)
             }
+            key == "TOOLBAR_BRAND" -> Unit
             key == "SHIFT" -> { shifted = !shifted; keyboard?.setShifted(shifted) }
             key == "SYMBOLS" -> { commitPending(""); keyboard?.setSymbols(true) }
             key == "EMOJI" -> { commitPending(""); keyboard?.setEmoji(true) }
