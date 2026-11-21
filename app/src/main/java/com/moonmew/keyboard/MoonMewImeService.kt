@@ -14,6 +14,7 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
     private var shifted = false
     private var composing = ""
     private var passwordField = false
+    private var modeBeforePassword = KeyboardSurface.Mode.ENGLISH
     private var swipePending = false
 
     override fun onEvaluateFullscreenMode(): Boolean = false
@@ -23,12 +24,14 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
             keyboard = it
             it.setMode(mode)
             it.setShifted(shifted)
+            it.setSwipeEnabled(!passwordField)
         }
     }
 
     override fun onStartInput(attribute: EditorInfo?, restarting: Boolean) {
         super.onStartInput(attribute, restarting)
         setExtractViewShown(false)
+        val wasPasswordField = passwordField
         val type = attribute?.inputType ?: InputType.TYPE_CLASS_TEXT
         val cls = type and InputType.TYPE_MASK_CLASS
         val variation = type and InputType.TYPE_MASK_VARIATION
@@ -40,7 +43,12 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
                 variation == InputType.TYPE_NUMBER_VARIATION_PASSWORD)
 
         currentInputConnection?.finishComposingText()
-        if (passwordField) mode = KeyboardSurface.Mode.ENGLISH
+        if (passwordField && !wasPasswordField) {
+            modeBeforePassword = mode
+            mode = KeyboardSurface.Mode.ENGLISH
+        } else if (!passwordField && wasPasswordField) {
+            mode = modeBeforePassword
+        }
         composing = ""
         swipePending = false
         keyboard?.refreshPreferences()
@@ -49,6 +57,7 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
         keyboard?.setSuggestions(emptyList())
         keyboard?.setShifted(false)
         keyboard?.setMode(mode)
+        keyboard?.setSwipeEnabled(!passwordField)
     }
 
     override fun onKey(key: String) {
