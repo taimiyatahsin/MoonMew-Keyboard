@@ -34,6 +34,15 @@ internal object BackspaceDeletion {
             while (start > 0 && isExtend(codePoints[start])) start--
         }
 
+        // Keep Indic virama conjuncts (for example, Bengali ক্ষ) together.
+        while (start > 0 && isVirama(codePoints[start - 1])) {
+            start--
+            if (start > 0) {
+                start--
+                while (start > 0 && isExtend(codePoints[start])) start--
+            }
+        }
+
         // A malformed/trailing joiner should be removed with the preceding character too.
         if (codePoints[start] == ZERO_WIDTH_JOINER && start > 0) start--
 
@@ -53,6 +62,18 @@ internal object BackspaceDeletion {
     }
 
     private fun isRegionalIndicator(codePoint: Int) = codePoint in 0x1F1E6..0x1F1FF
+
+    private fun isVirama(codePoint: Int) = codePoint in setOf(
+        0x094D, 0x09CD, 0x0A4D, 0x0ACD, 0x0B4D, 0x0BCD,
+        0x0C4D, 0x0CCD, 0x0D3B, 0x0D3C, 0x0D4D, 0x0DCA,
+        0x1039, 0x103A, 0x1714, 0x1734, 0x17D2, 0x1A60,
+        0x1B44, 0x1BAA, 0x1BAB, 0xA806, 0xA8C4, 0xA953,
+        0xA9C0, 0xAAF6, 0xABED, 0x10A3F, 0x11046, 0x11070,
+        0x11133, 0x111C0, 0x11235, 0x112EA, 0x1134D, 0x11442,
+        0x114C2, 0x115BF, 0x1163F, 0x116B6, 0x1172B, 0x11839,
+        0x1193D, 0x119E0, 0x11A34, 0x11A47, 0x11A99, 0x11C3F,
+        0x11D44, 0x11D45, 0x11D97
+    )
 
     private const val ZERO_WIDTH_JOINER = 0x200D
 }
