@@ -83,7 +83,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         val desiredPx = dp(configuredHeightDp().toFloat()).toInt()
         val measuredHeight = minOf(desiredPx, screenCapPx, parentCapPx).coerceAtLeast(1)
         val measuredWidth = if (MeasureSpec.getMode(widthMeasureSpec) == MeasureSpec.UNSPECIFIED) {
-            suggestedMinimumWidth
+            resources.displayMetrics.widthPixels.coerceAtLeast(suggestedMinimumWidth)
         } else {
             MeasureSpec.getSize(widthMeasureSpec)
         }
