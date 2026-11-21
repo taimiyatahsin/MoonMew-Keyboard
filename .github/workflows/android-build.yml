@@ -12,6 +12,12 @@ on:
 permissions:
   contents: write
 
+# Serialize main-branch builds so an older run cannot overwrite a newer APK
+# on the shared "latest" release after finishing late.
+concurrency:
+  group: moonmew-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   debug-build:
     runs-on: ubuntu-latest
@@ -29,6 +35,11 @@ jobs:
           packages: platform-tools
       - name: Install Android SDK 35
         run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - name: Restore stable debug signing key
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: moonmew-debug-signing-key-v1
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
