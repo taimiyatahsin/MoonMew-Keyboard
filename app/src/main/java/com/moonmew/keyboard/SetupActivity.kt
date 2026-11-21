@@ -12,6 +12,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.SeekBar
+import android.widget.ScrollView
 import android.widget.Switch
 import android.widget.TextView
 
@@ -133,7 +134,10 @@ class SetupActivity : Activity() {
         root.addView(clipboardSwitch, matchWithTop(dp(10)))
         root.addView(clipboardWarning, matchWithTop(dp(2)))
         root.addView(note, matchWithTop(dp(4)))
-        setContentView(root)
+        setContentView(ScrollView(this).apply {
+            isFillViewport = true
+            addView(root)
+        })
         refreshStatus()
     }
 
