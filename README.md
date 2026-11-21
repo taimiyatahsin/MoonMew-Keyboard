@@ -4,18 +4,18 @@ A lightweight, offline-first Android keyboard with English, Bangla phonetic, and
 
 ## Features
 
-- English QWERTY keyboard and direct Bangla character layout.
-- Starter Bangla phonetic typing with live composing preview.
-- Emoji panel with Unicode-safe emoji characters.
-- Long-press English letter keys for common number and symbol alternatives.
-- Experimental offline English swipe typing with local word suggestions (common-word dictionary; accuracy needs device testing).
-- Adjustable keyboard height (160–320 dp).
-- Three moon-inspired color themes: Moonlit Rose, Midnight Blue, and Lavender Dream.
-- Soft gradient keyboard background, subtle stars/crescent moon details, and outlined rounded keys.
-- Optional key sounds.
-- Shift, backspace, space, enter, and symbol layout.
-- Optional clipboard history: off by default; explicit opt-in; reads plain text only when the 📋 key is tapped; stores up to 5 items locally for up to 24 hours; disabled in password fields.
-- Compact keyboard layout in portrait and landscape (device testing still required).
+- English QWERTY keyboard with long-press number and symbol alternatives.
+- Bangla phonetic starter mode with live conversion preview and offline word suggestions.
+- Dedicated direct Bangla layout with independent vowels, vowel signs on long press, consonants, and alternate characters.
+- Emoji panel with categories and Unicode emoji.
+- Two-page symbol keyboard, including Bengali punctuation and additional Bangla signs.
+- Experimental English swipe typing with local word suggestions.
+- Adjustable keyboard height: **140–280 dp** (default: **210 dp**).
+- Five themes: Pink Plush, Moonlit Blue, Lavender Dream, Glass Candy, and Moon Garden.
+- Soft gradients, glossy rounded keycaps, subtle moon/star details, and compact toolbar.
+- Optional key sounds; haptics follow device settings.
+- Optional clipboard history: off by default; explicit opt-in; reads plain text only when the clipboard button is tapped; stores up to 5 items locally for up to 24 hours; unavailable in password fields.
+- Password fields switch to the English layout and disable swipe and clipboard history.
 - Android 6.0 (API 23) and newer.
 
 ## Download and install
@@ -34,18 +34,24 @@ On Samsung, the setting is usually **Settings → General management → Keyboar
 
 ## Privacy
 
-- No `INTERNET` permission, network client, or analytics. Ordinary keystrokes are not stored.
-- Optional clipboard history is off by default and requires explicit opt-in in settings. When enabled, tapping 📋 reads the current plain-text clipboard and stores up to 5 items locally for up to 24 hours. Turning it off clears saved items. Do not copy passwords or sensitive information; clipboard history is disabled in password fields.
-- Password fields are detected from Android input types and switch to the plain English layout.
-- As with any third-party keyboard, avoid using it for highly sensitive input until you have reviewed and tested the app yourself.
+- The app requests no `INTERNET` permission and contains no network client or analytics. Ordinary keystrokes are not stored.
+- Optional clipboard history is off by default and requires explicit opt-in in settings. When enabled, tapping 📋 reads the current plain-text clipboard and stores up to 5 items locally for up to 24 hours. Turning it off clears saved items. Avoid copying passwords or private information; clipboard history is disabled in password fields.
+- Password fields are detected from Android input types and switch to the English layout.
+- As with any third-party keyboard, review and test the app before using it for highly sensitive input.
 
-## Swipe typing limitations
+## Known limitations
+
+### Bangla typing
+
+Phonetic mode is a small deterministic offline converter with a growing local dictionary. It is **not** a complete Avro-compatible engine; spelling rules, conjunct handling, vowel signs, and context-aware conversion still need further improvement. Direct Bangla mode is a compact character layout, not a full Gboard-style composition engine.
+
+### Swipe typing
 
 Swipe typing is an experimental English-only prototype using a small on-device word list and edit-distance matching. It asks you to choose a suggested word rather than silently inserting a guess. It is not a Gboard-level swipe engine and needs accuracy and performance testing on physical devices.
 
-## Bangla typing limitations
+### Device compatibility
 
-Phonetic mode currently uses a small deterministic offline mapping. It is an early starter implementation, **not** a complete Avro-compatible engine. Spelling rules, conjuncts, vowel signs, word suggestions, and context-aware conversion still need improvement. Direct Bangla mode currently offers a compact character layout.
+The project is built for Android 6.0+ and the keyboard limits its height instead of using the full screen. However, compatibility, touch accuracy, layout, and performance still need hands-on testing across manufacturers, Android versions, screen sizes, and apps. Automated CI tests cannot replace physical-device testing.
 
 ## Build from source
 
@@ -54,8 +60,8 @@ Phonetic mode currently uses a small deterministic offline mapping. It is an ear
 3. Select **Build → Build APK(s)**.
 4. Find the debug APK at `app/build/outputs/apk/debug/app-debug.apk`.
 
-GitHub Actions also builds every push to `main`. Successful main-branch builds automatically update the latest test APK release.
+GitHub Actions runs unit tests and builds a debug APK for pull requests and pushes to `main`. Successful main-branch builds update the latest test APK release.
 
 ## Test-build notice
 
-This APK is an automatically generated **debug/test build**, not a signed Play Store release. Android may show its normal warning when installing apps from outside the Play Store. Physical-device testing is still required across different manufacturers, screen sizes, and Android versions.
+This APK is an automatically generated **debug/test build**, not a signed Play Store release. Android may show its normal warning when installing apps from outside the Play Store.
