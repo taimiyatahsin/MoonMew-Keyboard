@@ -7,6 +7,7 @@ import android.graphics.RectF
 import android.graphics.Typeface
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
+import android.os.SystemClock
 import android.view.SoundEffectConstants
 import android.view.View
 import android.view.ViewGroup
@@ -14,7 +15,7 @@ import android.view.ViewGroup
 class KeyboardSurface(context: Context, private val listener: Listener) : View(context) {
     interface Listener { fun onKey(key: String) }
     enum class Mode { ENGLISH, BANGLA_PHONETIC, BANGLA_DIRECT }
-    private data class Key(val label: String, val value: String, val weight: Float = 1f, val special: Boolean = false)
+    private data class Key(val label: String, val value: String, val weight: Float = 1f, val special: Boolean = false, val longPressValue: String? = null)
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val keyTypeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
     private val preferences = context.getSharedPreferences("moonmew_settings", Context.MODE_PRIVATE)
@@ -23,6 +24,9 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private var mode = Mode.ENGLISH
     private var shifted = false
     private var symbols = false
+    private var emojiMode = false
+    private var downKeyIndex = -1
+    private var downTime = 0L
     private var symbolsPage = 0
     private var composition = ""
     private var preview = ""
@@ -56,9 +60,10 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         invalidate()
     }
 
-    fun setMode(value: Mode) { mode = value; symbols = false; symbolsPage = 0; rebuild(); invalidate() }
+    fun setMode(value: Mode) { mode = value; symbols = false; emojiMode = false; symbolsPage = 0; rebuild(); invalidate() }
     fun setShifted(value: Boolean) { shifted = value; rebuild(); invalidate() }
-    fun setSymbols(value: Boolean) { symbols = value; symbolsPage = 0; rebuild(); invalidate() }
+    fun setSymbols(value: Boolean) { symbols = value; emojiMode = false; symbolsPage = 0; rebuild(); invalidate() }
+    fun setEmoji(value: Boolean) { emojiMode = value; symbols = false; rebuild(); invalidate() }
     fun nextSymbolsPage() { if (symbols) { symbolsPage = 1 - symbolsPage; rebuild(); invalidate() } }
     fun setComposition(value: String) { composition = value; invalidate() }
     fun setPreview(value: String) { preview = value; invalidate() }
@@ -66,7 +71,15 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private fun rebuild() {
         rows.clear()
         flatKeys.clear()
-        if (symbols) {
+        if (emojiMode) {
+            listOf(
+                listOf("😀","😃","😄","😁","😆","😅","😂","🤣"),
+                listOf("😊","😇","🙂","🙃","😉","😍","🥰","😘"),
+                listOf("😋","😛","😜","🤪","🤗","🤭","🤫","🤔"),
+                listOf("😭","😢","🥺","😡","😎","🤩","🥳","❤️")
+            ).forEach { line -> rows.add(line.map { emoji -> Key(emoji, emoji) }) }
+            rows.add(listOf(Key("ABC", "EMOJI_BACK", 1.2f, true), Key("⌫", "DELETE", 1.2f, true), Key("Space", "SPACE", 3.6f, true)))
+        } else if (symbols) {
             val lines = if (symbolsPage == 0)
                 listOf("1234567890", "!@#$%^&*()", "-_=+[]{}<>", "?/;:,.~")
             else
@@ -84,14 +97,14 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             lines.forEach { line ->
                 rows.add(line.map { ch ->
                     val label = if (mode == Mode.ENGLISH && shifted) ch.uppercaseChar().toString() else ch.toString()
-                    Key(label, ch.toString())
+                    Key(label, ch.toString(), longPressValue = if (mode == Mode.ENGLISH) longPressFor(ch) else null)
                 })
             }
             rows.add(listOf(Key("⇧", "SHIFT", 1.2f, true), Key("☾", "MODE", 1.1f, true),
                 Key(if (mode == Mode.ENGLISH) "EN" else if (mode == Mode.BANGLA_PHONETIC) "বাংলা" else "অক্ষর", "MODE", 1.4f, true),
                 Key("⌫", "DELETE", 1.2f, true)))
             rows.add(listOf(Key("?123", "SYMBOLS", 1.1f, true), Key(",", ",", .7f),
-                Key("English / বাংলা", "SPACE", 4.6f, true), Key(".", ".", .7f), Key("↵", "ENTER", 1.1f, true)))
+                Key("English / বাংলা", "SPACE", 3.5f, true), Key(".", ".", .7f), Key("😊", "EMOJI", .8f, true), Key("↵", "ENTER", 1.1f, true)))
         }
         // Keep the hit-test list in exactly the same row/key order as the drawn keys.
         rows.forEach { flatKeys.addAll(it) }
@@ -140,18 +153,35 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                downKeyIndex = bounds.indexOfFirst { it.contains(event.x, event.y) }
+                downTime = SystemClock.elapsedRealtime()
+            }
             MotionEvent.ACTION_UP -> {
                 val index = bounds.indexOfFirst { it.contains(event.x, event.y) }
-                if (index >= 0) {
+                if (index >= 0 && index == downKeyIndex) {
                     if (keySound) playSoundEffect(SoundEffectConstants.CLICK)
                     performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-                    flatKeys.getOrNull(index)?.let { listener.onKey(it.value) }
+                    flatKeys.getOrNull(index)?.let { key ->
+                        val held = SystemClock.elapsedRealtime() - downTime >= 450L
+                        listener.onKey(if (held && key.longPressValue != null) "LONG:${key.longPressValue}" else key.value)
+                    }
                 }
+                downKeyIndex = -1
                 performClick()
             }
-            MotionEvent.ACTION_CANCEL -> return true
+            MotionEvent.ACTION_CANCEL -> { downKeyIndex = -1; return true }
         }
         return true
+    }
+
+    private fun longPressFor(ch: Char): String? = when (ch.lowercaseChar()) {
+        'q' -> "1"; 'w' -> "2"; 'e' -> "3"; 'r' -> "4"; 't' -> "5"
+        'y' -> "6"; 'u' -> "7"; 'i' -> "8"; 'o' -> "9"; 'p' -> "0"
+        'a' -> "@"; 's' -> "#"; 'd' -> "\$"; 'f' -> "%"; 'g' -> "&"
+        'h' -> "-"; 'j' -> "+"; 'k' -> "("; 'l' -> ")"
+        'z' -> "!"; 'x' -> "?"; 'c' -> ":"; 'v' -> ";"; 'b' -> "\\"; 'n' -> "'"; 'm' -> "\""
+        else -> null
     }
 
     override fun performClick(): Boolean { super.performClick(); return true }
