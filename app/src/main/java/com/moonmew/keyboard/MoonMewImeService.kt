@@ -12,8 +12,6 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
     private var composing = ""
     private var passwordField = false
 
-    // Never replace the user's app with Android's full-screen extract editor,
-    // including landscape mode. Keep the IME as a compact bottom keyboard.
     override fun onEvaluateFullscreenMode(): Boolean = false
 
     override fun onCreateInputView(): View {
@@ -40,37 +38,47 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
         currentInputConnection?.finishComposingText()
         if (passwordField) mode = KeyboardSurface.Mode.ENGLISH
         composing = ""
-        shifted = false
         keyboard?.refreshPreferences()
         keyboard?.setComposition("")
         keyboard?.setPreview("")
+        keyboard?.setSuggestions(emptyList())
         keyboard?.setShifted(false)
         keyboard?.setMode(mode)
     }
 
     override fun onKey(key: String) {
-        when (key) {
-            "SHIFT" -> { shifted = !shifted; keyboard?.setShifted(shifted) }
-            "SYMBOLS" -> { commitPending(""); keyboard?.setSymbols(true) }
-            "EMOJI" -> { commitPending(""); keyboard?.setEmoji(true) }
-            "EMOJI_BACK" -> keyboard?.setEmoji(false)
-            "SYMBOLS_MORE" -> keyboard?.nextSymbolsPage()
-            "ABC" -> keyboard?.setSymbols(false)
-            "DELETE" -> {
+        when {
+            key.startsWith("SUGGEST:") -> {
+                val chosen = key.removePrefix("SUGGEST:")
+                if (composing.isNotEmpty()) {
+                    currentInputConnection?.setComposingText(chosen, 1)
+                    currentInputConnection?.finishComposingText()
+                    currentInputConnection?.commitText(" ", 1)
+                    clearComposition()
+                }
+            }
+            key.startsWith("LONG:") -> {
+                commitPending("")
+                currentInputConnection?.commitText(key.removePrefix("LONG:"), 1)
+            }
+            key == "SHIFT" -> { shifted = !shifted; keyboard?.setShifted(shifted) }
+            key == "SYMBOLS" -> { commitPending(""); keyboard?.setSymbols(true) }
+            key == "EMOJI" -> { commitPending(""); keyboard?.setEmoji(true) }
+            key == "EMOJI_BACK" -> keyboard?.setEmoji(false)
+            key == "SYMBOLS_MORE" -> keyboard?.nextSymbolsPage()
+            key == "ABC" -> keyboard?.setSymbols(false)
+            key == "DELETE" -> {
                 if (composing.isNotEmpty()) {
                     composing = composing.dropLast(1)
-                    val converted = BanglaTransliterator.convert(composing)
-                    currentInputConnection?.setComposingText(converted, 1)
-                    keyboard?.setComposition(composing)
-                    keyboard?.setPreview(converted)
+                    updateComposition()
                 } else {
                     val connection = currentInputConnection
                     if (android.os.Build.VERSION.SDK_INT >= 24) connection?.deleteSurroundingTextInCodePoints(1, 0)
                     else connection?.deleteSurroundingText(1, 0)
                 }
             }
-            "SPACE" -> commitPending(" ")
-            "ENTER" -> {
+            key == "SPACE" -> commitPending(" ")
+            key == "ENTER" -> {
                 commitPending("")
                 val action = currentInputEditorInfo?.imeOptions?.and(EditorInfo.IME_MASK_ACTION)
                 val handled = action != null && action != EditorInfo.IME_ACTION_NONE &&
@@ -78,7 +86,7 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
                     currentInputConnection?.performEditorAction(action) == true
                 if (!handled) currentInputConnection?.commitText("\n", 1)
             }
-            "MODE" -> {
+            key == "MODE" -> {
                 commitPending("")
                 mode = when (mode) {
                     KeyboardSurface.Mode.ENGLISH -> if (passwordField) KeyboardSurface.Mode.ENGLISH else KeyboardSurface.Mode.BANGLA_PHONETIC
@@ -88,16 +96,10 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
                 keyboard?.setMode(mode)
             }
             else -> {
-                if (key.startsWith("LONG:")) {
-                    commitPending("")
-                    currentInputConnection?.commitText(key.removePrefix("LONG:"), 1)
-                } else if (mode == KeyboardSurface.Mode.BANGLA_PHONETIC && !passwordField && key.length == 1 && key[0].isLetter()) {
+                if (mode == KeyboardSurface.Mode.BANGLA_PHONETIC && !passwordField && key.length == 1 && key[0].isLetter()) {
                     composing += if (shifted) key.uppercase() else key.lowercase()
                     if (shifted) { shifted = false; keyboard?.setShifted(false) }
-                    val converted = BanglaTransliterator.convert(composing)
-                    currentInputConnection?.setComposingText(converted, 1)
-                    keyboard?.setComposition(composing)
-                    keyboard?.setPreview(converted)
+                    updateComposition()
                 } else {
                     commitPending("")
                     currentInputConnection?.commitText(if (shifted) key.uppercase() else key, 1)
@@ -107,14 +109,27 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
         }
     }
 
+    private fun updateComposition() {
+        val converted = BanglaTransliterator.convert(composing)
+        currentInputConnection?.setComposingText(converted, 1)
+        keyboard?.setComposition(composing)
+        keyboard?.setPreview(converted)
+        keyboard?.setSuggestions(BanglaWordSuggestions.suggest(composing))
+    }
+
+    private fun clearComposition() {
+        composing = ""
+        keyboard?.setComposition("")
+        keyboard?.setPreview("")
+        keyboard?.setSuggestions(emptyList())
+    }
+
     private fun commitPending(separator: String) {
         if (composing.isNotEmpty()) {
             val result = BanglaTransliterator.convert(composing).ifEmpty { composing }
             currentInputConnection?.setComposingText(result, 1)
             currentInputConnection?.finishComposingText()
-            composing = ""
-            keyboard?.setComposition("")
-            keyboard?.setPreview("")
+            clearComposition()
         }
         if (separator.isNotEmpty()) currentInputConnection?.commitText(separator, 1)
     }
