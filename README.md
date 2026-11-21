@@ -8,6 +8,7 @@ A lightweight, offline-first Android keyboard with English, Bangla phonetic, and
 - Starter Bangla phonetic typing with live composing preview.
 - Emoji panel with Unicode-safe emoji characters.
 - Long-press English letter keys for common number and symbol alternatives.
+- Experimental offline English swipe typing with local word suggestions (common-word dictionary; accuracy needs device testing).
 - Adjustable keyboard height (160–320 dp).
 - Light/dark keyboard themes and optional key sounds.
 - Shift, backspace, space, enter, and symbol layout.
@@ -35,6 +36,10 @@ On Samsung, the setting is usually **Settings → General management → Keyboar
 - Optional clipboard history is off by default and requires explicit opt-in in settings. When enabled, tapping 📋 reads the current plain-text clipboard and stores up to 5 items locally for up to 24 hours. Turning it off clears saved items. Do not copy passwords or sensitive information; clipboard history is disabled in password fields.
 - Password fields are detected from Android input types and switch to the plain English layout.
 - As with any third-party keyboard, avoid using it for highly sensitive input until you have reviewed and tested the app yourself.
+
+## Swipe typing limitations
+
+Swipe typing is an experimental English-only prototype using a small on-device word list and edit-distance matching. It asks you to choose a suggested word rather than silently inserting a guess. It is not a Gboard-level swipe engine and needs accuracy and performance testing on physical devices.
 
 ## Bangla typing limitations
 

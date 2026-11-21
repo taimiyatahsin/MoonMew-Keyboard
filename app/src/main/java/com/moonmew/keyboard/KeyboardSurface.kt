@@ -30,6 +30,12 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private var downKeyIndex = -1
     private var downSuggestionIndex = -1
     private var downTime = 0L
+    private val swipePath = StringBuilder()
+    private var lastSwipeKeyIndex = -1
+    private var swipeTravel = 0f
+    private var lastTouchX = 0f
+    private var lastTouchY = 0f
+    private var swipeDetected = false
     private var symbolsPage = 0
     private var composition = ""
     private var preview = ""
@@ -185,8 +191,31 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 downSuggestionIndex = suggestionBounds.indexOfFirst { it.contains(event.x, event.y) }
                 downKeyIndex = bounds.indexOfFirst { it.contains(event.x, event.y) }
                 downTime = SystemClock.elapsedRealtime()
+                swipePath.setLength(0)
+                lastSwipeKeyIndex = -1
+                swipeTravel = 0f
+                swipeDetected = false
+                lastTouchX = event.x
+                lastTouchY = event.y
+                if (mode == Mode.ENGLISH && !symbols && !emojiMode && !clipboardMode) appendSwipeKey(event.x, event.y)
+            }
+            MotionEvent.ACTION_MOVE -> {
+                val dx = event.x - lastTouchX
+                val dy = event.y - lastTouchY
+                swipeTravel += Math.hypot(dx.toDouble(), dy.toDouble()).toFloat()
+                lastTouchX = event.x
+                lastTouchY = event.y
+                if (swipeTravel >= dp(38f)) swipeDetected = true
+                if (swipeDetected && mode == Mode.ENGLISH && !symbols && !emojiMode && !clipboardMode) appendSwipeKey(event.x, event.y)
             }
             MotionEvent.ACTION_UP -> {
+                if (swipeDetected && swipePath.length >= 3) {
+                    listener.onKey("SWIPE:$swipePath")
+                    downKeyIndex = -1
+                    downSuggestionIndex = -1
+                    performClick()
+                    return true
+                }
                 val suggestionIndex = suggestionBounds.indexOfFirst { it.contains(event.x, event.y) }
                 if (suggestionIndex >= 0 && suggestionIndex == downSuggestionIndex) {
                     suggestions.getOrNull(suggestionIndex)?.let { listener.onKey("SUGGEST:$it") }
@@ -203,11 +232,23 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 }
                 downKeyIndex = -1
                 downSuggestionIndex = -1
+                swipePath.setLength(0)
+                swipeDetected = false
                 performClick()
             }
-            MotionEvent.ACTION_CANCEL -> { downKeyIndex = -1; downSuggestionIndex = -1; return true }
+            MotionEvent.ACTION_CANCEL -> { downKeyIndex = -1; downSuggestionIndex = -1; swipePath.setLength(0); swipeDetected = false; return true }
         }
         return true
+    }
+
+    private fun appendSwipeKey(x: Float, y: Float) {
+        val index = bounds.indexOfFirst { it.contains(x, y) }
+        if (index < 0 || index == lastSwipeKeyIndex) return
+        val value = flatKeys.getOrNull(index)?.value ?: return
+        if (value.length == 1 && value[0] in 'a'..'z') {
+            swipePath.append(value)
+            lastSwipeKeyIndex = index
+        }
     }
 
     private fun longPressFor(ch: Char): String? = when (ch.lowercaseChar()) {
