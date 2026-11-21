@@ -105,27 +105,32 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private fun backgroundTopColor() = when (themeId) {
         1 -> 0xFF172B43.toInt()
         2 -> 0xFF30213F.toInt()
-        else -> 0xFF352333.toInt()
+        3 -> 0xFFFFD9EC.toInt()
+        else -> 0xFFFFEAF1.toInt()
     }
     private fun backgroundBottomColor() = when (themeId) {
         1 -> 0xFF0B1422.toInt()
         2 -> 0xFF171020.toInt()
-        else -> 0xFF17121B.toInt()
+        3 -> 0xFFFFB9D9.toInt()
+        else -> 0xFFF7C9DA.toInt()
     }
     private fun accentColor() = when (themeId) {
         1 -> 0xFFB9DFFF.toInt()
         2 -> 0xFFE0C8FF.toInt()
-        else -> 0xFFFFC6D9.toInt()
+        3 -> 0xFFFFFFFF.toInt()
+        else -> 0xFFFF8FB9.toInt()
     }
     private fun keyColor(special: Boolean, modeKey: Boolean = false) = when (themeId) {
         1 -> if (modeKey) 0xFF416B8B.toInt() else if (special) 0xFF2B405B.toInt() else 0xFF1D2B3E.toInt()
         2 -> if (modeKey) 0xFF795A99.toInt() else if (special) 0xFF49365F.toInt() else 0xFF302541.toInt()
-        else -> if (modeKey) 0xFF85536D.toInt() else if (special) 0xFF503548.toInt() else 0xFF342633.toInt()
+        3 -> if (modeKey) 0xFFFF83BA.toInt() else if (special) 0xFFFFC4E0.toInt() else 0xFFFFF8FC.toInt()
+        else -> if (modeKey) 0xFFFFA9C8.toInt() else if (special) 0xFFFFD5E3.toInt() else 0xFFFFF8F5.toInt()
     }
     private fun keyTextColor() = when (themeId) {
         1 -> 0xFFEAF5FF.toInt()
         2 -> 0xFFF4EAFF.toInt()
-        else -> 0xFFFFF0F5.toInt()
+        3 -> 0xFF713B60.toInt()
+        else -> 0xFF805365.toInt()
     }
 
     fun setSwipeEnabled(value: Boolean) { swipeEnabled = value; if (!value) resetSwipeTracking() }
@@ -280,13 +285,25 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 val rect = RectF(x, top + previewHeight + rowIndex * rowHeight + dp(2f),
                     x + w, top + previewHeight + (rowIndex + 1) * rowHeight - dp(3f))
                 bounds.add(rect)
-                paint.color = keyColor(special = key.special, modeKey = key.value == "MODE")
-                canvas.drawRoundRect(rect, dp(10f), dp(10f), paint)
+                val radius = dp(if (themeId == 3) 13f else 10f)
+                // Soft offset edge gives the keycap a tactile, raised appearance.
+                paint.color = if (themeId == 1 || themeId == 2) 0x66000000 else 0x55B65F83
+                canvas.drawRoundRect(RectF(rect.left, rect.top + dp(2f), rect.right, rect.bottom + dp(2f)), radius, radius, paint)
+                val base = keyColor(special = key.special, modeKey = key.value == "MODE")
+                val topTint = if (themeId == 1 || themeId == 2) 0xFF64718A.toInt() else 0xFFFFFFFF.toInt()
+                paint.shader = android.graphics.LinearGradient(rect.left, rect.top, rect.left, rect.bottom,
+                    topTint, base, android.graphics.Shader.TileMode.CLAMP)
+                canvas.drawRoundRect(rect, radius, radius, paint)
+                paint.shader = null
+                // A small glossy highlight makes pink and glass keys feel like crafted keycaps.
+                paint.color = if (themeId == 1 || themeId == 2) 0x33FFFFFF else 0x99FFFFFF.toInt()
+                canvas.drawRoundRect(RectF(rect.left + dp(3f), rect.top + dp(2f), rect.right - dp(3f), rect.top + dp(5f)),
+                    dp(3f), dp(3f), paint)
                 paint.style = Paint.Style.STROKE
-                paint.strokeWidth = dp(0.7f)
+                paint.strokeWidth = dp(if (themeId == 3) 1.2f else 0.8f)
                 paint.color = accentColor()
-                paint.alpha = if (key.special) 82 else 48
-                canvas.drawRoundRect(rect, dp(10f), dp(10f), paint)
+                paint.alpha = if (key.special) 190 else 125
+                canvas.drawRoundRect(rect, radius, radius, paint)
                 paint.style = Paint.Style.FILL
                 paint.alpha = 255
                 paint.color = keyTextColor()
