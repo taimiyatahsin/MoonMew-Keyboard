@@ -60,7 +60,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         invalidate()
     }
 
-    fun setMode(value: Mode) { mode = value; symbols = false; symbolsPage = 0; rebuild(); invalidate() }
+    fun setMode(value: Mode) { mode = value; symbols = false; emojiMode = false; symbolsPage = 0; rebuild(); invalidate() }
     fun setShifted(value: Boolean) { shifted = value; rebuild(); invalidate() }
     fun setSymbols(value: Boolean) { symbols = value; emojiMode = false; symbolsPage = 0; rebuild(); invalidate() }
     fun setEmoji(value: Boolean) { emojiMode = value; symbols = false; rebuild(); invalidate() }
@@ -72,9 +72,12 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         rows.clear()
         flatKeys.clear()
         if (emojiMode) {
-            listOf("😀😃😄😁😆😅😂🤣", "😊😇🙂🙃😉😍🥰😘", "😋😛😜🤪🤗🤭🤫🤔", "😭😢🥺😡😎🤩🥳❤️").forEach { line ->
-                rows.add(line.toList().map { emoji -> Key(emoji.toString(), emoji.toString()) })
-            }
+            listOf(
+                listOf("😀","😃","😄","😁","😆","😅","😂","🤣"),
+                listOf("😊","😇","🙂","🙃","😉","😍","🥰","😘"),
+                listOf("😋","😛","😜","🤪","🤗","🤭","🤫","🤔"),
+                listOf("😭","😢","🥺","😡","😎","🤩","🥳","❤️")
+            ).forEach { line -> rows.add(line.map { emoji -> Key(emoji, emoji) }) }
             rows.add(listOf(Key("ABC", "EMOJI_BACK", 1.2f, true), Key("⌫", "DELETE", 1.2f, true), Key("Space", "SPACE", 3.6f, true)))
         } else if (symbols) {
             val lines = if (symbolsPage == 0)
