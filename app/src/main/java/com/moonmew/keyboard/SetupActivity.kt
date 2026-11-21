@@ -146,7 +146,8 @@ class SetupActivity : Activity() {
     }
 
     private fun refreshStatus() {
-        val component = ComponentName(this, MoonMewImeService::class.java).flattenToString()
+        // InputMethodInfo.id and DEFAULT_INPUT_METHOD use the short component form.
+        val component = ComponentName(this, MoonMewImeService::class.java).flattenToShortString()
         val manager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         val enabled = manager.enabledInputMethodList.any { it.id == component }
         val selected = Settings.Secure.getString(contentResolver, Settings.Secure.DEFAULT_INPUT_METHOD) == component
