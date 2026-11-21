@@ -12,8 +12,8 @@ class BackspaceDeletionTest {
         assertEquals(1, BackspaceDeletion.utf16UnitsBeforeCursor("abc"))
     }
 
-    @Test fun banglaCharacterDeletesOneUnit() {
-        assertEquals(1, BackspaceDeletion.utf16UnitsBeforeCursor("বাংলা"))
+    @Test fun banglaVowelSignStaysWithItsConsonant() {
+        assertEquals("লা".length, BackspaceDeletion.utf16UnitsBeforeCursor("বাংলা"))
     }
 
     @Test fun combiningCharacterDeletesAsOneUnit() {
