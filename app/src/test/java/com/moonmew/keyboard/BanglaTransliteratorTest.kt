@@ -19,6 +19,19 @@ class BanglaTransliteratorTest {
         assertEquals("আমি তুমি", BanglaTransliterator.convert("ami tumi"))
     }
 
+    @Test fun expandedEverydayDictionaryCoversCommonWords() {
+        assertEquals("আচ্ছা", BanglaTransliterator.convert("accha"))
+        assertEquals("ঠিক আছে", BanglaTransliterator.convert("thikache"))
+        assertEquals("সবাই", BanglaTransliterator.convert("sobai"))
+        assertEquals("সমস্যা", BanglaTransliterator.convert("somossa"))
+        assertEquals("প্রশ্ন", BanglaTransliterator.convert("proshno"))
+    }
+
+    @Test fun expandedWordsAppearInPrefixSuggestions() {
+        assertTrue(BanglaWordSuggestions.suggest("acc").contains("আচ্ছা"))
+        assertTrue(BanglaWordSuggestions.suggest("sho", 5).contains("শুধু"))
+    }
+
     @Test fun suggestionsAreLocalAndPrefixMatched() {
         val suggestions = BanglaWordSuggestions.suggest("am")
         assertEquals(listOf("আমি", "আমার", "আমরা"), suggestions)
