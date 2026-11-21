@@ -106,30 +106,35 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         1 -> 0xFF172B43.toInt()
         2 -> 0xFF30213F.toInt()
         3 -> 0xFFFFD9EC.toInt()
+        4 -> 0xFF24213D.toInt()
         else -> 0xFFFFEAF1.toInt()
     }
     private fun backgroundBottomColor() = when (themeId) {
         1 -> 0xFF0B1422.toInt()
         2 -> 0xFF171020.toInt()
         3 -> 0xFFFFB9D9.toInt()
+        4 -> 0xFF111329.toInt()
         else -> 0xFFF7C9DA.toInt()
     }
     private fun accentColor() = when (themeId) {
         1 -> 0xFFB9DFFF.toInt()
         2 -> 0xFFE0C8FF.toInt()
         3 -> 0xFFFFFFFF.toInt()
+        4 -> 0xFFB9A7FF.toInt()
         else -> 0xFFFF8FB9.toInt()
     }
     private fun keyColor(special: Boolean, modeKey: Boolean = false) = when (themeId) {
         1 -> if (modeKey) 0xFF416B8B.toInt() else if (special) 0xFF2B405B.toInt() else 0xFF1D2B3E.toInt()
         2 -> if (modeKey) 0xFF795A99.toInt() else if (special) 0xFF49365F.toInt() else 0xFF302541.toInt()
         3 -> if (modeKey) 0xFFFF83BA.toInt() else if (special) 0xFFFFC4E0.toInt() else 0xFFFFF8FC.toInt()
+        4 -> if (modeKey) 0xFF7866C8.toInt() else if (special) 0xFF39365D.toInt() else 0xFF292743.toInt()
         else -> if (modeKey) 0xFFFFA9C8.toInt() else if (special) 0xFFFFD5E3.toInt() else 0xFFFFF8F5.toInt()
     }
     private fun keyTextColor() = when (themeId) {
         1 -> 0xFFEAF5FF.toInt()
         2 -> 0xFFF4EAFF.toInt()
         3 -> 0xFF713B60.toInt()
+        4 -> 0xFFF0ECFF.toInt()
         else -> 0xFF805365.toInt()
     }
 
