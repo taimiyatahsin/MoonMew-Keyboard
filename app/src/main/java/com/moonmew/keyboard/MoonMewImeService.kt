@@ -52,6 +52,8 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
         when (key) {
             "SHIFT" -> { shifted = !shifted; keyboard?.setShifted(shifted) }
             "SYMBOLS" -> { commitPending(""); keyboard?.setSymbols(true) }
+            "EMOJI" -> { commitPending(""); keyboard?.setEmoji(true) }
+            "EMOJI_BACK" -> keyboard?.setEmoji(false)
             "SYMBOLS_MORE" -> keyboard?.nextSymbolsPage()
             "ABC" -> keyboard?.setSymbols(false)
             "DELETE" -> {
@@ -86,7 +88,10 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
                 keyboard?.setMode(mode)
             }
             else -> {
-                if (mode == KeyboardSurface.Mode.BANGLA_PHONETIC && !passwordField && key.length == 1 && key[0].isLetter()) {
+                if (key.startsWith("LONG:")) {
+                    commitPending("")
+                    currentInputConnection?.commitText(key.removePrefix("LONG:"), 1)
+                } else if (mode == KeyboardSurface.Mode.BANGLA_PHONETIC && !passwordField && key.length == 1 && key[0].isLetter()) {
                     composing += if (shifted) key.uppercase() else key.lowercase()
                     if (shifted) { shifted = false; keyboard?.setShifted(false) }
                     val converted = BanglaTransliterator.convert(composing)
