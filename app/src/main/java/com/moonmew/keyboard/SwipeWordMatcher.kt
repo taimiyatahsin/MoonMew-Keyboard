@@ -25,7 +25,7 @@ object SwipeWordMatcher {
         if (query.length < 3 || limit <= 0) return emptyList()
         return words.asSequence().map { it to distance(query, it) }
             .filter { (word, score) -> score <= maxOf(1, word.length / 3) }
-            .sortedWith(compareBy<Pair<String, Int>> { it.second }.thenBy { it.first.length })
+            .sortedBy { it.second }
             .take(limit).map { it.first }.toList()
     }
     private fun distance(a: String, b: String): Int {
