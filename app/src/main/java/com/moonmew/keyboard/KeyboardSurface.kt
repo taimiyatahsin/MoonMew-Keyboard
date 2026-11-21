@@ -201,9 +201,9 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             rows.add(listOf(Key("ABC", "EMOJI_BACK", 1.2f, true), Key("⌫", "DELETE", 1.2f, true), Key("Space", "SPACE", 3.6f, true)))
         } else if (symbols) {
             val lines = if (symbolsPage == 0)
-                listOf("1234567890", "!@#$%^&*()", "-_=+[]{}<>", "?/;:,.~")
+                listOf("1234567890", "!@#$%^&*()", "-_=+[]{}<>", "?/;:,.।")
             else
-                listOf("1234567890", "`£€¥₹¢©®", "±×÷√∞≠≤≥", "\\|_~^%#@")
+                listOf("1234567890", "`£€¥₹¢©®", "±×÷√∞≠≤≥", "ঁংঃ্৽ৎড়ঢ়য়")
             lines.forEach { line -> rows.add(line.map { ch ->
                     val alternate = when (ch) {
                         'ড' -> "ড়"; 'ঢ' -> "ঢ়"; 'য' -> "য়"; 'ত' -> "ৎ"
@@ -218,15 +218,22 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 Key(".", ".", .7f), Key("↵", "ENTER", 1.1f, true)))
         } else if (mode == Mode.BANGLA_DIRECT) {
             // Dedicated compact Direct Bangla layout: four character rows and one action row.
+            // Independent vowels stay on tap; their matching vowel signs are available on long press.
             val vowels = listOf(
-                "অ" to "া", "আ" to "ি", "ই" to "ী", "ঈ" to "ু", "উ" to "ূ",
-                "ঊ" to "ৃ", "এ" to "ে", "ঐ" to "ৈ", "ও" to "ো", "ঔ" to "ৌ"
+                "অ" to null, "আ" to "া", "ই" to "ি", "ঈ" to "ী", "উ" to "ু",
+                "ঊ" to "ূ", "ঋ" to "ৃ", "এ" to "ে", "ঐ" to "ৈ", "ও" to "ো", "ঔ" to "ৌ"
             )
             rows.add(vowels.map { (label, alternate) ->
                 Key(label, label, longPressValue = alternate)
             })
             listOf("কখগঘঙচছজঝঞ", "টঠডঢণতথদধন", "পফবভমযরলশষসহ").forEach { line ->
-                rows.add(line.map { ch -> Key(ch.toString(), ch.toString()) })
+                rows.add(line.map { ch ->
+                    val alternate = when (ch) {
+                        'ড' -> "ড়"; 'ঢ' -> "ঢ়"; 'য' -> "য়"; 'ত' -> "ৎ"
+                        else -> null
+                    }
+                    Key(ch.toString(), ch.toString(), longPressValue = alternate)
+                })
             }
             rows.add(listOf(
                 Key("?123", "SYMBOLS", 1.05f, true),
