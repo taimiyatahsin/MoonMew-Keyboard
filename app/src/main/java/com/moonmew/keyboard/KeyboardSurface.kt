@@ -153,7 +153,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                     Key(label, ch.toString(), longPressValue = if (mode == Mode.ENGLISH) longPressFor(ch) else null)
                 })
             }
-            rows.add(listOf(Key("⇧", "SHIFT", 1.2f, true), Key("☾", "MODE", 1.1f, true),
+            rows.add(listOf(Key("⇧", "SHIFT", 1.2f, true),
                 Key(if (mode == Mode.ENGLISH) "EN" else if (mode == Mode.BANGLA_PHONETIC) "বাংলা" else "অক্ষর", "MODE", 1.4f, true),
                 Key("⌫", "DELETE", 1.2f, true)))
             rows.add(listOf(Key("?123", "SYMBOLS", 1.1f, true), Key(",", ",", .7f),
