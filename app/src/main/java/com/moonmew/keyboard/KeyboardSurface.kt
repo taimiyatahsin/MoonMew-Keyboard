@@ -305,6 +305,12 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 lastTouchY = event.y
             }
             MotionEvent.ACTION_UP -> {
+                // Include the final segment in distance detection too. Some devices may
+                // deliver DOWN and UP without an intermediate MOVE for a very fast swipe.
+                val finalDx = event.x - lastTouchX
+                val finalDy = event.y - lastTouchY
+                swipeTravel += Math.hypot(finalDx.toDouble(), finalDy.toDouble()).toFloat()
+                if (swipeTravel >= dp(38f)) swipeDetected = true
                 // ACTION_UP may be the only event delivered inside the final key.
                 // Capture it before matching so the last letter is not silently lost.
                 if (swipeEnabled && swipeDetected && mode == Mode.ENGLISH && !symbols && !emojiMode && !clipboardMode) {
