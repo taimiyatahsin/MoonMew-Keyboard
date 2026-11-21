@@ -56,6 +56,8 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
         keyboard?.setComposition("")
         keyboard?.setPreview("")
         keyboard?.setSuggestions(emptyList())
+        // Keep the service's typing state in sync with the visual shift key.
+        shifted = false
         keyboard?.setShifted(false)
         keyboard?.setMode(mode)
         keyboard?.setPasswordField(passwordField)
