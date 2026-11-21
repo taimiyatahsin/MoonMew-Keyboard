@@ -36,6 +36,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private var lastTouchX = 0f
     private var lastTouchY = 0f
     private var swipeDetected = false
+    private var swipeEnabled = true
     private var symbolsPage = 0
     private var composition = ""
     private var preview = ""
@@ -71,6 +72,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         invalidate()
     }
 
+    fun setSwipeEnabled(value: Boolean) { swipeEnabled = value; if (!value) { swipePath.setLength(0); swipeDetected = false } }
     fun setMode(value: Mode) { mode = value; symbols = false; emojiMode = false; clipboardMode = false; symbolsPage = 0; rebuild(); invalidate() }
     fun setShifted(value: Boolean) { shifted = value; rebuild(); invalidate() }
     fun setSymbols(value: Boolean) { symbols = value; emojiMode = false; clipboardMode = false; symbolsPage = 0; rebuild(); invalidate() }
@@ -197,7 +199,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 swipeDetected = false
                 lastTouchX = event.x
                 lastTouchY = event.y
-                if (mode == Mode.ENGLISH && !symbols && !emojiMode && !clipboardMode) appendSwipeKey(event.x, event.y)
+                if (swipeEnabled && mode == Mode.ENGLISH && !symbols && !emojiMode && !clipboardMode) appendSwipeKey(event.x, event.y)
             }
             MotionEvent.ACTION_MOVE -> {
                 val dx = event.x - lastTouchX
@@ -206,10 +208,10 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 lastTouchX = event.x
                 lastTouchY = event.y
                 if (swipeTravel >= dp(38f)) swipeDetected = true
-                if (swipeDetected && mode == Mode.ENGLISH && !symbols && !emojiMode && !clipboardMode) appendSwipeKey(event.x, event.y)
+                if (swipeEnabled && swipeDetected && mode == Mode.ENGLISH && !symbols && !emojiMode && !clipboardMode) appendSwipeKey(event.x, event.y)
             }
             MotionEvent.ACTION_UP -> {
-                if (swipeDetected && swipePath.length >= 3) {
+                if (swipeEnabled && swipeDetected && swipePath.length >= 3) {
                     listener.onKey("SWIPE:$swipePath")
                     downKeyIndex = -1
                     downSuggestionIndex = -1
