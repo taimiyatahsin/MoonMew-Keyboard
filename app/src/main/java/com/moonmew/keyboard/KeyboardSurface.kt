@@ -125,13 +125,16 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     fun setClipboard(value: Boolean) { clipboardMode = value; emojiMode = false; symbols = false; rebuild(); invalidate() }
     fun setClipboardItems(value: List<String>) { clipboardItems = value.take(5); if (clipboardMode) rebuild(); invalidate() }
     fun nextSymbolsPage() { if (symbols) { symbolsPage = 1 - symbolsPage; rebuild(); invalidate() } }
-    fun setComposition(value: String) { composition = value; invalidate() }
+    fun setComposition(value: String) { composition = value; suggestionBounds.clear(); invalidate() }
     fun setPreview(value: String) { preview = value; invalidate() }
-    fun setSuggestions(value: List<String>) { suggestions = value.take(3); invalidate() }
+    fun setSuggestions(value: List<String>) { suggestions = value.take(3); suggestionBounds.clear(); invalidate() }
 
     private fun rebuild() {
         rows.clear()
         flatKeys.clear()
+        // Old hitboxes must not point at a newly rebuilt key list before the next draw.
+        bounds.clear()
+        suggestionBounds.clear()
         if (clipboardMode) {
             if (clipboardItems.isEmpty()) {
                 val enabled = preferences.getBoolean("clipboard_history_enabled", false)
