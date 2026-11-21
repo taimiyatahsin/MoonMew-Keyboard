@@ -20,6 +20,10 @@ class BackspaceDeletionTest {
         assertEquals(2, BackspaceDeletion.utf16UnitsBeforeCursor("e\u0301"))
     }
 
+    @Test fun banglaConjunctDeletesAsOneUnit() {
+        assertEquals("ক্ষ".length, BackspaceDeletion.utf16UnitsBeforeCursor("ক্ষ"))
+    }
+
     @Test fun emojiWithSkinToneDeletesAsOneUnit() {
         assertEquals("👍🏽".length, BackspaceDeletion.utf16UnitsBeforeCursor("👍🏽"))
     }
