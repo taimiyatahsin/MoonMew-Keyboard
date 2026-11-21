@@ -14,6 +14,7 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
     private var shifted = false
     private var composing = ""
     private var passwordField = false
+    private var swipePending = false
 
     override fun onEvaluateFullscreenMode(): Boolean = false
 
@@ -41,6 +42,7 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
         currentInputConnection?.finishComposingText()
         if (passwordField) mode = KeyboardSurface.Mode.ENGLISH
         composing = ""
+        swipePending = false
         keyboard?.refreshPreferences()
         keyboard?.setComposition("")
         keyboard?.setPreview("")
@@ -50,10 +52,33 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
     }
 
     override fun onKey(key: String) {
+        if (swipePending && !key.startsWith("SUGGEST:")) {
+            swipePending = false
+            keyboard?.setComposition("")
+            keyboard?.setPreview("")
+            keyboard?.setSuggestions(emptyList())
+        }
         when {
+            key.startsWith("SWIPE:") -> {
+                if (mode == KeyboardSurface.Mode.ENGLISH && !passwordField) {
+                    val candidates = SwipeWordMatcher.suggest(key.removePrefix("SWIPE:"))
+                    if (candidates.isNotEmpty()) {
+                        swipePending = true
+                        keyboard?.setComposition("Swipe: " + key.removePrefix("SWIPE:"))
+                        keyboard?.setPreview("Choose a word")
+                        keyboard?.setSuggestions(candidates)
+                    }
+                }
+            }
             key.startsWith("SUGGEST:") -> {
                 val chosen = key.removePrefix("SUGGEST:")
-                if (composing.isNotEmpty()) {
+                if (swipePending) {
+                    currentInputConnection?.commitText(chosen + " ", 1)
+                    swipePending = false
+                    keyboard?.setComposition("")
+                    keyboard?.setPreview("")
+                    keyboard?.setSuggestions(emptyList())
+                } else if (composing.isNotEmpty()) {
                     currentInputConnection?.setComposingText(chosen, 1)
                     currentInputConnection?.finishComposingText()
                     currentInputConnection?.commitText(" ", 1)
@@ -171,6 +196,7 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
     }
 
     private fun updateComposition() {
+        swipePending = false
         val converted = BanglaTransliterator.convert(composing)
         currentInputConnection?.setComposingText(converted, 1)
         keyboard?.setComposition(composing)
@@ -179,6 +205,7 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
     }
 
     private fun clearComposition() {
+        swipePending = false
         composing = ""
         keyboard?.setComposition("")
         keyboard?.setPreview("")
@@ -186,6 +213,12 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
     }
 
     private fun commitPending(separator: String) {
+        if (swipePending) {
+            swipePending = false
+            keyboard?.setComposition("")
+            keyboard?.setPreview("")
+            keyboard?.setSuggestions(emptyList())
+        }
         if (composing.isNotEmpty()) {
             val result = BanglaTransliterator.convert(composing).ifEmpty { composing }
             currentInputConnection?.setComposingText(result, 1)
