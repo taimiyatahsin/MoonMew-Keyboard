@@ -265,10 +265,16 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 if (swipeEnabled && swipeDetected && mode == Mode.ENGLISH && !symbols && !emojiMode && !clipboardMode) appendSwipeKey(event.x, event.y)
             }
             MotionEvent.ACTION_UP -> {
+                // ACTION_UP may be the only event delivered inside the final key.
+                // Capture it before matching so the last letter is not silently lost.
+                if (swipeEnabled && swipeDetected && mode == Mode.ENGLISH && !symbols && !emojiMode && !clipboardMode) {
+                    appendSwipeKey(event.x, event.y)
+                }
                 if (swipeEnabled && swipeDetected && swipePath.length >= 3) {
                     listener.onKey("SWIPE:$swipePath")
                     downKeyIndex = -1
                     downSuggestionIndex = -1
+                    resetSwipeTracking()
                     performClick()
                     return true
                 }
@@ -288,11 +294,15 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 }
                 downKeyIndex = -1
                 downSuggestionIndex = -1
-                swipePath.setLength(0)
-                swipeDetected = false
+                resetSwipeTracking()
                 performClick()
             }
-            MotionEvent.ACTION_CANCEL -> { downKeyIndex = -1; downSuggestionIndex = -1; swipePath.setLength(0); swipeDetected = false; return true }
+            MotionEvent.ACTION_CANCEL -> {
+                downKeyIndex = -1
+                downSuggestionIndex = -1
+                resetSwipeTracking()
+                return true
+            }
         }
         return true
     }
