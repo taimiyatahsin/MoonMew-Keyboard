@@ -81,14 +81,13 @@ class SetupActivity : Activity() {
                 override fun onStopTrackingTouch(seekBar: SeekBar?) {}
             })
         }
-        val roseSwitch = Switch(this).apply {
-            this.text = "Moonlit rose theme"
-            textSize = 15f
-            setTextColor(text)
-            isChecked = preferences.getBoolean("rose_theme", true)
-            setOnCheckedChangeListener { _, checked ->
-                preferences.edit().putBoolean("rose_theme", checked).apply()
-            }
+        val themeNames = listOf("Moonlit Rose", "Midnight Blue", "Lavender Dream")
+        lateinit var themeButton: Button
+        themeButton = actionButton("Theme: " + themeNames[preferences.getInt("theme_id", if (preferences.getBoolean("rose_theme", true)) 0 else 1).coerceIn(0, 2)] + "  ·  Tap to change") {
+            val current = preferences.getInt("theme_id", if (preferences.getBoolean("rose_theme", true)) 0 else 1).coerceIn(0, 2)
+            val next = (current + 1) % themeNames.size
+            preferences.edit().putInt("theme_id", next).putBoolean("rose_theme", next == 0).apply()
+            themeButton.text = "Theme: " + themeNames[next] + "  ·  Tap to change"
         }
         val soundSwitch = Switch(this).apply {
             this.text = "Key sounds"
@@ -129,7 +128,7 @@ class SetupActivity : Activity() {
         root.addView(settingsTitle, matchWithTop(dp(8)))
         root.addView(heightLabel, matchWithTop(dp(4)))
         root.addView(heightControl, match())
-        root.addView(roseSwitch, matchWithTop(dp(6)))
+        root.addView(themeButton, matchWithTop(dp(6)))
         root.addView(soundSwitch, matchWithTop(dp(6)))
         root.addView(clipboardSwitch, matchWithTop(dp(10)))
         root.addView(clipboardWarning, matchWithTop(dp(2)))
