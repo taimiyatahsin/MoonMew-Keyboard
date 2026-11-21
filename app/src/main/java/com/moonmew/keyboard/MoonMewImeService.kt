@@ -12,6 +12,10 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
     private var composing = ""
     private var passwordField = false
 
+    // Never replace the user's app with Android's full-screen extract editor,
+    // including landscape mode. Keep the IME as a compact bottom keyboard.
+    override fun onEvaluateFullscreenMode(): Boolean = false
+
     override fun onCreateInputView(): View {
         return KeyboardSurface(this, this).also {
             keyboard = it
@@ -22,6 +26,7 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
 
     override fun onStartInput(attribute: EditorInfo?, restarting: Boolean) {
         super.onStartInput(attribute, restarting)
+        setExtractViewShown(false)
         val type = attribute?.inputType ?: InputType.TYPE_CLASS_TEXT
         val cls = type and InputType.TYPE_MASK_CLASS
         val variation = type and InputType.TYPE_MASK_VARIATION
@@ -57,7 +62,9 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
                     keyboard?.setComposition(composing)
                     keyboard?.setPreview(converted)
                 } else {
-                    currentInputConnection?.deleteSurroundingText(1, 0)
+                    val connection = currentInputConnection
+                    if (android.os.Build.VERSION.SDK_INT >= 24) connection?.deleteSurroundingTextInCodePoints(1, 0)
+                    else connection?.deleteSurroundingText(1, 0)
                 }
             }
             "SPACE" -> commitPending(" ")
