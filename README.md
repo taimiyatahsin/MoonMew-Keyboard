@@ -10,7 +10,9 @@ A lightweight, offline-first Android keyboard with English, Bangla phonetic, and
 - Long-press English letter keys for common number and symbol alternatives.
 - Experimental offline English swipe typing with local word suggestions (common-word dictionary; accuracy needs device testing).
 - Adjustable keyboard height (160–320 dp).
-- Light/dark keyboard themes and optional key sounds.
+- Three moon-inspired color themes: Moonlit Rose, Midnight Blue, and Lavender Dream.
+- Soft gradient keyboard background, subtle stars/crescent moon details, and outlined rounded keys.
+- Optional key sounds.
 - Shift, backspace, space, enter, and symbol layout.
 - Optional clipboard history: off by default; explicit opt-in; reads plain text only when the 📋 key is tapped; stores up to 5 items locally for up to 24 hours; disabled in password fields.
 - Compact keyboard layout in portrait and landscape (device testing still required).
