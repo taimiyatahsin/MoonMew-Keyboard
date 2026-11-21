@@ -259,16 +259,20 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 val dx = event.x - lastTouchX
                 val dy = event.y - lastTouchY
                 swipeTravel += Math.hypot(dx.toDouble(), dy.toDouble()).toFloat()
+                if (swipeTravel >= dp(38f)) swipeDetected = true
+                // Track the path before the swipe threshold is crossed too; otherwise
+                // early letters can be lost when the gesture becomes a swipe later.
+                if (swipeEnabled && mode == Mode.ENGLISH && !symbols && !emojiMode && !clipboardMode) {
+                    appendSwipeSegment(lastTouchX, lastTouchY, event.x, event.y)
+                }
                 lastTouchX = event.x
                 lastTouchY = event.y
-                if (swipeTravel >= dp(38f)) swipeDetected = true
-                if (swipeEnabled && swipeDetected && mode == Mode.ENGLISH && !symbols && !emojiMode && !clipboardMode) appendSwipeKey(event.x, event.y)
             }
             MotionEvent.ACTION_UP -> {
                 // ACTION_UP may be the only event delivered inside the final key.
                 // Capture it before matching so the last letter is not silently lost.
                 if (swipeEnabled && swipeDetected && mode == Mode.ENGLISH && !symbols && !emojiMode && !clipboardMode) {
-                    appendSwipeKey(event.x, event.y)
+                    appendSwipeSegment(lastTouchX, lastTouchY, event.x, event.y)
                 }
                 if (swipeEnabled && swipeDetected && swipePath.length >= 3) {
                     listener.onKey("SWIPE:$swipePath")
@@ -305,6 +309,22 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             }
         }
         return true
+    }
+
+    /**
+     * Sample the full pointer segment so fast moves or sparse MotionEvent delivery
+     * do not skip letters between two reported touch positions.
+     */
+    private fun appendSwipeSegment(startX: Float, startY: Float, endX: Float, endY: Float) {
+        val dx = endX - startX
+        val dy = endY - startY
+        val distance = Math.hypot(dx.toDouble(), dy.toDouble()).toFloat()
+        val stepSize = dp(8f).coerceAtLeast(1f)
+        val steps = kotlin.math.ceil(distance / stepSize).toInt().coerceAtLeast(1)
+        for (step in 1..steps) {
+            val fraction = step.toFloat() / steps
+            appendSwipeKey(startX + dx * fraction, startY + dy * fraction)
+        }
     }
 
     private fun appendSwipeKey(x: Float, y: Float) {
