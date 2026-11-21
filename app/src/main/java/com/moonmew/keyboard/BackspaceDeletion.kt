@@ -19,9 +19,14 @@ internal object BackspaceDeletion {
         var start = codePoints.lastIndex
         val last = codePoints[start]
 
-        // A flag is a pair of regional-indicator code points.
-        if (isRegionalIndicator(last) && start > 0 && isRegionalIndicator(codePoints[start - 1])) {
-            start--
+        // Regional indicators are paired from the start of each consecutive run.
+        // If the run has odd length, its final indicator is a standalone grapheme;
+        // if even, the final two indicators form the last flag.
+        if (isRegionalIndicator(last)) {
+            var runStart = start
+            while (runStart > 0 && isRegionalIndicator(codePoints[runStart - 1])) runStart--
+            val runLength = start - runStart + 1
+            if (runLength % 2 == 0 && start > runStart) start--
             return textBeforeCursor.length - offsets[start]
         }
 
