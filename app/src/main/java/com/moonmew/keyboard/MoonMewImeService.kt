@@ -104,6 +104,9 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
             key == "EMOJI_BACK" -> keyboard?.setEmoji(false)
             key == "CLIP" -> openClipboardHistory()
             key == "CLIP_CLOSE" -> keyboard?.setClipboard(false)
+            // Informational/empty clipboard rows are not text keys. Never let their
+            // internal action IDs fall through to the printable-character handler.
+            key == "CLIP_NOTICE" || key == "CLIP_EMPTY" -> Unit
             key == "CLIP_CLEAR" -> { saveClipboardItems(emptyList()); keyboard?.setClipboardItems(emptyList()) }
             key.startsWith("CLIP_ITEM:") -> {
                 val index = key.substringAfter(":").toIntOrNull() ?: -1
