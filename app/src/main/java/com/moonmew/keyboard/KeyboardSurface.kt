@@ -68,8 +68,15 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     fun refreshPreferences() {
         themeId = preferences.getInt("theme_id", if (preferences.getBoolean("rose_theme", true)) 0 else 1).coerceIn(0, 2)
         keySound = preferences.getBoolean("key_sound", false)
+        // If clipboard history was switched off in Settings while this IME was alive,
+        // immediately discard the in-memory panel contents as well as the saved data.
+        if (!preferences.getBoolean("clipboard_history_enabled", false)) {
+            clipboardItems = emptyList()
+            clipboardMode = false
+        }
         setBackgroundColor(backgroundBottomColor())
         applyHeight()
+        rebuild()
         invalidate()
     }
 
@@ -100,7 +107,16 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     }
 
     fun setSwipeEnabled(value: Boolean) { swipeEnabled = value; if (!value) resetSwipeTracking() }
-    fun setPasswordField(value: Boolean) { passwordField = value; rebuild(); invalidate() }
+    fun setPasswordField(value: Boolean) {
+        passwordField = value
+        if (value) {
+            // A panel opened in the previous field must never survive into a password field.
+            clipboardMode = false
+            clipboardItems = emptyList()
+        }
+        rebuild()
+        invalidate()
+    }
     private fun resetSwipeTracking() { swipePath.setLength(0); lastSwipeKeyIndex = -1; swipeTravel = 0f; swipeDetected = false }
     fun setMode(value: Mode) { mode = value; symbols = false; emojiMode = false; clipboardMode = false; symbolsPage = 0; rebuild(); invalidate() }
     fun setShifted(value: Boolean) { shifted = value; rebuild(); invalidate() }
