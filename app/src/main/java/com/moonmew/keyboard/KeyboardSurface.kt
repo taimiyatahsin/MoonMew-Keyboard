@@ -204,7 +204,13 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 listOf("1234567890", "!@#$%^&*()", "-_=+[]{}<>", "?/;:,.~")
             else
                 listOf("1234567890", "`£€¥₹¢©®", "±×÷√∞≠≤≥", "\\|_~^%#@")
-            lines.forEach { line -> rows.add(line.map { ch -> Key(ch.toString(), ch.toString()) }) }
+            lines.forEach { line -> rows.add(line.map { ch ->
+                    val alternate = when (ch) {
+                        'ড' -> "ড়"; 'ঢ' -> "ঢ়"; 'য' -> "য়"; 'ত' -> "ৎ"
+                        else -> null
+                    }
+                    Key(ch.toString(), ch.toString(), longPressValue = alternate)
+                }) }
             rows.add(listOf(Key("ABC", "ABC", 1.2f, true), Key("☾", "MODE", 1.1f, true),
                 Key("⌫", "DELETE", 1.2f, true)))
             rows.add(listOf(Key(if (symbolsPage == 0) "=\\<" else "123", "SYMBOLS_MORE", 1.1f, true),
