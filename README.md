@@ -10,13 +10,11 @@ A native Android `InputMethodService` keyboard with English, English-letter Bang
 
 ## Download the Android APK from GitHub
 
-1. Open the [MoonMew Actions page](https://github.com/taimiyatahsin0-png/MoonMew-Keyboard/actions).
-2. Open the newest run named **Add MoonMew keyboard foundation** (or the latest successful build).
-3. Make sure the run says **Success**.
-4. Scroll to **Artifacts** and click **moonmew-debug-apk** to download the ZIP.
-5. Extract the ZIP. Inside it, find `app-debug.apk`; transfer it to your Android phone and install it.
+**Easy download:** open [MoonMew Latest Test APK](https://github.com/taimiyatahsin0-png/MoonMew-Keyboard/releases/tag/latest), scroll to **Assets**, and tap `app-debug.apk`. No ZIP extraction is needed. The release is updated automatically after each successful development-branch build.
 
-GitHub Actions artifacts are temporary and expire after the retention period shown by GitHub. A future signed public release can provide a longer-lived direct APK download. This debug APK is for testing and may show Android's normal warning for apps installed outside the Play Store.
+If the release is not available yet, open the [MoonMew Actions page](https://github.com/taimiyatahsin0-png/MoonMew-Keyboard/actions), select the latest successful run, then download `moonmew-debug-apk` under **Artifacts** and extract `app-debug.apk` from the ZIP.
+
+This is a debug/test APK, not a signed Play Store release. Android may show its normal warning for apps installed outside the Play Store.
 
 ## Build locally with Android Studio
 
