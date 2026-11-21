@@ -95,6 +95,7 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
             key == "EMOJI_BACK" -> keyboard?.setEmoji(false)
             key == "CLIP" -> openClipboardHistory()
             key == "CLIP_CLOSE" -> keyboard?.setClipboard(false)
+            key == "CLIP_NOTICE" || key == "CLIP_EMPTY" -> keyboard?.setClipboard(false)
             key == "CLIP_CLEAR" -> { saveClipboardItems(emptyList()); keyboard?.setClipboardItems(emptyList()) }
             key.startsWith("CLIP_ITEM:") -> {
                 val index = key.substringAfter(":").toIntOrNull() ?: -1
@@ -183,7 +184,26 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
     }
 
     private fun saveClipboardItems(items: List<String>) {
-        saveClipboardEntries(items.take(5).map { System.currentTimeMillis() to it })
+        if (items.isEmpty()) {
+            saveClipboardEntries(emptyList())
+            return
+        }
+        val cutoff = System.currentTimeMillis() - 24L * 60L * 60L * 1000L
+        val existingTimes = mutableMapOf<String, Long>()
+        try {
+            val raw = getSharedPreferences("moonmew_settings", MODE_PRIVATE)
+                .getString("clipboard_history", "[]") ?: "[]"
+            val array = JSONArray(raw)
+            for (i in 0 until array.length()) {
+                val entry = array.getJSONObject(i)
+                val timestamp = entry.optLong("time", 0L)
+                val value = entry.optString("text", "")
+                if (timestamp >= cutoff && value.isNotBlank()) existingTimes[value] = timestamp
+            }
+        } catch (_: Exception) { }
+        val now = System.currentTimeMillis()
+        val entries = items.distinct().take(5).map { value -> (existingTimes[value] ?: now) to value }
+        saveClipboardEntries(entries)
     }
 
     private fun saveClipboardEntries(entries: List<Pair<Long, String>>) {
