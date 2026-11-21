@@ -230,7 +230,9 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 paint.alpha = 255
                 paint.color = keyTextColor()
                 paint.textAlign = Paint.Align.CENTER
-                paint.textSize = if (key.label.length > 5) dp(11f) else dp(18f)
+                val preferredTextSize = if (key.label.length > 5) dp(11f) else dp(18f)
+                // Fit labels inside short rows (especially 7-row Bangla Direct at 160dp).
+                paint.textSize = minOf(preferredTextSize, rect.height() * 0.68f)
                 paint.typeface = keyTypeface
                 val baseline = rect.centerY() - (paint.ascent() + paint.descent()) / 2
                 canvas.drawText(key.label, rect.centerX(), baseline, paint)
