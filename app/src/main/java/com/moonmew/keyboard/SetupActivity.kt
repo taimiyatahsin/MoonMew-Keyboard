@@ -69,13 +69,13 @@ class SetupActivity : Activity() {
             setPadding(0, dp(10), 0, dp(2))
         }
         val heightControl = SeekBar(this).apply {
-            max = 160
-            progress = (preferences.getInt("keyboard_height_dp", 240).coerceIn(160, 320) - 160)
-            heightLabel.text = "Keyboard height: ${progress + 160} dp"
+            max = 140
+            progress = (preferences.getInt("keyboard_height_dp", 210).coerceIn(140, 280) - 140)
+            heightLabel.text = "Keyboard height: ${progress + 140} dp"
             setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                    heightLabel.text = "Keyboard height: ${progress + 160} dp"
-                    if (fromUser) preferences.edit().putInt("keyboard_height_dp", progress + 160).apply()
+                    heightLabel.text = "Keyboard height: ${progress + 140} dp"
+                    if (fromUser) preferences.edit().putInt("keyboard_height_dp", progress + 140).apply()
                 }
                 override fun onStartTrackingTouch(seekBar: SeekBar?) {}
                 override fun onStopTrackingTouch(seekBar: SeekBar?) {}
