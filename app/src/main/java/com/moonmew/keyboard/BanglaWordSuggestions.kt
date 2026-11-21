@@ -34,7 +34,36 @@ object BanglaWordSuggestions {
         "jibon" to "জীবন", "shopno" to "স্বপ্ন", "mon" to "মন", "bhalobasha" to "ভালোবাসা",
         "valobasha" to "ভালোবাসা", "khushi" to "খুশি", "dukkho" to "দুঃখ",
         "allah" to "আল্লাহ", "inshallah" to "ইনশাআল্লাহ", "mashallah" to "মাশাআল্লাহ",
-        "shukriya" to "শুকরিয়া", "assalamu" to "আসসালামু", "alaikum" to "আলাইকুম"
+        "shukriya" to "শুকরিয়া", "assalamu" to "আসসালামু", "alaikum" to "আলাইকুম",
+        // Everyday words and short conversational phrases.
+        "tahole" to "তাহলে", "taholei" to "তাহলেই", "kintu" to "কিন্তু",
+        "karon" to "কারণ", "jodi" to "যদি", "jokhon" to "যখন", "tokhon" to "তখন",
+        "ekhono" to "এখনো", "shob" to "সব", "sob" to "সব", "shobai" to "সবাই",
+        "sobai" to "সবাই", "kichu" to "কিছু", "kichui" to "কিছুই", "shudhu" to "শুধু",
+        "sudhu" to "শুধু", "aro" to "আরও", "abar" to "আবার", "ekhonkar" to "এখনকার",
+        "theke" to "থেকে", "jonno" to "জন্য", "sathe" to "সাথে", "shonge" to "সঙ্গে",
+        "moddhe" to "মধ্যে", "upore" to "উপরে", "niche" to "নিচে", "samne" to "সামনে",
+        "pore" to "পরে", "age" to "আগে", "ekhane" to "এখানে", "sekhan" to "সেখানে",
+        "kothao" to "কোথাও", "kono" to "কোনো", "kon" to "কোন", "keu" to "কেউ",
+        "kichuna" to "কিছু না", "hoyni" to "হয়নি", "hoyto" to "হয়তো", "mone" to "মনে",
+        "monehoy" to "মনে হয়", "janish" to "জানিস", "jani" to "জানি", "janina" to "জানি না",
+        "bujhlam" to "বুঝলাম", "bujhina" to "বুঝি না", "bol" to "বল", "bolo" to "বলো",
+        "bolchi" to "বলছি", "bolbo" to "বলব", "shono" to "শোনো", "dekho" to "দেখো",
+        "dekhi" to "দেখি", "dekha" to "দেখা", "likho" to "লিখো", "likhbo" to "লিখব",
+        "pori" to "পড়ি", "khabo" to "খাব", "kheyechi" to "খেয়েছি", "pani" to "পানি",
+        "khabar" to "খাবার", "bhat" to "ভাত", "ghum" to "ঘুম", "ghumabo" to "ঘুমাব",
+        "shundor" to "সুন্দর", "valo" to "ভালো", "darun" to "দারুণ", "moja" to "মজা",
+        "thik" to "ঠিক", "thikache" to "ঠিক আছে", "thikase" to "ঠিক আছে",
+        "hmm" to "হুম", "accha" to "আচ্ছা", "acha" to "আচ্ছা", "oboshshoi" to "অবশ্যই",
+        "dorkar" to "দরকার", "lagbe" to "লাগবে", "lagena" to "লাগে না", "parbe" to "পারবে",
+        "parbo" to "পারব", "korben" to "করবেন", "korbenna" to "করবেন না",
+        "asbo" to "আসব", "ashbo" to "আসব", "gechi" to "গেছি", "gecho" to "গেছ",
+        "bosh" to "বস", "bosho" to "বসো", "uthho" to "উঠো", "cholo" to "চলো",
+        "chol" to "চল", "dhire" to "ধীরে", "taratari" to "তাড়াতাড়ি",
+        "ekshathe" to "একসাথে", "ekshathei" to "একসাথেই", "shotti" to "সত্যি",
+        "shotyi" to "সত্যি", "mittha" to "মিথ্যা", "shomossa" to "সমস্যা",
+        "somossa" to "সমস্যা", "shomadhan" to "সমাধান", "uttor" to "উত্তর",
+        "proshno" to "প্রশ্ন", "bikel" to "বিকেল", "rat" to "রাত", "shokal" to "সকাল"
     )
 
     /** Exact dictionary lookup, tolerant of accidental surrounding spaces/case. */
