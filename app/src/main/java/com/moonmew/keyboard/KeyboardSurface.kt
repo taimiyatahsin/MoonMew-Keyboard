@@ -6,6 +6,8 @@ import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.view.MotionEvent
+import android.view.SoundEffectConstants
+import android.view.HapticFeedbackConstants
 import android.view.View
 
 class KeyboardSurface(context: Context, private val listener: Listener) : View(context) {
@@ -13,6 +15,9 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     enum class Mode { ENGLISH, BANGLA_PHONETIC, BANGLA_DIRECT }
     private data class Key(val label: String, val value: String, val weight: Float = 1f, val special: Boolean = false)
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val preferences = context.getSharedPreferences("moonmew_settings", Context.MODE_PRIVATE)
+    private var roseTheme = preferences.getBoolean("rose_theme", true)
+    private var keySound = preferences.getBoolean("key_sound", false)
     private var mode = Mode.ENGLISH
     private var shifted = false
     private var symbols = false
@@ -21,7 +26,13 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private val bounds = mutableListOf<RectF>()
     private val rows = mutableListOf<List<Key>>()
 
-    init { setBackgroundColor(0xFF17151B.toInt()); rebuild() }
+    init { isClickable = true; setBackgroundColor(if (roseTheme) 0xFF17151B.toInt() else 0xFF101820.toInt()); rebuild() }
+    fun refreshPreferences() {
+        roseTheme = preferences.getBoolean("rose_theme", true)
+        keySound = preferences.getBoolean("key_sound", false)
+        setBackgroundColor(if (roseTheme) 0xFF17151B.toInt() else 0xFF101820.toInt())
+        invalidate()
+    }
     fun setMode(value: Mode) { mode = value; symbols = false; rebuild(); invalidate() }
     fun setShifted(value: Boolean) { shifted = value; rebuild(); invalidate() }
     fun setSymbols(value: Boolean) { symbols = value; rebuild(); invalidate() }
@@ -79,9 +90,13 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 val rect = RectF(x, top + previewHeight + rowIndex * rowHeight + dp(2f),
                     x + w, top + previewHeight + (rowIndex + 1) * rowHeight - dp(3f))
                 bounds.add(rect)
-                paint.color = if (key.value == "MODE") 0xFF563B50.toInt() else if (key.special) 0xFF39333F.toInt() else 0xFF29252E.toInt()
+                paint.color = if (roseTheme) {
+                    if (key.value == "MODE") 0xFF704356.toInt() else if (key.special) 0xFF49303E.toInt() else 0xFF30232E.toInt()
+                } else {
+                    if (key.value == "MODE") 0xFF36566A.toInt() else if (key.special) 0xFF293D4B.toInt() else 0xFF202D38.toInt()
+                }
                 canvas.drawRoundRect(rect, dp(8f), dp(8f), paint)
-                paint.color = 0xFFF6EDF1.toInt()
+                paint.color = if (roseTheme) 0xFFFFF0F5.toInt() else 0xFFEAF4FA.toInt()
                 paint.textAlign = Paint.Align.CENTER
                 paint.textSize = if (key.label.length > 5) dp(11f) else dp(18f)
                 paint.typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
@@ -94,6 +109,8 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (event.action == MotionEvent.ACTION_UP) {
+            if (keySound) playSoundEffect(SoundEffectConstants.CLICK)
+            performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
             val index = bounds.indexOfFirst { it.contains(event.x, event.y) }
             if (index >= 0) rows.flatten().getOrNull(index)?.let { listener.onKey(it.value) }
             performClick()
