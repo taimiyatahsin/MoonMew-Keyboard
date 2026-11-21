@@ -5,10 +5,11 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Typeface
+import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.SoundEffectConstants
-import android.view.HapticFeedbackConstants
 import android.view.View
+import android.view.ViewGroup
 
 class KeyboardSurface(context: Context, private val listener: Listener) : View(context) {
     interface Listener { fun onKey(key: String) }
@@ -32,13 +33,26 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     init {
         isClickable = true
         setBackgroundColor(if (roseTheme) 0xFF17151B.toInt() else 0xFF101820.toInt())
+        applyHeight()
         rebuild()
+    }
+
+    private fun applyHeight() {
+        val heightDp = preferences.getInt("keyboard_height_dp", 240).coerceIn(160, 320)
+        val params = layoutParams ?: ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, dp(heightDp.toFloat()).toInt()
+        )
+        params.height = dp(heightDp.toFloat()).toInt()
+        params.width = ViewGroup.LayoutParams.MATCH_PARENT
+        layoutParams = params
+        requestLayout()
     }
 
     fun refreshPreferences() {
         roseTheme = preferences.getBoolean("rose_theme", true)
         keySound = preferences.getBoolean("key_sound", false)
         setBackgroundColor(if (roseTheme) 0xFF17151B.toInt() else 0xFF101820.toInt())
+        applyHeight()
         invalidate()
     }
 
@@ -82,6 +96,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             Key("⌫", "DELETE", 1.2f, true)))
         rows.add(listOf(Key("?123", "SYMBOLS", 1.1f, true), Key(",", ",", .7f),
             Key("English / বাংলা", "SPACE", 4.6f, true), Key(".", ".", .7f), Key("↵", "ENTER", 1.1f, true)))
+        rows.forEach { flatKeys.addAll(it) }
     }
 
     override fun onDraw(canvas: Canvas) {
