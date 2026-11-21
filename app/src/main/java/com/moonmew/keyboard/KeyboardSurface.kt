@@ -260,7 +260,9 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 val dy = event.y - lastTouchY
                 swipeTravel += Math.hypot(dx.toDouble(), dy.toDouble()).toFloat()
                 if (swipeTravel >= dp(38f)) swipeDetected = true
-                if (swipeEnabled && swipeDetected && mode == Mode.ENGLISH && !symbols && !emojiMode && !clipboardMode) {
+                // Track the path before the swipe threshold is crossed too; otherwise
+                // early letters can be lost when the gesture becomes a swipe later.
+                if (swipeEnabled && mode == Mode.ENGLISH && !symbols && !emojiMode && !clipboardMode) {
                     appendSwipeSegment(lastTouchX, lastTouchY, event.x, event.y)
                 }
                 lastTouchX = event.x
