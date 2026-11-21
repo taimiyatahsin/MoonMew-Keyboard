@@ -109,10 +109,12 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (event.action == MotionEvent.ACTION_UP) {
-            if (keySound) playSoundEffect(SoundEffectConstants.CLICK)
-            performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
             val index = bounds.indexOfFirst { it.contains(event.x, event.y) }
-            if (index >= 0) rows.flatten().getOrNull(index)?.let { listener.onKey(it.value) }
+            if (index >= 0) {
+                if (keySound) playSoundEffect(SoundEffectConstants.CLICK)
+                performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                rows.flatten().getOrNull(index)?.let { listener.onKey(it.value) }
+            }
             performClick()
             return true
         }
