@@ -204,12 +204,39 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 listOf("1234567890", "!@#$%^&*()", "-_=+[]{}<>", "?/;:,.~")
             else
                 listOf("1234567890", "`£€¥₹¢©®", "±×÷√∞≠≤≥", "\\|_~^%#@")
-            lines.forEach { line -> rows.add(line.map { ch -> Key(ch.toString(), ch.toString()) }) }
+            lines.forEach { line -> rows.add(line.map { ch ->
+                    val alternate = when (ch) {
+                        'ড' -> "ড়"; 'ঢ' -> "ঢ়"; 'য' -> "য়"; 'ত' -> "ৎ"
+                        else -> null
+                    }
+                    Key(ch.toString(), ch.toString(), longPressValue = alternate)
+                }) }
             rows.add(listOf(Key("ABC", "ABC", 1.2f, true), Key("☾", "MODE", 1.1f, true),
                 Key("⌫", "DELETE", 1.2f, true)))
             rows.add(listOf(Key(if (symbolsPage == 0) "=\\<" else "123", "SYMBOLS_MORE", 1.1f, true),
                 Key(",", ",", .7f), Key("English / বাংলা", "SPACE", 4.6f, true),
                 Key(".", ".", .7f), Key("↵", "ENTER", 1.1f, true)))
+        } else if (mode == Mode.BANGLA_DIRECT) {
+            // Dedicated compact Direct Bangla layout: four character rows and one action row.
+            val vowels = listOf(
+                "অ" to "া", "আ" to "ি", "ই" to "ী", "ঈ" to "ু", "উ" to "ূ",
+                "ঊ" to "ৃ", "এ" to "ে", "ঐ" to "ৈ", "ও" to "ো", "ঔ" to "ৌ"
+            )
+            rows.add(vowels.map { (label, alternate) ->
+                Key(label, label, longPressValue = alternate)
+            })
+            listOf("কখগঘঙচছজঝঞ", "টঠডঢণতথদধন", "পফবভমযরলশষসহ").forEach { line ->
+                rows.add(line.map { ch -> Key(ch.toString(), ch.toString()) })
+            }
+            rows.add(listOf(
+                Key("?123", "SYMBOLS", 1.05f, true),
+                Key("EN", "MODE", 0.9f, true),
+                Key("ং", "ং", 0.8f),
+                Key("ঃ", "ঃ", 0.8f),
+                Key("⌫", "DELETE", 1.0f, true),
+                Key("Space", "SPACE", 2.8f, true),
+                Key("↵", "ENTER", 0.9f, true)
+            ))
         } else {
             // A compact action strip keeps common tools reachable without adding
             // another full-height row of oversized controls.
@@ -217,32 +244,21 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 add(Key("☾ MoonMew", "TOOLBAR_BRAND", 2.1f, true))
                 add(Key("😊", "EMOJI", 0.9f, true))
                 if (!passwordField) add(Key("📋", "CLIP", 0.9f, true))
-                add(Key(if (mode == Mode.ENGLISH) "বাংলা" else "EN", "MODE", 1.1f, true))
+                add(Key("বাংলা", "MODE", 1.1f, true))
             })
-            val lines = if (mode == Mode.BANGLA_DIRECT)
-                listOf(
-                    "অআইঈউঊএঐওঔ",
-                    "কখগঘঙচছজঝঞ",
-                    "টঠডঢণতথদধন",
-                    "পফবভমযরলশষসহ",
-                    "ািীুূৃেৈোৌংঃ্"
-                )
-            else listOf("qwertyuiop", "asdfghjkl", "zxcvbnm")
-            lines.forEach { line ->
+            listOf("qwertyuiop", "asdfghjkl", "zxcvbnm").forEach { line ->
                 rows.add(line.map { ch ->
-                    val label = if (mode == Mode.ENGLISH && shifted) ch.uppercaseChar().toString() else ch.toString()
-                    Key(label, ch.toString(), longPressValue = if (mode == Mode.ENGLISH) longPressFor(ch) else null)
+                    val label = if (shifted) ch.uppercaseChar().toString() else ch.toString()
+                    Key(label, ch.toString(), longPressValue = longPressFor(ch))
                 })
             }
             rows.add(listOf(Key("⇧", "SHIFT", 1.2f, true),
-                Key(if (mode == Mode.ENGLISH) "EN" else if (mode == Mode.BANGLA_PHONETIC) "বাংলা" else "অক্ষর", "MODE", 1.4f, true),
-                Key("⌫", "DELETE", 1.2f, true)))
-            val bottomRow = mutableListOf(
+                Key("EN", "MODE", 1.4f, true), Key("⌫", "DELETE", 1.2f, true)))
+            rows.add(listOf(
                 Key("?123", "SYMBOLS", 1.1f, true), Key(",", ",", .7f),
                 Key("English / বাংলা", "SPACE", 4.2f, true),
                 Key(".", ".", .7f), Key("↵", "ENTER", 1.1f, true)
-            )
-            rows.add(bottomRow)
+            ))
         }
         rows.forEach { flatKeys.addAll(it) }
     }
