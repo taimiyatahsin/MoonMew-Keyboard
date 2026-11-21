@@ -25,6 +25,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private var shifted = false
     private var symbols = false
     private var emojiMode = false
+    private var emojiCategory = 0
     private var clipboardMode = false
     private var clipboardItems = emptyList<String>()
     private var downKeyIndex = -1
@@ -153,7 +154,8 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     fun setMode(value: Mode) { mode = value; symbols = false; emojiMode = false; clipboardMode = false; symbolsPage = 0; rebuild(); invalidate() }
     fun setShifted(value: Boolean) { shifted = value; rebuild(); invalidate() }
     fun setSymbols(value: Boolean) { symbols = value; emojiMode = false; clipboardMode = false; symbolsPage = 0; rebuild(); invalidate() }
-    fun setEmoji(value: Boolean) { emojiMode = value; clipboardMode = false; symbols = false; rebuild(); invalidate() }
+    fun setEmoji(value: Boolean) { emojiMode = value; if (value) emojiCategory = 0; clipboardMode = false; symbols = false; rebuild(); invalidate() }
+    fun setEmojiCategory(value: Int) { emojiCategory = value.coerceIn(0, 4); if (emojiMode) { rebuild(); invalidate() } }
     fun setClipboard(value: Boolean) { clipboardMode = value; emojiMode = false; symbols = false; rebuild(); invalidate() }
     fun setClipboardItems(value: List<String>) { clipboardItems = value.take(5); if (clipboardMode) rebuild(); invalidate() }
     fun nextSymbolsPage() { if (symbols) { symbolsPage = 1 - symbolsPage; rebuild(); invalidate() } }
@@ -183,12 +185,19 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 rows.add(listOf(Key("Clear history", "CLIP_CLEAR", 1.4f, true), Key("ABC", "CLIP_CLOSE", 1f, true)))
             }
         } else if (emojiMode) {
-            listOf(
-                listOf("😀","😃","😄","😁","😆","😅","😂","🤣"),
-                listOf("😊","😇","🙂","🙃","😉","😍","🥰","😘"),
-                listOf("😋","😛","😜","🤪","🤗","🤭","🤫","🤔"),
-                listOf("😭","😢","🥺","😡","😎","🤩","🥳","❤️")
-            ).forEach { line -> rows.add(line.map { emoji -> Key(emoji, emoji) }) }
+            val categories = listOf(
+                listOf("😀","😃","😄","😁","😆","😅","😂","🤣","😊","😇","🙂","🙃","😉","😍","🥰","😘","😋","😛","😜","🤪","🤗","🤭","🤫","🤔","😭","😢","🥺","😡","😎","🤩","🥳","❤️"),
+                listOf("🐱","🐈","🐶","🐻","🐼","🐰","🦊","🐸","🐥","🦋","🐝","🐞","🌸","🌷","🌹","🌻","🌙","⭐","✨","☁️","🌈","🍀","🌼","🌺"),
+                listOf("🍓","🍒","🍑","🍉","🍇","🍋","🍍","🥑","🍕","🍔","🍟","🍩","🍪","🧁","🍰","🍫","🍬","🍭","🧋","☕","🥐","🍜","🍣","🍦"),
+                listOf("⚽","🏀","🏈","🎾","🎮","🎧","🎀","🎁","💎","👑","👜","💄","📚","✏️","📷","💻","🚗","✈️","🏡","🎉","🎈","🪄","🧸","🪷"),
+                listOf("❤️","🩷","🧡","💛","💚","🩵","💙","💜","🤍","🖤","🤎","💔","💕","💞","💓","💗","💖","💘","💝","❣️","✨","⭐","🌟","💫")
+            )
+            rows.add(listOf("☺", "🌿", "🍓", "🎀", "♡").mapIndexed { index, label ->
+                Key(label, "EMOJI_CAT:$index", 1f, true)
+            })
+            categories[emojiCategory].chunked(8).forEach { line ->
+                rows.add(line.map { emoji -> Key(emoji, emoji) })
+            }
             rows.add(listOf(Key("ABC", "EMOJI_BACK", 1.2f, true), Key("⌫", "DELETE", 1.2f, true), Key("Space", "SPACE", 3.6f, true)))
         } else if (symbols) {
             val lines = if (symbolsPage == 0)

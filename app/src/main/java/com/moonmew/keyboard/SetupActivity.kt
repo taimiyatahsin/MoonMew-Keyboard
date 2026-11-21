@@ -15,6 +15,7 @@ import android.widget.SeekBar
 import android.widget.ScrollView
 import android.widget.Switch
 import android.widget.TextView
+import android.graphics.drawable.GradientDrawable
 
 class SetupActivity : Activity() {
     private lateinit var status: TextView
@@ -81,6 +82,27 @@ class SetupActivity : Activity() {
                 override fun onStopTrackingTouch(seekBar: SeekBar?) {}
             })
         }
+        val themePreview = TextView(this).apply {
+            textSize = 21f
+            gravity = Gravity.CENTER
+            setPadding(dp(14), dp(16), dp(14), dp(16))
+        }
+        fun updateThemePreview(id: Int) {
+            val colors = listOf(
+                0xFFFFD5E2.toInt() to 0xFFFFF8F5.toInt(),
+                0xFF416B8B.toInt() to 0xFF1D2B3E.toInt(),
+                0xFF795A99.toInt() to 0xFF302541.toInt(),
+                0xFFFF83BA.toInt() to 0xFFFFF8FC.toInt(),
+                0xFF7866C8.toInt() to 0xFF292743.toInt()
+            )
+            val pair = colors[id.coerceIn(0, 4)]
+            themePreview.text = "Aa   ♥   ☾   ✦"
+            themePreview.setTextColor(if (id == 0 || id == 3) 0xFF713B60.toInt() else 0xFFF8F2FF.toInt())
+            themePreview.background = GradientDrawable(
+                GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(pair.first, pair.second)
+            ).apply { cornerRadius = dp(18).toFloat() }
+        }
+        updateThemePreview(preferences.getInt("theme_id", 0).coerceIn(0, 4))
         val themeNames = listOf("Pink Plush", "Moonlit Blue", "Lavender Dream", "Glass Candy", "Moon Garden")
         lateinit var themeButton: Button
         themeButton = actionButton("Theme: " + themeNames[preferences.getInt("theme_id", if (preferences.getBoolean("rose_theme", true)) 0 else 1).coerceIn(0, 4)] + "  ·  Tap to change") {
@@ -88,6 +110,7 @@ class SetupActivity : Activity() {
             val next = (current + 1) % themeNames.size
             preferences.edit().putInt("theme_id", next).putBoolean("rose_theme", next == 0).apply()
             themeButton.text = "Theme: " + themeNames[next] + "  ·  Tap to change"
+            updateThemePreview(next)
         }
         val soundSwitch = Switch(this).apply {
             this.text = "Key sounds"
@@ -129,6 +152,7 @@ class SetupActivity : Activity() {
         root.addView(heightLabel, matchWithTop(dp(4)))
         root.addView(heightControl, match())
         root.addView(themeButton, matchWithTop(dp(6)))
+        root.addView(themePreview, matchWithTop(dp(8)))
         root.addView(soundSwitch, matchWithTop(dp(6)))
         root.addView(clipboardSwitch, matchWithTop(dp(10)))
         root.addView(clipboardWarning, matchWithTop(dp(2)))
