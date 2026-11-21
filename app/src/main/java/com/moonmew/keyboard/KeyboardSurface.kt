@@ -88,7 +88,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     }
 
     fun refreshPreferences() {
-        themeId = preferences.getInt("theme_id", if (preferences.getBoolean("rose_theme", true)) 0 else 1).coerceIn(0, 2)
+        themeId = preferences.getInt("theme_id", if (preferences.getBoolean("rose_theme", true)) 0 else 1).coerceIn(0, 3)
         keySound = preferences.getBoolean("key_sound", false)
         // If clipboard history was switched off in Settings while this IME was alive,
         // immediately discard the in-memory panel contents as well as the saved data.
