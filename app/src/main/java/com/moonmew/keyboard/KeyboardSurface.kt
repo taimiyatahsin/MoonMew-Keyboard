@@ -15,19 +15,31 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private var mode = Mode.ENGLISH
     private var shifted = false
+    private var symbols = false
     private var composition = ""
     private var preview = ""
     private val bounds = mutableListOf<RectF>()
     private val rows = mutableListOf<List<Key>>()
 
     init { setBackgroundColor(0xFF17151B.toInt()); rebuild() }
-    fun setMode(value: Mode) { mode = value; rebuild(); invalidate() }
+    fun setMode(value: Mode) { mode = value; symbols = false; rebuild(); invalidate() }
     fun setShifted(value: Boolean) { shifted = value; rebuild(); invalidate() }
+    fun setSymbols(value: Boolean) { symbols = value; rebuild(); invalidate() }
     fun setComposition(value: String) { composition = value; invalidate() }
     fun setPreview(value: String) { preview = value; invalidate() }
 
     private fun rebuild() {
         rows.clear()
+        if (symbols) {
+            listOf("1234567890", "@#$%&-*+()", "!?/\':;\u005c\u005c\u005c"_").forEach { line ->
+                rows.add(line.map { ch -> Key(ch.toString(), ch.toString()) })
+            }
+            rows.add(listOf(Key("ABC", "ABC", 1.2f, true), Key("☾", "MODE", 1.1f, true),
+                Key("⌫", "DELETE", 1.2f, true)))
+            rows.add(listOf(Key("=\\<", "SYMBOLS_MORE", 1.1f, true), Key(",", ",", .7f),
+                Key("English / বাংলা", "SPACE", 4.6f, true), Key(".", "." , .7f), Key("↵", "ENTER", 1.1f, true)))
+            return
+        }
         val lines = if (mode == Mode.BANGLA_DIRECT)
             listOf("ািীুূৃেৈোৌংঃ", "কখগঘঙচছজঝঞ", "টঠডঢণতথদধন", "পফবভমযরলশষসহ")
         else listOf("qwertyuiop", "asdfghjkl", "zxcvbnm")
@@ -40,8 +52,8 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         rows.add(listOf(Key("⇧","SHIFT",1.2f,true), Key("☾","MODE",1.1f,true),
             Key(if (mode == Mode.ENGLISH) "EN" else if (mode == Mode.BANGLA_PHONETIC) "বাংলা" else "অক্ষর","MODE",1.4f,true),
             Key("⌫","DELETE",1.2f,true)))
-        rows.add(listOf(Key("?123","?",1.1f,true), Key(", ",",",.7f),
-            Key("English / বাংলা","SPACE",4.6f,true), Key(".",".",.7f), Key("↵","ENTER",1.1f,true)))
+        rows.add(listOf(Key("?123","SYMBOLS",1.1f,true), Key(",",",",.7f),
+            Key("English / বাংলা","SPACE",4.6f,true), Key(".", ".",.7f), Key("↵","ENTER",1.1f,true)))
     }
 
     override fun onDraw(canvas: Canvas) {
