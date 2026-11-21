@@ -32,7 +32,7 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
             (cls == InputType.TYPE_CLASS_NUMBER &&
                 variation == InputType.TYPE_NUMBER_VARIATION_PASSWORD)
 
-        // Secure fields always use the plain English layout, regardless of the previous mode.
+        currentInputConnection?.finishComposingText()
         if (passwordField) mode = KeyboardSurface.Mode.ENGLISH
         composing = ""
         shifted = false
@@ -52,9 +52,13 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
             "DELETE" -> {
                 if (composing.isNotEmpty()) {
                     composing = composing.dropLast(1)
+                    val converted = BanglaTransliterator.convert(composing)
+                    currentInputConnection?.setComposingText(converted, 1)
                     keyboard?.setComposition(composing)
-                    keyboard?.setPreview(BanglaTransliterator.convert(composing))
-                } else currentInputConnection?.deleteSurroundingText(1, 0)
+                    keyboard?.setPreview(converted)
+                } else {
+                    currentInputConnection?.deleteSurroundingText(1, 0)
+                }
             }
             "SPACE" -> commitPending(" ")
             "ENTER" -> {
@@ -78,8 +82,10 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
                 if (mode == KeyboardSurface.Mode.BANGLA_PHONETIC && !passwordField && key.length == 1 && key[0].isLetter()) {
                     composing += if (shifted) key.uppercase() else key.lowercase()
                     if (shifted) { shifted = false; keyboard?.setShifted(false) }
+                    val converted = BanglaTransliterator.convert(composing)
+                    currentInputConnection?.setComposingText(converted, 1)
                     keyboard?.setComposition(composing)
-                    keyboard?.setPreview(BanglaTransliterator.convert(composing))
+                    keyboard?.setPreview(converted)
                 } else {
                     commitPending("")
                     currentInputConnection?.commitText(if (shifted) key.uppercase() else key, 1)
@@ -91,8 +97,9 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
 
     private fun commitPending(separator: String) {
         if (composing.isNotEmpty()) {
-            val result = BanglaTransliterator.convert(composing)
-            currentInputConnection?.commitText(if (result.isNotEmpty()) result else composing, 1)
+            val result = BanglaTransliterator.convert(composing).ifEmpty { composing }
+            currentInputConnection?.setComposingText(result, 1)
+            currentInputConnection?.finishComposingText()
             composing = ""
             keyboard?.setComposition("")
             keyboard?.setPreview("")
@@ -102,6 +109,7 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
 
     override fun onFinishInput() {
         commitPending("")
+        currentInputConnection?.finishComposingText()
         super.onFinishInput()
     }
 }
