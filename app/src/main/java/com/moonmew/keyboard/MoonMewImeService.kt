@@ -1,0 +1,97 @@
+package com.moonmew.keyboard
+
+import android.inputmethodservice.InputMethodService
+import android.text.InputType
+import android.view.View
+import android.view.inputmethod.EditorInfo
+
+class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
+    private var keyboard: KeyboardSurface? = null
+    private var mode = KeyboardSurface.Mode.ENGLISH
+    private var shifted = false
+    private var composing = ""
+    private var passwordField = false
+
+    override fun onCreateInputView(): View {
+        return KeyboardSurface(this, this).also {
+            keyboard = it
+            it.setMode(mode)
+            it.setShifted(shifted)
+        }
+    }
+
+    override fun onStartInput(attribute: EditorInfo?, restarting: Boolean) {
+        super.onStartInput(attribute, restarting)
+        val type = attribute?.inputType ?: InputType.TYPE_CLASS_TEXT
+        val cls = type and InputType.TYPE_MASK_CLASS
+        val variation = type and InputType.TYPE_MASK_VARIATION
+        passwordField = (cls == InputType.TYPE_CLASS_TEXT &&
+            variation in setOf(InputType.TYPE_TEXT_VARIATION_PASSWORD,
+                InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD,
+                InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD)) ||
+            (cls == InputType.TYPE_CLASS_NUMBER && variation == InputType.TYPE_NUMBER_VARIATION_PASSWORD)
+        composing = ""
+        keyboard?.setComposition("")
+        if (passwordField && mode == KeyboardSurface.Mode.BANGLA_PHONETIC) {
+            mode = KeyboardSurface.Mode.ENGLISH
+            keyboard?.setMode(mode)
+        }
+    }
+
+    override fun onKey(key: String) {
+        when (key) {
+            "SHIFT" -> { shifted = !shifted; keyboard?.setShifted(shifted) }
+            "DELETE" -> {
+                if (composing.isNotEmpty()) {
+                    composing = composing.dropLast(1)
+                    keyboard?.setComposition(composing)
+                } else currentInputConnection?.deleteSurroundingText(1, 0)
+            }
+            "SPACE" -> commitPending(" ")
+            "ENTER" -> {
+                commitPending("")
+                val action = currentInputEditorInfo?.imeOptions?.and(EditorInfo.IME_MASK_ACTION)
+                val handled = action != null && action != EditorInfo.IME_ACTION_NONE &&
+                    action != EditorInfo.IME_ACTION_UNSPECIFIED &&
+                    currentInputConnection?.performEditorAction(action) == true
+                if (!handled) currentInputConnection?.commitText("\n", 1)
+            }
+            "MODE" -> {
+                commitPending("")
+                mode = when (mode) {
+                    KeyboardSurface.Mode.ENGLISH -> if (passwordField) KeyboardSurface.Mode.ENGLISH else KeyboardSurface.Mode.BANGLA_PHONETIC
+                    KeyboardSurface.Mode.BANGLA_PHONETIC -> KeyboardSurface.Mode.BANGLA_DIRECT
+                    KeyboardSurface.Mode.BANGLA_DIRECT -> KeyboardSurface.Mode.ENGLISH
+                }
+                keyboard?.setMode(mode)
+            }
+            else -> {
+                if (mode == KeyboardSurface.Mode.BANGLA_PHONETIC && !passwordField && key.length == 1 && key[0].isLetter()) {
+                    composing += key.lowercase()
+                    keyboard?.setComposition(composing)
+                    keyboard?.setPreview(BanglaTransliterator.convert(composing))
+                } else {
+                    commitPending("")
+                    currentInputConnection?.commitText(if (shifted) key.uppercase() else key, 1)
+                    if (shifted) { shifted = false; keyboard?.setShifted(false) }
+                }
+            }
+        }
+    }
+
+    private fun commitPending(separator: String) {
+        if (composing.isNotEmpty()) {
+            val result = BanglaTransliterator.convert(composing)
+            currentInputConnection?.commitText(if (result.isNotEmpty()) result else composing, 1)
+            composing = ""
+            keyboard?.setComposition("")
+            keyboard?.setPreview("")
+        }
+        if (separator.isNotEmpty()) currentInputConnection?.commitText(separator, 1)
+    }
+
+    override fun onFinishInput() {
+        commitPending("")
+        super.onFinishInput()
+    }
+}
