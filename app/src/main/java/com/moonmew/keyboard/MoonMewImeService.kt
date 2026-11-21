@@ -26,27 +26,34 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
         val cls = type and InputType.TYPE_MASK_CLASS
         val variation = type and InputType.TYPE_MASK_VARIATION
         passwordField = (cls == InputType.TYPE_CLASS_TEXT &&
-            variation in setOf(InputType.TYPE_TEXT_VARIATION_PASSWORD,
-                InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD,
-                InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD)) ||
-            (cls == InputType.TYPE_CLASS_NUMBER && variation == InputType.TYPE_NUMBER_VARIATION_PASSWORD)
+            (variation == InputType.TYPE_TEXT_VARIATION_PASSWORD ||
+                variation == InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD ||
+                variation == InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD)) ||
+            (cls == InputType.TYPE_CLASS_NUMBER &&
+                variation == InputType.TYPE_NUMBER_VARIATION_PASSWORD)
+
+        // Secure fields always use the plain English layout, regardless of the previous mode.
+        if (passwordField) mode = KeyboardSurface.Mode.ENGLISH
         composing = ""
+        shifted = false
+        keyboard?.refreshPreferences()
         keyboard?.setComposition("")
-        if (passwordField && mode == KeyboardSurface.Mode.BANGLA_PHONETIC) {
-            mode = KeyboardSurface.Mode.ENGLISH
-            keyboard?.setMode(mode)
-        }
+        keyboard?.setPreview("")
+        keyboard?.setShifted(false)
+        keyboard?.setMode(mode)
     }
 
     override fun onKey(key: String) {
         when (key) {
             "SHIFT" -> { shifted = !shifted; keyboard?.setShifted(shifted) }
             "SYMBOLS" -> { commitPending(""); keyboard?.setSymbols(true) }
+            "SYMBOLS_MORE" -> keyboard?.nextSymbolsPage()
             "ABC" -> keyboard?.setSymbols(false)
             "DELETE" -> {
                 if (composing.isNotEmpty()) {
                     composing = composing.dropLast(1)
                     keyboard?.setComposition(composing)
+                    keyboard?.setPreview(BanglaTransliterator.convert(composing))
                 } else currentInputConnection?.deleteSurroundingText(1, 0)
             }
             "SPACE" -> commitPending(" ")
@@ -69,7 +76,8 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
             }
             else -> {
                 if (mode == KeyboardSurface.Mode.BANGLA_PHONETIC && !passwordField && key.length == 1 && key[0].isLetter()) {
-                    composing += key.lowercase()
+                    composing += if (shifted) key.uppercase() else key.lowercase()
+                    if (shifted) { shifted = false; keyboard?.setShifted(false) }
                     keyboard?.setComposition(composing)
                     keyboard?.setPreview(BanglaTransliterator.convert(composing))
                 } else {
