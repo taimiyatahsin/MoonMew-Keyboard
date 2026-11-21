@@ -98,6 +98,22 @@ class SetupActivity : Activity() {
                 preferences.edit().putBoolean("key_sound", checked).apply()
             }
         }
+        val clipboardSwitch = Switch(this).apply {
+            this.text = "Optional clipboard history (local only)"
+            textSize = 14f
+            setTextColor(text)
+            isChecked = preferences.getBoolean("clipboard_history_enabled", false)
+            setOnCheckedChangeListener { _, checked ->
+                preferences.edit().putBoolean("clipboard_history_enabled", checked).apply()
+                if (!checked) preferences.edit().remove("clipboard_history").apply()
+            }
+        }
+        val clipboardWarning = TextView(this).apply {
+            this.text = "Off by default. When enabled, tapping 📋 reads plain text from the clipboard and keeps up to 5 items on this device for up to 24 hours. Avoid copying passwords or private information. Disabled in password fields."
+            textSize = 12f
+            setTextColor(muted)
+            setPadding(0, dp(6), 0, dp(4))
+        }
         val note = TextView(this).apply {
             this.text = "Sound is off by default. Haptic feedback follows your device settings."
             textSize = 12f
@@ -114,6 +130,8 @@ class SetupActivity : Activity() {
         root.addView(heightControl, match())
         root.addView(roseSwitch, matchWithTop(dp(6)))
         root.addView(soundSwitch, matchWithTop(dp(6)))
+        root.addView(clipboardSwitch, matchWithTop(dp(10)))
+        root.addView(clipboardWarning, matchWithTop(dp(2)))
         root.addView(note, matchWithTop(dp(4)))
         setContentView(root)
         refreshStatus()
