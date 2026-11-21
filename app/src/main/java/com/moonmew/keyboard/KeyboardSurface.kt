@@ -104,7 +104,13 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 Key(".", ".", .7f), Key("↵", "ENTER", 1.1f, true)))
         } else {
             val lines = if (mode == Mode.BANGLA_DIRECT)
-                listOf("ািীুূৃেৈোৌংঃ", "কখগঘঙচছজঝঞ", "টঠডঢণতথদধন", "পফবভমযরলশষসহ")
+                listOf(
+                    "অআইঈউঊএঐওঔ",
+                    "কখগঘঙচছজঝঞ",
+                    "টঠডঢণতথদধন",
+                    "পফবভমযরলশষসহ",
+                    "ািীুূৃেৈোৌংঃ্"
+                )
             else listOf("qwertyuiop", "asdfghjkl", "zxcvbnm")
             lines.forEach { line ->
                 rows.add(line.map { ch ->
