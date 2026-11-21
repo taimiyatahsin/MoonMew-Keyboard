@@ -41,6 +41,8 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
     override fun onKey(key: String) {
         when (key) {
             "SHIFT" -> { shifted = !shifted; keyboard?.setShifted(shifted) }
+            "SYMBOLS" -> { commitPending(""); keyboard?.setSymbols(true) }
+            "ABC" -> keyboard?.setSymbols(false)
             "DELETE" -> {
                 if (composing.isNotEmpty()) {
                     composing = composing.dropLast(1)
