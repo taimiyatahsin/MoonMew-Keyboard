@@ -11,6 +11,7 @@ import android.view.Gravity
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.LinearLayout
+import android.widget.SeekBar
 import android.widget.Switch
 import android.widget.TextView
 
@@ -61,6 +62,24 @@ class SetupActivity : Activity() {
             setTextColor(rose)
             setPadding(0, dp(28), 0, dp(8))
         }
+        val heightLabel = TextView(this).apply {
+            textSize = 14f
+            setTextColor(text)
+            setPadding(0, dp(10), 0, dp(2))
+        }
+        val heightControl = SeekBar(this).apply {
+            max = 160
+            progress = (preferences.getInt("keyboard_height_dp", 240).coerceIn(160, 320) - 160)
+            heightLabel.text = "Keyboard height: ${progress + 160} dp"
+            setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                    heightLabel.text = "Keyboard height: ${progress + 160} dp"
+                    if (fromUser) preferences.edit().putInt("keyboard_height_dp", progress + 160).apply()
+                }
+                override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+                override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+            })
+        }
         val roseSwitch = Switch(this).apply {
             this.text = "Moonlit rose theme"
             textSize = 15f
@@ -91,6 +110,8 @@ class SetupActivity : Activity() {
         root.addView(enable, matchWithTop(dp(8)))
         root.addView(choose, matchWithTop(dp(10)))
         root.addView(settingsTitle, matchWithTop(dp(8)))
+        root.addView(heightLabel, matchWithTop(dp(4)))
+        root.addView(heightControl, match())
         root.addView(roseSwitch, matchWithTop(dp(6)))
         root.addView(soundSwitch, matchWithTop(dp(6)))
         root.addView(note, matchWithTop(dp(4)))
