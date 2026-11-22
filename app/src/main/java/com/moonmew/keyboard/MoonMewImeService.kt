@@ -16,6 +16,9 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
     private var passwordField = false
     private var modeBeforePassword = KeyboardSurface.Mode.ENGLISH
     private var swipePending = false
+    private var numericInput = false
+    private var numericDecimal = false
+    private var numericSigned = false
 
     override fun onEvaluateFullscreenMode(): Boolean = false
 
@@ -27,6 +30,7 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
             it.setShifted(shifted)
             it.setPasswordField(passwordField)
             it.setSwipeEnabled(!passwordField)
+            it.setNumericInput(numericInput, numericDecimal, numericSigned)
         }
     }
 
@@ -37,6 +41,9 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
         val type = attribute?.inputType ?: InputType.TYPE_CLASS_TEXT
         val cls = type and InputType.TYPE_MASK_CLASS
         val variation = type and InputType.TYPE_MASK_VARIATION
+        numericInput = cls == InputType.TYPE_CLASS_NUMBER
+        numericDecimal = numericInput && (type and InputType.TYPE_NUMBER_FLAG_DECIMAL) != 0
+        numericSigned = numericInput && (type and InputType.TYPE_NUMBER_FLAG_SIGNED) != 0
         passwordField = (cls == InputType.TYPE_CLASS_TEXT &&
             (variation == InputType.TYPE_TEXT_VARIATION_PASSWORD ||
                 variation == InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD ||
@@ -64,6 +71,7 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
         keyboard?.setEditorAction(attribute?.imeOptions ?: 0)
         keyboard?.setPasswordField(passwordField)
         keyboard?.setSwipeEnabled(!passwordField)
+        keyboard?.setNumericInput(numericInput, numericDecimal, numericSigned)
     }
 
     override fun onKey(key: String) {

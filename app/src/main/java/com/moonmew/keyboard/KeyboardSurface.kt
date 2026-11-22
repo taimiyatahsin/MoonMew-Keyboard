@@ -40,6 +40,9 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private var swipeDetected = false
     private var swipeEnabled = true
     private var passwordField = false
+    private var numericInput = false
+    private var numericDecimal = false
+    private var numericSigned = false
     private var editorAction = EditorInfo.IME_ACTION_NONE
     private var symbolsPage = 0
     private var composition = ""
@@ -142,6 +145,13 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     }
 
     fun setSwipeEnabled(value: Boolean) { swipeEnabled = value; if (!value) resetSwipeTracking() }
+    fun setNumericInput(value: Boolean, decimal: Boolean = false, signed: Boolean = false) {
+        numericInput = value
+        numericDecimal = decimal
+        numericSigned = signed
+        rebuild()
+        invalidate()
+    }
     fun setEditorAction(value: Int) { editorAction = EditorActionPolicy.keyboardAction(value); rebuild(); invalidate() }
     private fun editorActionLabel(): String = when (editorAction) {
         EditorInfo.IME_ACTION_GO -> "Go"
@@ -211,6 +221,19 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 rows.add(line.map { emoji -> Key(emoji, emoji) })
             }
             rows.add(listOf(Key("ABC", "EMOJI_BACK", 1.2f, true), Key("⌫", "DELETE", 1.2f, true), Key("Space", "SPACE", 3.6f, true)))
+        } else if (numericInput && !symbols) {
+            // Dedicated number-pad layout for numeric editors; avoids showing a
+            // full QWERTY board where only numeric input is accepted.
+            listOf("123", "456", "789").forEach { line ->
+                rows.add(line.map { ch -> Key(ch.toString(), ch.toString()) })
+            }
+            val bottom = mutableListOf<Key>()
+            if (numericSigned) bottom.add(Key("−", "-", 1f, true))
+            bottom.add(Key("0", "0"))
+            if (numericDecimal) bottom.add(Key(".", "."))
+            bottom.add(Key("⌫", "DELETE", 1.2f, true))
+            bottom.add(Key(editorActionLabel(), "ENTER", 1.2f, true))
+            rows.add(bottom)
         } else if (symbols) {
             val lines = if (symbolsPage == 0)
                 listOf("1234567890", "!@#$%^&*()", "-_=+[]{}<>", "?/;:,.।")
