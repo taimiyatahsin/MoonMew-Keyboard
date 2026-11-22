@@ -64,4 +64,21 @@ class BackspaceDeletionTest {
         assertEquals(1, BackspaceDeletion.utf16UnitsBeforeCursor(""))
         assertEquals(1, BackspaceDeletion.utf16UnitsBeforeCursor(null))
     }
+
+
+    @Test fun chainedBanglaConjunctWithMultipleJoinersDeletesAsOneUnit() {
+        val conjunct = "\\u0995\\u09CD\\u200D\\u09B7\\u09CD\\u200D\\u09AE"
+        assertEquals(conjunct.length, BackspaceDeletion.utf16UnitsBeforeCursor(conjunct))
+    }
+
+    @Test fun emojiKeycapSequenceDeletesAsOneUnit() {
+        val keycap = "1\\uFE0F\\u20E3"
+        assertEquals(keycap.length, BackspaceDeletion.utf16UnitsBeforeCursor(keycap))
+    }
+
+    @Test fun emojiWithTagCharactersDeletesAsOneUnit() {
+        val flag = "\\uD83C\\uDFF4\\uDB40\\uDC67\\uDB40\\uDC62\\uDB40\\uDC7F"
+        assertEquals(flag.length, BackspaceDeletion.utf16UnitsBeforeCursor(flag))
+    }
+}
 }
