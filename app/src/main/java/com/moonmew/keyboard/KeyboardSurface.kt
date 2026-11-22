@@ -207,14 +207,19 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 rows.add(listOf(Key("Clear history", "CLIP_CLEAR", 1.4f, true), Key("ABC", "CLIP_CLOSE", 1f, true)))
             }
         } else if (emojiMode) {
+            // Expanded offline emoji groups: faces, animals, nature, food,
+            // activities, travel, objects and hearts/symbols.
             val categories = listOf(
-                listOf("😀","😃","😄","😁","😆","😅","😂","🤣","😊","😇","🙂","🙃","😉","😍","🥰","😘","😋","😛","😜","🤪","🤗","🤭","🤫","🤔","😭","😢","🥺","😡","😎","🤩","🥳","❤️"),
-                listOf("🐱","🐈","🐶","🐻","🐼","🐰","🦊","🐸","🐥","🦋","🐝","🐞","🌸","🌷","🌹","🌻","🌙","⭐","✨","☁️","🌈","🍀","🌼","🌺"),
-                listOf("🍓","🍒","🍑","🍉","🍇","🍋","🍍","🥑","🍕","🍔","🍟","🍩","🍪","🧁","🍰","🍫","🍬","🍭","🧋","☕","🥐","🍜","🍣","🍦"),
-                listOf("⚽","🏀","🏈","🎾","🎮","🎧","🎀","🎁","💎","👑","👜","💄","📚","✏️","📷","💻","🚗","✈️","🏡","🎉","🎈","🪄","🧸","🪷"),
-                listOf("❤️","🩷","🧡","💛","💚","🩵","💙","💜","🤍","🖤","🤎","💔","💕","💞","💓","💗","💖","💘","💝","❣️","✨","⭐","🌟","💫")
+                "😀 😃 😄 😁 😆 😅 😂 🤣 🥲 ☺️ 😊 😇 🙂 🙃 😉 😌 😍 🥰 😘 😗 😙 😚 😋 😛 😝 😜 🤪 🤨 🧐 🤓 😎 🥸 🤩 🥳 😏 😒 😞 😔 😟 😕 🙁 ☹️ 😣 😖 😫 😩 🥺 😢 😭 😤 😠 😡 🤯".split(" "),
+                "🐱 🐈 🐈‍⬛ 🐶 🐕 🐩 🐺 🦊 🦝 🐻 🐻‍❄️ 🐼 🐨 🐯 🦁 🐮 🐷 🐸 🐵 🙈 🙉 🙊 🐔 🐧 🐦 🐤 🐣 🦆 🦉 🦇 🐴 🦄 🐝 🦋 🐌 🐞 🐢 🐍 🦎 🐙 🦀 🐠 🐬 🐳 🦈".split(" "),
+                "🌸 💐 🌷 🌹 🥀 🌺 🌻 🌼 🌵 🌲 🌳 🌴 🌱 🌿 ☘️ 🍀 🍁 🍂 🍃 🍄 🌾 💧 💦 🌊 🌈 ☀️ 🌤️ ⛅ 🌥️ ☁️ 🌦️ 🌧️ ⛈️ 🌩️ ❄️ ☃️ ⛄ 🌙 🌛 🌜 ⭐ 🌟 ✨ ⚡ 🔥 💥".split(" "),
+                "🍏 🍎 🍐 🍊 🍋 🍌 🍉 🍇 🍓 🫐 🍈 🍒 🍑 🥭 🍍 🥥 🥝 🍅 🍆 🥑 🥦 🥬 🥒 🌶️ 🫑 🌽 🥕 🫒 🧄 🧅 🥔 🍠 🥐 🥯 🍞 🥖 🧀 🥚 🍳 🧈 🥞 🧇 🥓 🥩 🍗 🍖 🌭 🍔 🍟 🍕".split(" "),
+                "⚽ 🏀 🏈 ⚾ 🥎 🎾 🏐 🏉 🎱 🏓 🏸 🥅 🏒 🏑 🥍 🏏 🪃 🥊 🥋 🎣 🤿 🎽 🛹 🛼 🛷 ⛸️ 🥌 🎿 ⛷️ 🏂 🪂 🏋️ 🤼 🤸 ⛹️ 🤺 🏇 🧘 🏄 🏊 🚴".split(" "),
+                "🚗 🚕 🚙 🚌 🚎 🏎️ 🚓 🚑 🚒 🚐 🛻 🚚 🚛 🚜 🛵 🏍️ 🚲 🛴 🚏 🛣️ 🛤️ 🚨 🚥 🚦 🛑 🚧 ⚓ ⛵ 🚤 🛳️ ⛴️ 🛥️ 🚢 ✈️ 🛩️ 🛫 🛬 🪂 💺 🚁 🚟 🚠 🚡 🚀 🛸".split(" "),
+                "⌚ 📱 📲 💻 ⌨️ 🖥️ 🖨️ 🖱️ 🖲️ 💽 💾 💿 📀 📷 📸 📹 🎥 📞 ☎️ 📺 📻 🎙️ 🎚️ 🎛️ 🧭 ⏱️ ⏰ ⌛ 🔋 🪫 💡 🔦 🕯️ 🧯 🛒 🎁 🎀 🪄 🧸 🪅 🎈 🎉 🎊 🪩".split(" "),
+                "❤️ 🩷 🧡 💛 💚 🩵 💙 💜 🤎 🖤 🩶 🤍 💔 ❤️‍🔥 ❤️‍🩹 💕 💞 💓 💗 💖 💘 💝 ❣️ 💟 ☮️ ✝️ ☪️ 🕉️ ☸️ ✡️ 🔯 🕎 ☯️ ☦️ 🛐 ⛎ ♈ ♉ ♊ ♋ ♌ ♍ ♎ ♏ ♐ ♑ ♒ ♓".split(" ")
             )
-            rows.add(listOf("☺", "🌿", "🍓", "🎀", "♡").mapIndexed { index, label ->
+            rows.add(listOf("😀", "🐱", "🌿", "🍓", "⚽", "🚗", "💡", "♡").mapIndexed { index, label ->
                 Key(label, "EMOJI_CAT:$index", 1f, true)
             })
             categories[emojiCategory].chunked(8).forEach { line ->
@@ -283,7 +288,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             // A compact action strip keeps common tools reachable without adding
             // another full-height row of oversized controls.
             rows.add(buildList {
-                add(Key("☾ MoonMew", "TOOLBAR_BRAND", 2.1f, true))
+                add(Key("🐱 MoonMew", "TOOLBAR_BRAND", 2.1f, true))
                 add(Key("😊", "EMOJI", 0.9f, true))
                 if (!passwordField) add(Key("📋", "CLIP", 0.9f, true))
                 add(Key("বাংলা", "MODE", 1.1f, true))
