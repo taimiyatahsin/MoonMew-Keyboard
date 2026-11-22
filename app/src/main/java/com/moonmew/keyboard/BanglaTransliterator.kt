@@ -33,13 +33,14 @@ object BanglaTransliterator {
         var index = 0
         var previousWasConsonant = false
         while (index < lower.length) {
-            val remaining = lower.substring(index)
-            val consonant = consonants.keys.firstOrNull { remaining.startsWith(it) }
+            // Match at the current offset directly; avoid allocating a new suffix
+            // String for every character typed in a composing word.
+            val consonant = consonants.keys.firstOrNull { lower.startsWith(it, index) }
             if (consonant != null) {
                 out.append(consonants.getValue(consonant))
                 index += consonant.length
                 previousWasConsonant = true
-                val vowel = vowelSigns.keys.firstOrNull { lower.substring(index).startsWith(it) }
+                val vowel = vowelSigns.keys.firstOrNull { lower.startsWith(it, index) }
                 if (vowel != null) {
                     out.append(vowelSigns.getValue(vowel))
                     index += vowel.length
@@ -48,7 +49,7 @@ object BanglaTransliterator {
                 continue
             }
             val vowelMap = if (previousWasConsonant) vowelSigns else independentVowels
-            val vowel = vowelMap.keys.firstOrNull { remaining.startsWith(it) }
+            val vowel = vowelMap.keys.firstOrNull { lower.startsWith(it, index) }
             if (vowel != null) {
                 out.append(vowelMap.getValue(vowel))
                 index += vowel.length
