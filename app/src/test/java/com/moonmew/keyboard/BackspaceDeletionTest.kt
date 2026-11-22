@@ -24,6 +24,16 @@ class BackspaceDeletionTest {
         assertEquals("ক্ষ".length, BackspaceDeletion.utf16UnitsBeforeCursor("ক্ষ"))
     }
 
+    @Test fun banglaConjunctWithZeroWidthJoinerDeletesAsOneUnit() {
+        val conjunct = "\u0995\u09CD\u200D\u09B7"
+        assertEquals(conjunct.length, BackspaceDeletion.utf16UnitsBeforeCursor(conjunct))
+    }
+
+    @Test fun devanagariConjunctWithZeroWidthJoinerDeletesAsOneUnit() {
+        val conjunct = "\u0915\u094D\u200D\u0937"
+        assertEquals(conjunct.length, BackspaceDeletion.utf16UnitsBeforeCursor(conjunct))
+    }
+
     @Test fun emojiWithSkinToneDeletesAsOneUnit() {
         assertEquals("👍🏽".length, BackspaceDeletion.utf16UnitsBeforeCursor("👍🏽"))
     }

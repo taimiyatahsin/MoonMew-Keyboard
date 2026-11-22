@@ -33,18 +33,23 @@ internal object BackspaceDeletion {
         // Include combining marks, variation selectors, emoji modifiers, and tag characters.
         while (start > 0 && isExtend(codePoints[start])) start--
 
-        // Walk backwards over joined emoji sequences (for example, family emoji).
-        while (start > 0 && codePoints[start - 1] == ZERO_WIDTH_JOINER) {
-            start = (start - 2).coerceAtLeast(0)
-            while (start > 0 && isExtend(codePoints[start])) start--
-        }
-
-        // Keep Indic virama conjuncts (for example, Bengali ক্ষ) together.
-        while (start > 0 && isVirama(codePoints[start - 1])) {
-            start--
-            if (start > 0) {
-                start--
-                while (start > 0 && isExtend(codePoints[start])) start--
+        // Walk backwards over emoji ZWJ sequences and Indic conjuncts.
+        // Indic shaping may place a ZWJ between virama and the next consonant
+        // (for example, KA + VIRAMA + ZWJ + SSA), so handle that link together.
+        while (start > 0) {
+            when {
+                codePoints[start - 1] == ZERO_WIDTH_JOINER -> {
+                    val hasViramaBeforeJoiner = start > 1 && isVirama(codePoints[start - 2])
+                    start = if (hasViramaBeforeJoiner) start - 2 else (start - 2).coerceAtLeast(0)
+                    if (hasViramaBeforeJoiner && start > 0) start--
+                    while (start > 0 && isExtend(codePoints[start])) start--
+                }
+                isVirama(codePoints[start - 1]) -> {
+                    start--
+                    if (start > 0) start--
+                    while (start > 0 && isExtend(codePoints[start])) start--
+                }
+                else -> break
             }
         }
 
