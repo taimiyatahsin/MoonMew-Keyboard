@@ -38,6 +38,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private var lastTouchX = 0f
     private var lastTouchY = 0f
     private var swipeDetected = false
+    private var multiTouchCancelled = false
     private var swipeEnabled = true
     private var passwordField = false
     private var numericInput = false
@@ -434,6 +435,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
+                multiTouchCancelled = false
                 downSuggestionIndex = suggestionBounds.indexOfFirst { it.contains(event.x, event.y) }
                 downKeyIndex = bounds.indexOfFirst { it.contains(event.x, event.y) }
                 downTime = SystemClock.elapsedRealtime()
@@ -458,7 +460,22 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 lastTouchX = event.x
                 lastTouchY = event.y
             }
+            MotionEvent.ACTION_POINTER_DOWN -> {
+                // A second finger can otherwise turn one gesture into an accidental key press.
+                // Cancel the entire gesture until every pointer is lifted.
+                multiTouchCancelled = true
+                downKeyIndex = -1
+                downSuggestionIndex = -1
+                resetSwipeTracking()
+            }
             MotionEvent.ACTION_UP -> {
+                if (multiTouchCancelled) {
+                    multiTouchCancelled = false
+                    downKeyIndex = -1
+                    downSuggestionIndex = -1
+                    resetSwipeTracking()
+                    return true
+                }
                 // Include the final segment in distance detection too. Some devices may
                 // deliver DOWN and UP without an intermediate MOVE for a very fast swipe.
                 val finalDx = event.x - lastTouchX
@@ -498,6 +515,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 performClick()
             }
             MotionEvent.ACTION_CANCEL -> {
+                multiTouchCancelled = false
                 downKeyIndex = -1
                 downSuggestionIndex = -1
                 resetSwipeTracking()
