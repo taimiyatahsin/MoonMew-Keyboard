@@ -25,12 +25,12 @@ class BackspaceDeletionTest {
     }
 
     @Test fun banglaConjunctWithZeroWidthJoinerDeletesAsOneUnit() {
-        val conjunct = "\\u0995\\u09CD\\u200D\\u09B7"
+        val conjunct = "\u0995\u09CD\u200D\u09B7"
         assertEquals(conjunct.length, BackspaceDeletion.utf16UnitsBeforeCursor(conjunct))
     }
 
     @Test fun devanagariConjunctWithZeroWidthJoinerDeletesAsOneUnit() {
-        val conjunct = "\\u0915\\u094D\\u200D\\u0937"
+        val conjunct = "\u0915\u094D\u200D\u0937"
         assertEquals(conjunct.length, BackspaceDeletion.utf16UnitsBeforeCursor(conjunct))
     }
 
