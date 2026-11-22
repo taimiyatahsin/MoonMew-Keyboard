@@ -177,7 +177,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     fun setShifted(value: Boolean) { shifted = value; rebuild(); invalidate() }
     fun setSymbols(value: Boolean) { symbols = value; emojiMode = false; clipboardMode = false; symbolsPage = 0; rebuild(); invalidate() }
     fun setEmoji(value: Boolean) { emojiMode = value; if (value) emojiCategory = 0; clipboardMode = false; symbols = false; rebuild(); invalidate() }
-    fun setEmojiCategory(value: Int) { emojiCategory = value.coerceIn(0, 4); if (emojiMode) { rebuild(); invalidate() } }
+    fun setEmojiCategory(value: Int) { emojiCategory = value.coerceIn(0, 7); if (emojiMode) { rebuild(); invalidate() } }
     fun setClipboard(value: Boolean) { clipboardMode = value; emojiMode = false; symbols = false; rebuild(); invalidate() }
     fun setClipboardItems(value: List<String>) { clipboardItems = value.take(5); if (clipboardMode) rebuild(); invalidate() }
     fun nextSymbolsPage() { if (symbols) { symbolsPage = 1 - symbolsPage; rebuild(); invalidate() } }
