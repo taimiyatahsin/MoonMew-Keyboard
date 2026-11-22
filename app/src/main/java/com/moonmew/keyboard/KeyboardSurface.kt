@@ -22,6 +22,9 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     enum class Mode { ENGLISH, BANGLA_PHONETIC, BANGLA_DIRECT }
     private data class Key(val label: String, val value: String, val weight: Float = 1f, val special: Boolean = false, val longPressValue: String? = null)
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    // Reused draw rectangles avoid allocating temporary RectF objects for every key on every frame.
+    private val shadowRect = RectF()
+    private val highlightRect = RectF()
     private val keyTypeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
     private val preferences = context.getSharedPreferences("moonmew_settings", Context.MODE_PRIVATE)
     private var themeId = preferences.getInt("theme_id", if (preferences.getBoolean("rose_theme", true)) 0 else 1)
@@ -457,7 +460,8 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 val radius = dp(if (themeId == 3) 13f else 10f)
                 // Soft offset edge gives the keycap a tactile, raised appearance.
                 paint.color = if (themeId == 1 || themeId == 2) 0x66000000 else 0x55B65F83
-                canvas.drawRoundRect(RectF(rect.left, rect.top + dp(2f), rect.right, rect.bottom + dp(2f)), radius, radius, paint)
+                shadowRect.set(rect.left, rect.top + dp(2f), rect.right, rect.bottom + dp(2f))
+                canvas.drawRoundRect(shadowRect, radius, radius, paint)
                 val base = keyColor(special = key.special, modeKey = key.value == "MODE")
                 val topTint = if (themeId == 1 || themeId == 2) 0xFF64718A.toInt() else 0xFFFFFFFF.toInt()
                 paint.shader = android.graphics.LinearGradient(rect.left, rect.top, rect.left, rect.bottom,
@@ -466,8 +470,8 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 paint.shader = null
                 // A small glossy highlight makes pink and glass keys feel like crafted keycaps.
                 paint.color = if (themeId == 1 || themeId == 2) 0x33FFFFFF else 0x99FFFFFF.toInt()
-                canvas.drawRoundRect(RectF(rect.left + dp(3f), rect.top + dp(2f), rect.right - dp(3f), rect.top + dp(5f)),
-                    dp(3f), dp(3f), paint)
+                highlightRect.set(rect.left + dp(3f), rect.top + dp(2f), rect.right - dp(3f), rect.top + dp(5f))
+                canvas.drawRoundRect(highlightRect, dp(3f), dp(3f), paint)
                 paint.style = Paint.Style.STROKE
                 paint.strokeWidth = dp(if (themeId == 3) 1.2f else 0.8f)
                 paint.color = accentColor()
