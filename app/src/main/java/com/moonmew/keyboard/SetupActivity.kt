@@ -112,7 +112,7 @@ class SetupActivity : Activity() {
             themeNames.forEachIndexed { index, name ->
                 val pair = themeColors[index]
                 val option = TextView(this).apply {
-                    text = (if (selectedTheme() == index) "✓  " else "") + "🐱  " + name + "     Aa  ♥  ☾  🎀"
+                    this.text = (if (selectedTheme() == index) "✓  " else "") + "🐱  " + name + "     Aa  ♥  ☾  🎀"
                     textSize = 16f; gravity = Gravity.CENTER_VERTICAL
                     setTextColor(if (index == 0 || index == 3) 0xFF713B60.toInt() else 0xFFF8F2FF.toInt())
                     setPadding(dp(14), dp(17), dp(14), dp(17))
