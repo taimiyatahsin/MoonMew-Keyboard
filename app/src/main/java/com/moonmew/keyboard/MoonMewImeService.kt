@@ -41,9 +41,10 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
         val type = attribute?.inputType ?: InputType.TYPE_CLASS_TEXT
         val cls = type and InputType.TYPE_MASK_CLASS
         val variation = type and InputType.TYPE_MASK_VARIATION
-        numericInput = cls == InputType.TYPE_CLASS_NUMBER
-        numericDecimal = numericInput && (type and InputType.TYPE_NUMBER_FLAG_DECIMAL) != 0
-        numericSigned = numericInput && (type and InputType.TYPE_NUMBER_FLAG_SIGNED) != 0
+        val numericConfig = NumericInputPolicy.fromInputType(type)
+        numericInput = numericConfig.enabled
+        numericDecimal = numericConfig.decimal
+        numericSigned = numericConfig.signed
         passwordField = (cls == InputType.TYPE_CLASS_TEXT &&
             (variation == InputType.TYPE_TEXT_VARIATION_PASSWORD ||
                 variation == InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD ||
