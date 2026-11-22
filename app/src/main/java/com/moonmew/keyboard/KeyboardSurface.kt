@@ -4,6 +4,10 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.RectF
+import android.graphics.Rect
+import android.view.accessibility.AccessibilityNodeInfo
+import android.view.accessibility.AccessibilityNodeProvider
+import android.os.Bundle
 import android.graphics.Typeface
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
@@ -53,6 +57,56 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private val suggestionBounds = mutableListOf<RectF>()
     private val rows = mutableListOf<List<Key>>()
     private val flatKeys = mutableListOf<Key>()
+
+    private val keyboardAccessibilityProvider = object : AccessibilityNodeProvider() {
+        override fun createAccessibilityNodeInfo(virtualViewId: Int): AccessibilityNodeInfo? {
+            if (virtualViewId == HOST_VIEW_ID) {
+                return AccessibilityNodeInfo.obtain(this@KeyboardSurface).apply {
+                    className = KeyboardSurface::class.java.name
+                    packageName = context.packageName
+                    contentDescription = "MoonMew keyboard"
+                    setSource(this@KeyboardSurface)
+                    val parentView = this@KeyboardSurface.parent
+                    if (parentView is View) setParent(parentView)
+                    for (index in bounds.indices) addChild(this@KeyboardSurface, index)
+                    for (index in suggestionBounds.indices) addChild(this@KeyboardSurface, flatKeys.size + index)
+                }
+            }
+            val suggestionIndex = virtualViewId - flatKeys.size
+            val isSuggestion = suggestionIndex >= 0
+            val rect = if (isSuggestion) suggestionBounds.getOrNull(suggestionIndex) else bounds.getOrNull(virtualViewId)
+            if (rect == null) return null
+            val label = if (isSuggestion) suggestions.getOrNull(suggestionIndex) else flatKeys.getOrNull(virtualViewId)?.label
+            return AccessibilityNodeInfo.obtain().apply {
+                setSource(this@KeyboardSurface, virtualViewId)
+                setParent(this@KeyboardSurface)
+                packageName = context.packageName
+                className = "android.widget.Button"
+                text = label ?: "Keyboard key"
+                contentDescription = label ?: "Keyboard key"
+                isEnabled = true
+                isClickable = true
+        importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
+                addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_CLICK)
+                val nodeBounds = Rect()
+                rect.roundOut(nodeBounds)
+                setBoundsInParent(nodeBounds)
+            }
+        }
+
+        override fun performAction(virtualViewId: Int, action: Int, arguments: Bundle?): Boolean {
+            if (action != AccessibilityNodeInfo.ACTION_CLICK) return false
+            if (virtualViewId == HOST_VIEW_ID) return this@KeyboardSurface.performAccessibilityAction(action, arguments)
+            if (virtualViewId >= flatKeys.size) {
+                val word = suggestions.getOrNull(virtualViewId - flatKeys.size) ?: return false
+                listener.onKey("SUGGEST:$word")
+            } else {
+                val key = flatKeys.getOrNull(virtualViewId) ?: return false
+                listener.onKey(key.value)
+            }
+            return true
+        }
+    }
 
     init {
         isClickable = true
@@ -310,6 +364,8 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         }
         rows.forEach { flatKeys.addAll(it) }
     }
+
+    override fun getAccessibilityNodeProvider(): AccessibilityNodeProvider = keyboardAccessibilityProvider
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
