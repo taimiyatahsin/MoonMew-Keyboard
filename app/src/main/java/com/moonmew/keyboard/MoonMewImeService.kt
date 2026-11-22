@@ -144,10 +144,10 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
             key == "SPACE" -> commitPending(" ")
             key == "ENTER" -> {
                 commitPending("")
-                val action = currentInputEditorInfo?.imeOptions?.and(EditorInfo.IME_MASK_ACTION)
-                val handled = action != null && action != EditorInfo.IME_ACTION_NONE &&
-                    action != EditorInfo.IME_ACTION_UNSPECIFIED &&
-                    currentInputConnection?.performEditorAction(action) == true
+                val imeOptions = currentInputEditorInfo?.imeOptions
+                val action = imeOptions?.let(EditorActionPolicy::keyboardAction)
+                val handled = imeOptions != null && EditorActionPolicy.shouldPerformEditorAction(imeOptions) &&
+                    action != null && currentInputConnection?.performEditorAction(action) == true
                 if (!handled) currentInputConnection?.commitText("\n", 1)
             }
             key == "MODE" -> {

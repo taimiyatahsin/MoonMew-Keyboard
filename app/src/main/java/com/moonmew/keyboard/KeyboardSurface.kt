@@ -142,7 +142,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     }
 
     fun setSwipeEnabled(value: Boolean) { swipeEnabled = value; if (!value) resetSwipeTracking() }
-    fun setEditorAction(value: Int) { editorAction = value and EditorInfo.IME_MASK_ACTION; rebuild(); invalidate() }
+    fun setEditorAction(value: Int) { editorAction = EditorActionPolicy.keyboardAction(value); rebuild(); invalidate() }
     private fun editorActionLabel(): String = when (editorAction) {
         EditorInfo.IME_ACTION_GO -> "Go"
         EditorInfo.IME_ACTION_SEARCH -> "Search"
