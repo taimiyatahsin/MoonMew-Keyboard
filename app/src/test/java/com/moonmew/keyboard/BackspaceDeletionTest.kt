@@ -81,4 +81,3 @@ class BackspaceDeletionTest {
         assertEquals(flag.length, BackspaceDeletion.utf16UnitsBeforeCursor(flag))
     }
 }
-}
