@@ -337,6 +337,21 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 canvas.drawCircle(cx + dp(2f), cy, dp(2.4f), paint)
                 canvas.drawCircle(cx, cy, dp(1.5f), paint)
             }
+            // Tiny paw-print motifs add a recognisable kitty detail without
+            // covering keys or competing with the labels.
+            val paws = arrayOf(0.16f to 0.18f, 0.84f to 0.18f, 0.10f to 0.78f, 0.90f to 0.78f)
+            paws.forEachIndexed { index, point ->
+                val cx = width * point.first
+                val cy = height * point.second
+                val paw = if (index % 2 == 0) 0xFFFF8FB9.toInt() else 0xFFFFFFFF.toInt()
+                paint.color = paw
+                paint.alpha = 115
+                val r = dp(2.2f)
+                canvas.drawCircle(cx - r * 1.35f, cy - r * 1.15f, r, paint)
+                canvas.drawCircle(cx, cy - r * 1.65f, r, paint)
+                canvas.drawCircle(cx + r * 1.35f, cy - r * 1.15f, r, paint)
+                canvas.drawOval(RectF(cx - r * 1.5f, cy - r * 0.4f, cx + r * 1.5f, cy + r * 1.65f), paint)
+            }
             paint.alpha = 255
         }
         val moonX = width - dp(18f)
