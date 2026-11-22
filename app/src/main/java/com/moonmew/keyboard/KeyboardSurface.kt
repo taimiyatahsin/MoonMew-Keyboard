@@ -76,18 +76,23 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             val isSuggestion = suggestionIndex >= 0
             val rect = if (isSuggestion) suggestionBounds.getOrNull(suggestionIndex) else bounds.getOrNull(virtualViewId)
             if (rect == null) return null
-            val label = if (isSuggestion) suggestions.getOrNull(suggestionIndex) else flatKeys.getOrNull(virtualViewId)?.label
+            val key = if (isSuggestion) null else flatKeys.getOrNull(virtualViewId)
+            val label = if (isSuggestion) suggestions.getOrNull(suggestionIndex) else key?.let { accessibilityLabel(it) }
             return AccessibilityNodeInfo.obtain().apply {
                 setSource(this@KeyboardSurface, virtualViewId)
                 setParent(this@KeyboardSurface)
                 packageName = context.packageName
                 className = "android.widget.Button"
                 text = label ?: "Keyboard key"
-                contentDescription = label ?: "Keyboard key"
+                contentDescription = if (isSuggestion) "Suggestion: ${label ?: "word"}" else label ?: "Keyboard key"
                 isEnabled = true
+                isFocusable = true
                 isClickable = true
-        importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
                 addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_CLICK)
+                if (key?.longPressValue != null) {
+                    isLongClickable = true
+                    addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_LONG_CLICK)
+                }
                 val nodeBounds = Rect()
                 rect.roundOut(nodeBounds)
                 setBoundsInParent(nodeBounds)
@@ -95,14 +100,23 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         }
 
         override fun performAction(virtualViewId: Int, action: Int, arguments: Bundle?): Boolean {
-            if (action != AccessibilityNodeInfo.ACTION_CLICK) return false
-            if (virtualViewId == HOST_VIEW_ID) return this@KeyboardSurface.performAccessibilityAction(action, arguments)
+            if (virtualViewId == HOST_VIEW_ID) {
+                return this@KeyboardSurface.performAccessibilityAction(action, arguments)
+            }
+            if (action != AccessibilityNodeInfo.ACTION_CLICK &&
+                action != AccessibilityNodeInfo.ACTION_LONG_CLICK) return false
             if (virtualViewId >= flatKeys.size) {
+                if (action == AccessibilityNodeInfo.ACTION_LONG_CLICK) return false
                 val word = suggestions.getOrNull(virtualViewId - flatKeys.size) ?: return false
                 listener.onKey("SUGGEST:$word")
             } else {
                 val key = flatKeys.getOrNull(virtualViewId) ?: return false
-                listener.onKey(key.value)
+                if (action == AccessibilityNodeInfo.ACTION_LONG_CLICK) {
+                    val alternate = key.longPressValue ?: return false
+                    listener.onKey("LONG:$alternate")
+                } else {
+                    listener.onKey(key.value)
+                }
             }
             return true
         }
@@ -110,9 +124,35 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
 
     init {
         isClickable = true
+        importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
         setBackgroundColor(backgroundBottomColor())
         applyHeight()
         rebuild()
+    }
+
+    private fun accessibilityLabel(key: Key): String = when (key.value) {
+        "DELETE" -> "Backspace"
+        "SPACE" -> "Space"
+        "ENTER" -> when (key.label) {
+            "Go" -> "Go action"
+            "Search" -> "Search action"
+            "Send" -> "Send action"
+            "Next" -> "Next field"
+            "Done" -> "Done action"
+            "Prev" -> "Previous field"
+            else -> "Enter"
+        }
+        "SHIFT" -> if (shifted) "Shift, uppercase" else "Shift, lowercase"
+        "MODE" -> if (mode == Mode.BANGLA_DIRECT) "Switch to English" else "Switch language"
+        "SYMBOLS", "SYMBOLS_MORE" -> "Symbols"
+        "EMOJI" -> "Open emoji picker"
+        "CLIP" -> "Open clipboard history"
+        "EMOJI_BACK" -> "Return to keyboard"
+        "CLIP_CLOSE" -> "Close clipboard history"
+        "CLIP_CLEAR" -> "Clear clipboard history"
+        "ABC" -> "Return to letters"
+        "TOOLBAR_BRAND" -> "MoonMew keyboard tools"
+        else -> key.label
     }
 
     private fun configuredHeightDp(): Int =
