@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - codex/moonmew-foundation
+      - feat/spacebar-cursor-navigation-v2
   pull_request:
     branches:
       - main
