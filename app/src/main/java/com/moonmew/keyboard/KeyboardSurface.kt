@@ -1092,9 +1092,18 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     fun onTrimMemory(level: Int) {
         if (level >= ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW) {
             memoryFallback = true
+            cancelDeleteRepeat()
             pressAnimator?.cancel()
             pressAnimator = null
+            pressedKeyIndex = -1
             pressedScale = 1f
+            downKeyIndex = -1
+            downSuggestionIndex = -1
+            multiTouchCancelled = true
+            spaceCursorGesture = false
+            spaceCursorMoved = false
+            cursorMoveRemainder = 0f
+            resetSwipeTracking()
             furTextureBitmap?.recycle()
             furTextureBitmap = null
             furTextureShader = null
