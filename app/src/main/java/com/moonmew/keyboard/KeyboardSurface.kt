@@ -789,6 +789,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                     paint.alpha = 255
                     canvas.drawText("☾", moonX, baseline, paint)
                     if (themeId == 6) canvas.drawText("🎀", moonX + dp(18f), baseline, paint)
+                    paint.color = keyTextColor()
                 }
                 if (themeId >= 5 && rowIndex == 0 && key.value == "TOOLBAR_BRAND") {
                     paint.color = accentColor()
