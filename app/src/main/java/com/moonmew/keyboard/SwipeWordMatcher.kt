@@ -20,24 +20,34 @@ object SwipeWordMatcher {
         "to","today","tomorrow","time","take","talk","thank","thanks","than","they",
         "up","us","use","very","want","was","way","work","world","write"
     )
+    private val distanceBufferSize = words.maxOf { it.length } + 1
+
     fun suggest(path: String, limit: Int = 3): List<String> {
         val query = path.lowercase().filter { it in 'a'..'z' }
         if (query.length < 3 || limit <= 0) return emptyList()
-        return words.asSequence().map { it to distance(query, it) }
+        // Reuse two bounded DP rows across every dictionary candidate.
+        // The previous implementation allocated two IntArrays per word on each swipe.
+        val firstRow = IntArray(distanceBufferSize)
+        val secondRow = IntArray(distanceBufferSize)
+        return words.asSequence().map { it to distance(query, it, firstRow, secondRow) }
             .filter { (word, score) -> score <= maxOf(1, word.length / 3) }
             .sortedWith(compareBy<Pair<String, Int>> { it.second }.thenBy { it.first.length })
             .take(limit).map { it.first }.toList()
     }
-    private fun distance(a: String, b: String): Int {
-        var previous = IntArray(b.length + 1) { it }
+
+    private fun distance(a: String, b: String, first: IntArray, second: IntArray): Int {
+        var previous = first
+        var current = second
+        for (j in 0..b.length) previous[j] = j
         for (i in 1..a.length) {
-            val current = IntArray(b.length + 1)
             current[0] = i
             for (j in 1..b.length) {
                 val cost = if (a[i - 1] == b[j - 1]) 0 else 1
                 current[j] = minOf(current[j - 1] + 1, previous[j] + 1, previous[j - 1] + cost)
             }
+            val reusable = previous
             previous = current
+            current = reusable
         }
         return previous[b.length]
     }
