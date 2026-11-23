@@ -59,7 +59,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private val rows = mutableListOf<List<Key>>()
     private val flatKeys = mutableListOf<Key>()
 
-    private fun accessibilityLabel(key: Key): String = when {
+    private fun emojiPickerAccessibilityLabel(key: Key): String = when {
         key.value == "EMOJI_PAGE_PREV" -> "Previous emoji page"
         key.value == "EMOJI_PAGE_NEXT" -> "Next emoji page"
         key.value == "EMOJI_PAGE_STATUS" -> "Emoji page ${key.label}"
@@ -96,7 +96,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             val isSuggestion = suggestionIndex >= 0
             val rect = if (isSuggestion) suggestionBounds.getOrNull(suggestionIndex) else bounds.getOrNull(virtualViewId)
             if (rect == null) return null
-            val label = if (isSuggestion) suggestions.getOrNull(suggestionIndex)?.let { "Suggestion: $it" } else flatKeys.getOrNull(virtualViewId)?.let(::accessibilityLabel)
+            val label = if (isSuggestion) suggestions.getOrNull(suggestionIndex)?.let { "Suggestion: $it" } else flatKeys.getOrNull(virtualViewId)?.let(::emojiPickerAccessibilityLabel)
             return AccessibilityNodeInfo.obtain().apply {
                 setSource(this@KeyboardSurface, virtualViewId)
                 setParent(this@KeyboardSurface)
