@@ -118,9 +118,13 @@ object BanglaWordSuggestions {
         if (query.isBlank() || safeLimit == 0) return emptyList()
 
         val result = ArrayList<String>(safeLimit)
+        words[query]?.let { exact ->
+            result.add(exact)
+            if (result.size == safeLimit) return result
+        }
         for ((roman, bangla) in rankedWords) {
-            if (roman == query || (roman.startsWith(query) && roman != query)) {
-                if (bangla !in result) result.add(bangla)
+            if (roman != query && roman.startsWith(query) && bangla !in result) {
+                result.add(bangla)
                 if (result.size == safeLimit) break
             }
         }
