@@ -18,7 +18,7 @@ on:
       - test/clipboard-history-policy
 
 permissions:
-  contents: write
+  contents: read
 
 # Serialize main-branch builds so an older run cannot overwrite a newer APK
 # on the shared "latest" release after finishing late.
@@ -72,13 +72,29 @@ jobs:
       - name: Upload debug APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: moonmew-debug-and-release-apks
-          path: |
-            app/build/outputs/apk/debug/app-debug.apk
-            app/build/outputs/apk/release/*.apk
+          name: moonmew-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
           retention-days: 90
+      - name: Upload release APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: moonmew-release-apk
+          path: app/build/outputs/apk/release/*.apk
+          retention-days: 90
+
+  publish-test-apk:
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/codex/moonmew-foundation')
+    needs: debug-build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download debug APK artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: moonmew-debug-apk
+          path: dist
       - name: Publish latest test APK to GitHub Releases
-        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/codex/moonmew-foundation')
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
@@ -88,5 +104,5 @@ jobs:
             This is a test build, not a signed Play Store release.
           prerelease: true
           make_latest: false
-          files: app/build/outputs/apk/debug/app-debug.apk
+          files: dist/app-debug.apk
           overwrite_files: true
