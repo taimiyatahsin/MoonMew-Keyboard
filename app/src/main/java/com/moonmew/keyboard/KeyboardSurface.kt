@@ -493,7 +493,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 Key("EN", "MODE", 1.4f, true), Key("⌫", "DELETE", 1.2f, true)))
             rows.add(listOf(
                 Key("?123", "SYMBOLS", 1.1f, true), Key(",", ",", .7f),
-                Key(if (themeId == 6) "☾ 🎀 English / বাংলা" else "☾  English / বাংলা", "SPACE", 4.2f, true),
+                Key(if (themeId >= 5) "English / বাংলা" else "☾  English / বাংলা", "SPACE", 4.2f, true),
                 Key(".", ".", .7f), Key(if (themeId >= 5) "🐾 ${editorActionLabel()}" else editorActionLabel(), "ENTER", 1.1f, true)
             ))
         }
@@ -781,6 +781,15 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 paint.textSize = minOf(preferredTextSize, rect.height() * 0.68f)
                 paint.typeface = keyTypeface
                 val baseline = rect.centerY() - (paint.ascent() + paint.descent()) / 2
+                if (themeId >= 5 && key.value == "SPACE") {
+                    val moonX = rect.left + dp(18f)
+                    paint.color = accentColor()
+                    paint.alpha = 38
+                    canvas.drawCircle(moonX, rect.centerY(), dp(8f), paint)
+                    paint.alpha = 255
+                    canvas.drawText("☾", moonX, baseline, paint)
+                    if (themeId == 6) canvas.drawText("🎀", moonX + dp(18f), baseline, paint)
+                }
                 if (themeId >= 5 && rowIndex == 0 && key.value == "TOOLBAR_BRAND") {
                     paint.color = accentColor()
                     catEarPath.reset()
