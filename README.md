@@ -63,7 +63,7 @@ The project is built for Android 6.0+ and the keyboard limits its height instead
 3. Select **Build → Build APK(s)**.
 4. Find the debug APK at `app/build/outputs/apk/debug/app-debug.apk`.
 
-GitHub Actions runs unit tests and builds a debug APK for pull requests and pushes to `main`. Successful main-branch builds update the latest test APK release.
+GitHub Actions runs unit tests and builds separate debug and release APK artifacts for pull requests and pushes to `main`. Only successful main-branch pushes publish the debug test APK to the latest test release.
 
 ## Release signing
 
