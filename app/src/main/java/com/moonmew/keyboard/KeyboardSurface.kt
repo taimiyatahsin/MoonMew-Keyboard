@@ -311,6 +311,12 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     fun setSuggestions(value: List<String>) { suggestions = value.take(3); suggestionBounds.clear(); invalidate() }
 
     private fun rebuild() {
+        // A layout rebuild invalidates the geometry captured by an in-flight touch.
+        // Cancel it so ACTION_UP cannot activate a different key at the same index.
+        multiTouchCancelled = true
+        downKeyIndex = -1
+        downSuggestionIndex = -1
+        resetSwipeTracking()
         rows.clear()
         flatKeys.clear()
         // Old hitboxes must not point at a newly rebuilt key list before the next draw.
