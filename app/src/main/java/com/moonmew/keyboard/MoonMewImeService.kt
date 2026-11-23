@@ -75,6 +75,40 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
         keyboard?.setNumericInput(numericInput, numericDecimal, numericSigned)
     }
 
+    override fun onUpdateSelection(
+        oldSelStart: Int,
+        oldSelEnd: Int,
+        newSelStart: Int,
+        newSelEnd: Int,
+        candidatesStart: Int,
+        candidatesEnd: Int
+    ) {
+        super.onUpdateSelection(
+            oldSelStart, oldSelEnd, newSelStart, newSelEnd, candidatesStart, candidatesEnd
+        )
+
+        // Keep our local phonetic buffer only while the editor cursor remains
+        // immediately after the composing text we last sent to the host app.
+        // Editors such as browsers and chat apps can move the cursor or replace
+        // text independently; retaining stale composition would duplicate text.
+        if (composing.isEmpty() || newSelStart < 0 || newSelEnd < 0) return
+        if (newSelStart != newSelEnd) {
+            clearComposition()
+            return
+        }
+
+        val expectedText = BanglaTransliterator.convert(composing).ifEmpty { composing }
+        val beforeCursor = currentInputConnection
+            ?.getTextBeforeCursor(expectedText.length, 0)
+            ?.toString()
+
+        // Some InputConnection implementations return null for surrounding text.
+        // In that case keep the composition rather than destroying valid input.
+        if (beforeCursor != null && !beforeCursor.endsWith(expectedText)) {
+            clearComposition()
+        }
+    }
+
     override fun onKey(key: String) {
         if (swipePending && !key.startsWith("SUGGEST:")) {
             swipePending = false
