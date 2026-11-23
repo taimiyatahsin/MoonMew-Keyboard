@@ -193,6 +193,12 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         if (w != oldw || h != oldh) {
+            // A finger may still be down while Android resizes the IME. Cancel that
+            // gesture too: onDraw can repopulate the same indices before ACTION_UP.
+            multiTouchCancelled = true
+            downKeyIndex = -1
+            downSuggestionIndex = -1
+            resetSwipeTracking()
             bounds.clear()
             suggestionBounds.clear()
         }
