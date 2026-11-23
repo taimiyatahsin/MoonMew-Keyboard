@@ -232,7 +232,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     fun setMode(value: Mode) { mode = value; symbols = false; emojiMode = false; clipboardMode = false; symbolsPage = 0; rebuild(); invalidate() }
     fun setShifted(value: Boolean) { shifted = value; rebuild(); invalidate() }
     fun setSymbols(value: Boolean) { symbols = value; emojiMode = false; clipboardMode = false; symbolsPage = 0; rebuild(); invalidate() }
-    fun setEmoji(value: Boolean) { emojiMode = value; if (value) emojiCategory = 0; clipboardMode = false; symbols = false; rebuild(); invalidate() }
+    fun setEmoji(value: Boolean) { emojiMode = value; if (value) { emojiCategory = 0; emojiPage = 0 }; clipboardMode = false; symbols = false; rebuild(); invalidate() }
     fun setEmojiCategory(value: Int) { emojiCategory = value.coerceIn(0, 7); emojiPage = 0; if (emojiMode) { rebuild(); invalidate() } }
     fun moveEmojiPage(delta: Int) { if (emojiMode) { emojiPage = (emojiPage + delta).coerceAtLeast(0); rebuild(); invalidate() } }
     fun setClipboard(value: Boolean) { clipboardMode = value; emojiMode = false; symbols = false; rebuild(); invalidate() }
