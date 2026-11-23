@@ -25,6 +25,11 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     // Reused draw rectangles avoid allocating temporary RectF objects for every key on every frame.
     private val shadowRect = RectF()
     private val highlightRect = RectF()
+    private val pawOvalRect = RectF()
+    // Immutable normalized decoration points are created once, not on every redraw.
+    private val starPoints = arrayOf(0.08f to 0.12f, 0.22f to 0.05f, 0.78f to 0.09f, 0.93f to 0.22f, 0.13f to 0.86f, 0.88f to 0.82f)
+    private val candyAccentPoints = arrayOf(0.08f to 0.08f, 0.27f to 0.07f, 0.73f to 0.07f, 0.92f to 0.08f, 0.05f to 0.92f, 0.95f to 0.92f)
+    private val pawPrintPoints = arrayOf(0.16f to 0.18f, 0.84f to 0.18f, 0.10f to 0.78f, 0.90f to 0.78f)
     private val keyTypeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
     private val preferences = context.getSharedPreferences("moonmew_settings", Context.MODE_PRIVATE)
     private var themeId = preferences.getInt("theme_id", if (preferences.getBoolean("rose_theme", true)) 0 else 1)
@@ -379,16 +384,13 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         paint.shader = null
         paint.color = accentColor()
         paint.alpha = 58
-        val stars = arrayOf(0.08f to 0.12f, 0.22f to 0.05f, 0.78f to 0.09f, 0.93f to 0.22f, 0.13f to 0.86f, 0.88f to 0.82f)
-        stars.forEachIndexed { index, point ->
+        starPoints.forEachIndexed { index, point ->
             canvas.drawCircle(width * point.first, height * point.second, dp(if (index % 2 == 0) 1.4f else 1f), paint)
         }
         paint.alpha = 255
         // Decorative candy dots and tiny bow-like accents for the kawaii palettes.
         if (themeId == 0 || themeId == 3) {
-            val accents = arrayOf(0.08f to 0.08f, 0.27f to 0.07f, 0.73f to 0.07f, 0.92f to 0.08f,
-                0.05f to 0.92f, 0.95f to 0.92f)
-            accents.forEachIndexed { index, point ->
+            candyAccentPoints.forEachIndexed { index, point ->
                 val cx = width * point.first
                 val cy = height * point.second
                 paint.color = if (index % 2 == 0) 0xFFFF8FB9.toInt() else 0xFFFFFFFF.toInt()
@@ -399,8 +401,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             }
             // Tiny paw-print motifs add a recognisable kitty detail without
             // covering keys or competing with the labels.
-            val paws = arrayOf(0.16f to 0.18f, 0.84f to 0.18f, 0.10f to 0.78f, 0.90f to 0.78f)
-            paws.forEachIndexed { index, point ->
+            pawPrintPoints.forEachIndexed { index, point ->
                 val cx = width * point.first
                 val cy = height * point.second
                 val paw = if (index % 2 == 0) 0xFFFF8FB9.toInt() else 0xFFFFFFFF.toInt()
@@ -410,7 +411,8 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 canvas.drawCircle(cx - r * 1.35f, cy - r * 1.15f, r, paint)
                 canvas.drawCircle(cx, cy - r * 1.65f, r, paint)
                 canvas.drawCircle(cx + r * 1.35f, cy - r * 1.15f, r, paint)
-                canvas.drawOval(RectF(cx - r * 1.5f, cy - r * 0.4f, cx + r * 1.5f, cy + r * 1.65f), paint)
+                pawOvalRect.set(cx - r * 1.5f, cy - r * 0.4f, cx + r * 1.5f, cy + r * 1.65f)
+                canvas.drawOval(pawOvalRect, paint)
             }
             paint.alpha = 255
         }
