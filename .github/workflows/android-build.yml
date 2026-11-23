@@ -5,9 +5,8 @@ on:
     branches:
       - main
       - codex/moonmew-foundation
+  # Run CI for every PR target, including stacked feature branches.
   pull_request:
-    branches:
-      - main
 
 permissions:
   contents: write
