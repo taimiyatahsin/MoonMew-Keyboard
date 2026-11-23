@@ -11,7 +11,8 @@ A lightweight, offline-first Android keyboard with English, Bangla phonetic, and
 - Two-page symbol keyboard, including Bengali punctuation and additional Bangla signs.
 - Experimental English swipe typing with local word suggestions.
 - Adjustable keyboard height: **140–280 dp** (default: **210 dp**).
-- Five themes: Pink Plush, Moonlit Blue, Lavender Dream, Glass Candy, and Moon Garden.
+- Seven themes: Pink Plush, Moonlit Blue, Lavender Dream, Glass Candy, Moon Garden, Midnight Fur, and Lavender Kitty Plush.
+- Midnight Fur and Lavender Kitty Plush use one tiny pre-rendered tiled bitmap texture and a bounded static keyboard-layer cache (up to 1.5 MiB). Dynamic key labels and suggestions stay sharply rendered above the cached layer. Android memory-pressure callbacks release the cache and texture. Reduce Animations disables the fur overlay, bitmap cache, and pressed-key scale effect as a low-memory fallback.
 - Soft gradients, glossy rounded keycaps, subtle moon/star details, and compact toolbar.
 - Optional key sounds; haptics follow device settings.
 - Optional clipboard history: off by default; explicit opt-in; reads plain text only when the clipboard button is tapped; stores up to 5 items locally for up to 24 hours; unavailable in password fields.
@@ -65,3 +66,13 @@ GitHub Actions runs unit tests and builds a debug APK for pull requests and push
 ## Test-build notice
 
 This APK is an automatically generated **debug/test build**, not a signed Play Store release. Android may show its normal warning when installing apps from outside the Play Store.
+
+
+## Rendering and touch responsiveness
+
+- Key press feedback is shown immediately on touch-down and cleared on release or cancelled gestures.
+- Press feedback invalidates the affected key region and uses a short 65 ms, 0.95-scale inset effect; Reduce Animations disables it.
+- Key gradients and drawing rectangles are reused to reduce repeated allocations.
+- The keycap look uses a small faux bottom lip and a thin highlight instead of real-time blur or shadow layers.
+- A full keyboard bitmap cache is intentionally avoided because suggestions, editor actions, and key layouts change dynamically; retaining a large bitmap would add memory pressure on low-RAM devices.
+- A stable 60 FPS target must be confirmed with frame-timing/profiling on physical devices; it is not guaranteed by source-level changes alone.
