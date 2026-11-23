@@ -29,7 +29,6 @@ class SwipeWordMatcherTest {
         assertTrue(SwipeWordMatcher.suggest("hello", limit = 0).isEmpty())
         assertTrue(SwipeWordMatcher.suggest("hello", limit = -1).isEmpty())
     }
-}
     @Test fun reusedDistanceBuffersDoNotLeakAcrossDifferentPaths() {
         assertEquals("hello", SwipeWordMatcher.suggest("hello").first())
         assertEquals("the", SwipeWordMatcher.suggest("the").first())
@@ -40,3 +39,4 @@ class SwipeWordMatcherTest {
         val path = "qwertyuiopasdfghjklzxcvbnm"
         assertEquals(SwipeWordMatcher.suggest(path), SwipeWordMatcher.suggest(path))
     }
+}
