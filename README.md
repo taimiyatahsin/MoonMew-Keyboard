@@ -5,6 +5,7 @@ A lightweight, offline-first Android keyboard with English, Bangla phonetic, and
 ## Features
 
 - English QWERTY keyboard with long-press number and symbol alternatives.
+- Move the text cursor left or right by dragging horizontally across the spacebar; a normal tap still inserts a space.
 - Hold Backspace to repeat deletions, with a short initial delay and faster repeat cadence for longer holds.
 - Bangla phonetic starter mode with live conversion preview and offline word suggestions.
 - Dedicated direct Bangla layout with independent vowels, vowel signs on long press, consonants, and alternate characters.
@@ -72,6 +73,7 @@ This APK is an automatically generated **debug/test build**, not a signed Play S
 ## Rendering and touch responsiveness
 
 - Key press feedback is shown immediately on touch-down and cleared on release or cancelled gestures.
+- Horizontal spacebar cursor movement uses a bounded distance threshold and sends standard DPAD key events to the active editor; app/editor support can vary.
 - Press feedback invalidates the affected key region and uses a short 65 ms, 0.95-scale inset effect; Reduce Animations disables it.
 - Key gradients and drawing rectangles are reused to reduce repeated allocations.
 - The keycap look uses a small faux bottom lip and a thin highlight instead of real-time blur or shadow layers.
