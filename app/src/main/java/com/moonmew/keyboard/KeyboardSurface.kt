@@ -22,6 +22,13 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     enum class Mode { ENGLISH, BANGLA_PHONETIC, BANGLA_DIRECT }
     private data class Key(val label: String, val value: String, val weight: Float = 1f, val special: Boolean = false, val longPressValue: String? = null)
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private var backgroundGradient: android.graphics.LinearGradient? = null
+    private var backgroundGradientWidth = -1
+    private var backgroundGradientHeight = -1
+    private var backgroundGradientTop = 0
+    private var backgroundGradientBottom = 0
+    private data class CachedKeyGradient(val bounds: RectF, val topColor: Int, val bottomColor: Int, val shader: android.graphics.LinearGradient)
+    private val keyGradientCache = mutableListOf<CachedKeyGradient>()
     // Reused draw rectangles avoid allocating temporary RectF objects for every key on every frame.
     private val shadowRect = RectF()
     private val highlightRect = RectF()
@@ -67,6 +74,38 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private val flatKeys = mutableListOf<Key>()
 
     // Keep hit-test rectangles across frames; rebuild() clears them when key structure changes.
+    private fun backgroundShader(): android.graphics.LinearGradient {
+        val topColor = backgroundTopColor()
+        val bottomColor = backgroundBottomColor()
+        val cached = backgroundGradient
+        if (cached == null || backgroundGradientWidth != width || backgroundGradientHeight != height ||
+            backgroundGradientTop != topColor || backgroundGradientBottom != bottomColor) {
+            return android.graphics.LinearGradient(0f, 0f, 0f, height.toFloat(), topColor, bottomColor,
+                android.graphics.Shader.TileMode.CLAMP).also {
+                backgroundGradient = it
+                backgroundGradientWidth = width
+                backgroundGradientHeight = height
+                backgroundGradientTop = topColor
+                backgroundGradientBottom = bottomColor
+            }
+        }
+        return cached
+    }
+
+    private fun keyShader(index: Int, rect: RectF, topColor: Int, bottomColor: Int): android.graphics.LinearGradient {
+        while (keyGradientCache.size <= index) {
+            keyGradientCache.add(CachedKeyGradient(RectF(), 0, 0,
+                android.graphics.LinearGradient(0f, 0f, 0f, 1f, 0, 0, android.graphics.Shader.TileMode.CLAMP)))
+        }
+        val cached = keyGradientCache[index]
+        if (cached.topColor == topColor && cached.bottomColor == bottomColor && cached.bounds == rect) return cached.shader
+        val boundsCopy = RectF(rect)
+        val shader = android.graphics.LinearGradient(rect.left, rect.top, rect.left, rect.bottom,
+            topColor, bottomColor, android.graphics.Shader.TileMode.CLAMP)
+        keyGradientCache[index] = CachedKeyGradient(boundsCopy, topColor, bottomColor, shader)
+        return shader
+    }
+
     private fun obtainRect(pool: MutableList<RectF>, index: Int): RectF {
         while (pool.size <= index) pool.add(RectF())
         return pool[index]
@@ -264,6 +303,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         // Old hitboxes must not point at a newly rebuilt key list before the next draw.
         bounds.clear()
         suggestionBounds.clear()
+        keyGradientCache.clear()
         if (clipboardMode) {
             if (clipboardItems.isEmpty()) {
                 val enabled = preferences.getBoolean("clipboard_history_enabled", false)
@@ -388,8 +428,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         if (rows.isEmpty()) return
-        paint.shader = android.graphics.LinearGradient(0f, 0f, 0f, height.toFloat(),
-            backgroundTopColor(), backgroundBottomColor(), android.graphics.Shader.TileMode.CLAMP)
+        paint.shader = backgroundShader()
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
         paint.shader = null
         paint.color = accentColor()
@@ -481,8 +520,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 canvas.drawRoundRect(shadowRect, radius, radius, paint)
                 val base = keyColor(special = key.special, modeKey = key.value == "MODE")
                 val topTint = if (themeId == 1 || themeId == 2) 0xFF64718A.toInt() else 0xFFFFFFFF.toInt()
-                paint.shader = android.graphics.LinearGradient(rect.left, rect.top, rect.left, rect.bottom,
-                    topTint, base, android.graphics.Shader.TileMode.CLAMP)
+                paint.shader = keyShader(keyRectCount - 1, rect, topTint, base)
                 canvas.drawRoundRect(rect, radius, radius, paint)
                 paint.shader = null
                 // A small glossy highlight makes pink and glass keys feel like crafted keycaps.
