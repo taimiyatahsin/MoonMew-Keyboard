@@ -41,6 +41,8 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private val preferences = context.getSharedPreferences("moonmew_settings", Context.MODE_PRIVATE)
     private var themeId = preferences.getInt("theme_id", if (preferences.getBoolean("rose_theme", true)) 0 else 1)
     private var keySound = preferences.getBoolean("key_sound", false)
+        reduceAnimations = preferences.getBoolean("reduce_animations", false)
+    private var reduceAnimations = preferences.getBoolean("reduce_animations", false)
     private var mode = Mode.ENGLISH
     private var shifted = false
     private var symbols = false
@@ -691,11 +693,13 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     }
 
     private fun setPressedKey(index: Int) {
-        if (pressedKeyIndex == index) return
+        // Low-end devices can disable the pressed-key visual overlay entirely.
+        val visibleIndex = if (reduceAnimations) -1 else index
+        if (pressedKeyIndex == visibleIndex) return
         bounds.getOrNull(pressedKeyIndex)?.let { old ->
             invalidate(old.left.toInt(), old.top.toInt(), old.right.toInt() + 1, old.bottom.toInt() + 1)
         }
-        pressedKeyIndex = index
+        pressedKeyIndex = visibleIndex
         bounds.getOrNull(pressedKeyIndex)?.let { current ->
             invalidate(current.left.toInt(), current.top.toInt(), current.right.toInt() + 1, current.bottom.toInt() + 1)
         }
