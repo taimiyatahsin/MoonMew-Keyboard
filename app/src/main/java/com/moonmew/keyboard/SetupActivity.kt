@@ -139,6 +139,15 @@ class SetupActivity : Activity() {
                 preferences.edit().putBoolean("key_sound", checked).apply()
             }
         }
+        val hapticsSwitch = Switch(this).apply {
+            this.text = "Light key vibration"
+            textSize = 14f
+            setTextColor(text)
+            isChecked = preferences.getBoolean("key_haptics", true)
+            setOnCheckedChangeListener { _, checked ->
+                preferences.edit().putBoolean("key_haptics", checked).apply()
+            }
+        }
         val reduceAnimationsSwitch = Switch(this).apply {
             this.text = "Reduce animations / visual effects"
             textSize = 14f
@@ -165,7 +174,7 @@ class SetupActivity : Activity() {
             setPadding(0, dp(6), 0, dp(4))
         }
         val note = TextView(this).apply {
-            this.text = "Sound is off by default. Haptic feedback follows your device settings."
+            this.text = "Sound is off by default. Light key vibration is on by default and can be disabled here; Android system haptic settings are still respected."
             textSize = 12f
             setTextColor(muted)
             setPadding(0, dp(8), 0, 0)
@@ -181,6 +190,7 @@ class SetupActivity : Activity() {
         root.addView(themeButton, matchWithTop(dp(6)))
         root.addView(themePreview, matchWithTop(dp(8)))
         root.addView(soundSwitch, matchWithTop(dp(6)))
+        root.addView(hapticsSwitch, matchWithTop(dp(8)))
         root.addView(reduceAnimationsSwitch, matchWithTop(dp(8)))
         root.addView(clipboardSwitch, matchWithTop(dp(10)))
         root.addView(clipboardWarning, matchWithTop(dp(2)))

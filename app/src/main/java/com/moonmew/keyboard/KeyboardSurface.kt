@@ -62,6 +62,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private val preferences = context.getSharedPreferences("moonmew_settings", Context.MODE_PRIVATE)
     private var themeId = preferences.getInt("theme_id", if (preferences.getBoolean("rose_theme", true)) 0 else 1)
     private var keySound = preferences.getBoolean("key_sound", false)
+    private var keyHaptics = preferences.getBoolean("key_haptics", true)
     private var reduceAnimations = preferences.getBoolean("reduce_animations", false)
     private var memoryFallback = false
     private var mode = Mode.ENGLISH
@@ -253,6 +254,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     fun refreshPreferences() {
         themeId = preferences.getInt("theme_id", if (preferences.getBoolean("rose_theme", true)) 0 else 1).coerceIn(0, 6)
         keySound = preferences.getBoolean("key_sound", false)
+        keyHaptics = preferences.getBoolean("key_haptics", true)
         reduceAnimations = preferences.getBoolean("reduce_animations", false)
         memoryFallback = false
         // If clipboard history was switched off in Settings while this IME was alive,
@@ -886,7 +888,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                     val index = bounds.indexOfFirst { it.contains(event.x, event.y) }
                     if (index >= 0 && index == downKeyIndex) {
                         if (keySound) playSoundEffect(SoundEffectConstants.CLICK)
-                        performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                        if (keyHaptics) performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
                         flatKeys.getOrNull(index)?.let { key ->
                             val held = SystemClock.elapsedRealtime() - downTime >= 450L
                             listener.onKey(if (held && key.longPressValue != null) "LONG:${key.longPressValue}" else key.value)
