@@ -7,9 +7,13 @@ val releaseStoreFile = System.getenv("MOONMEW_RELEASE_STORE_FILE")
 val releaseStorePassword = System.getenv("MOONMEW_RELEASE_STORE_PASSWORD")
 val releaseKeyAlias = System.getenv("MOONMEW_RELEASE_KEY_ALIAS")
 val releaseKeyPassword = System.getenv("MOONMEW_RELEASE_KEY_PASSWORD")
-val releaseSigningConfigured = listOf(
+val releaseSigningValues = listOf(
     releaseStoreFile, releaseStorePassword, releaseKeyAlias, releaseKeyPassword
-).all { !it.isNullOrBlank() }
+)
+val releaseSigningConfigured = releaseSigningValues.all { !it.isNullOrBlank() }
+require(releaseSigningValues.all { it.isNullOrBlank() } || releaseSigningConfigured) {
+    "Release signing requires all four MOONMEW_RELEASE_* environment variables."
+}
 
 android {
     namespace = "com.moonmew.keyboard"
