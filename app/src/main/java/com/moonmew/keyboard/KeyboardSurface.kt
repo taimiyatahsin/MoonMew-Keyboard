@@ -41,6 +41,14 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private var furTextureBitmap: Bitmap? = null
     private var furTextureShader: BitmapShader? = null
     private val catEarPath = Path()
+    private var plushStaticBitmap: Bitmap? = null
+    private var plushStaticWidth = -1
+    private var plushStaticHeight = -1
+    private var plushStaticTheme = -1
+    private var plushStaticRowsHash = 0
+    private var plushStaticPreviewHeight = -1f
+    private val plushStaticRects = mutableListOf<RectF>()
+    private val maxPlushCacheBytes = 1_572_864L
     // Reused draw rectangles avoid allocating temporary RectF objects for every key on every frame.
     private val shadowRect = RectF()
     private val highlightRect = RectF()
@@ -218,6 +226,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             resetSwipeTracking()
             bounds.clear()
             suggestionBounds.clear()
+            releasePlushStaticLayer()
         }
     }
 
@@ -362,6 +371,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         downSuggestionIndex = -1
         setPressedKey(-1)
         resetSwipeTracking()
+        releasePlushStaticLayer()
         rows.clear()
         flatKeys.clear()
         // Old hitboxes must not point at a newly rebuilt key list before the next draw.
@@ -489,10 +499,138 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
 
     override fun getAccessibilityNodeProvider(): AccessibilityNodeProvider = keyboardAccessibilityProvider
 
+    private fun releasePlushStaticLayer() {
+        plushStaticBitmap?.recycle()
+        plushStaticBitmap = null
+        plushStaticWidth = -1
+        plushStaticHeight = -1
+        plushStaticTheme = -1
+        plushStaticRowsHash = 0
+        plushStaticPreviewHeight = -1f
+        plushStaticRects.clear()
+    }
+
+    private fun drawPlushBackdrop(target: Canvas) {
+        paint.shader = backgroundShader()
+        paint.color = 0xFFFFFFFF.toInt()
+        target.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
+        paint.shader = null
+        if (themeId == 5) {
+            paint.color = 0xFFF5DCE6.toInt()
+            paint.alpha = 90
+            starPoints.forEachIndexed { index, point ->
+                target.drawCircle(width * point.first, height * point.second, dp(if (index % 2 == 0) 1.5f else 1f), paint)
+            }
+            paint.alpha = 255
+        } else {
+            candyAccentPoints.forEachIndexed { index, point ->
+                val cx = width * point.first
+                val cy = height * point.second
+                paint.color = if (index % 2 == 0) 0xFFC7B2E3.toInt() else 0xFFFFFFFF.toInt()
+                paint.alpha = 130
+                target.drawCircle(cx - dp(2f), cy, dp(2.4f), paint)
+                target.drawCircle(cx + dp(2f), cy, dp(2.4f), paint)
+                target.drawCircle(cx, cy, dp(1.5f), paint)
+            }
+            pawPrintPoints.forEach { point ->
+                val cx = width * point.first
+                val cy = height * point.second
+                paint.color = 0xFFC7B2E3.toInt()
+                paint.alpha = 90
+                val r = dp(2.2f)
+                target.drawCircle(cx - r * 1.35f, cy - r * 1.15f, r, paint)
+                target.drawCircle(cx, cy - r * 1.65f, r, paint)
+                target.drawCircle(cx + r * 1.35f, cy - r * 1.15f, r, paint)
+                pawOvalRect.set(cx - r * 1.5f, cy - r * 0.4f, cx + r * 1.5f, cy + r * 1.65f)
+                target.drawOval(pawOvalRect, paint)
+            }
+            paint.alpha = 255
+        }
+        val moonX = width - dp(18f)
+        val moonY = dp(12f)
+        paint.color = accentColor()
+        target.drawCircle(moonX, moonY, dp(6f), paint)
+        paint.color = backgroundTopColor()
+        target.drawCircle(moonX + dp(3f), moonY - dp(2f), dp(5.5f), paint)
+    }
+
+    private fun ensurePlushStaticLayer(pad: Float, top: Float, previewHeight: Float): Boolean {
+        if (themeId < 5 || reduceAnimations || width <= 0 || height <= 0) return false
+        val rowsHash = rows.hashCode()
+        val cached = plushStaticBitmap
+        if (cached != null && plushStaticWidth == width && plushStaticHeight == height &&
+            plushStaticTheme == themeId && plushStaticRowsHash == rowsHash &&
+            plushStaticPreviewHeight == previewHeight) return true
+        releasePlushStaticLayer()
+        val bytes = width.toLong() * height.toLong() * 4L
+        if (bytes <= 0L || bytes > maxPlushCacheBytes) return false
+        val bitmap = try {
+            Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        } catch (_: OutOfMemoryError) {
+            return false
+        }
+        val layer = Canvas(bitmap)
+        drawPlushBackdrop(layer)
+        val rowHeight = (height - top - previewHeight - pad) / rows.size
+        var index = 0
+        rows.forEachIndexed { rowIndex, row ->
+            val gap = dp(4f)
+            val total = row.sumOf { it.weight.toDouble() }.toFloat()
+            val usable = width - pad * 2 - gap * (row.size - 1)
+            var x = pad
+            row.forEach { key ->
+                val w = usable * key.weight / total
+                val rect = obtainRect(plushStaticRects, index).apply {
+                    set(x, top + previewHeight + rowIndex * rowHeight + dp(2f),
+                        x + w, top + previewHeight + (rowIndex + 1) * rowHeight - dp(3f))
+                }
+                val radius = dp(13f)
+                paint.color = if (themeId == 5) 0x66000000 else 0x338B648E
+                shadowRect.set(rect.left, rect.top + dp(1.5f), rect.right, rect.bottom + dp(1.5f))
+                layer.drawRoundRect(shadowRect, radius, radius, paint)
+                paint.color = 0xFFFFFFFF.toInt()
+                paint.shader = keyShader(index, rect,
+                    if (themeId == 5) 0xFF51434D.toInt() else 0xFFFFFFFF.toInt(),
+                    keyColor(special = key.special, modeKey = key.value == "MODE"))
+                layer.drawRoundRect(rect, radius, radius, paint)
+                paint.shader = furTextureShader()
+                paint.color = 0x22FFFFFF
+                layer.drawRoundRect(rect, radius, radius, paint)
+                paint.shader = null
+                paint.color = if (themeId == 5) 0x33F5DCE6 else 0x66FFFFFF
+                highlightRect.set(rect.left + dp(3f), rect.top + dp(2f), rect.right - dp(3f), rect.top + dp(5f))
+                layer.drawRoundRect(highlightRect, dp(3f), dp(3f), paint)
+                paint.style = Paint.Style.STROKE
+                paint.strokeWidth = dp(1f)
+                paint.color = accentColor()
+                paint.alpha = if (key.special) 175 else 110
+                layer.drawRoundRect(rect, radius, radius, paint)
+                paint.style = Paint.Style.FILL
+                paint.alpha = 255
+                x += w + gap
+                index++
+            }
+        }
+        plushStaticBitmap = bitmap
+        plushStaticWidth = width
+        plushStaticHeight = height
+        plushStaticTheme = themeId
+        plushStaticRowsHash = rowsHash
+        plushStaticPreviewHeight = previewHeight
+        return true
+    }
+
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         if (rows.isEmpty()) return
-        paint.shader = backgroundShader()
+        val pad = dp(5f)
+        val top = dp(7f)
+        val previewHeight = if (composition.isNotEmpty()) dp(49f) else dp(5f)
+        val cachedPlushLayer = ensurePlushStaticLayer(pad, top, previewHeight)
+        if (cachedPlushLayer) {
+            plushStaticBitmap?.let { canvas.drawBitmap(it, 0f, 0f, null) }
+        } else {
+            paint.shader = backgroundShader()
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
         paint.shader = null
         paint.color = accentColor()
@@ -544,9 +682,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         canvas.drawCircle(moonX, moonY, dp(6f), paint)
         paint.color = backgroundTopColor()
         canvas.drawCircle(moonX + dp(3f), moonY - dp(2f), dp(5.5f), paint)
-        val pad = dp(5f)
-        val top = dp(7f)
-        val previewHeight = if (composition.isNotEmpty()) dp(49f) else dp(5f)
+        }
         var suggestionRectCount = 0
         if (composition.isNotEmpty()) {
             paint.color = accentColor()
@@ -586,6 +722,34 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 val rect = obtainRect(bounds, keyRectCount++).apply {
                     set(x, top + previewHeight + rowIndex * rowHeight + dp(2f),
                         x + w, top + previewHeight + (rowIndex + 1) * rowHeight - dp(3f))
+                }
+                if (!cachedPlushLayer) {
+                    val radius = dp(if (themeId == 3 || themeId >= 5) 13f else 10f)
+                    paint.color = if (themeId == 1 || themeId == 2 || themeId == 5) 0x66000000 else 0x55B65F83
+                    shadowRect.set(rect.left, rect.top + dp(if (themeId >= 5) 1.5f else 2f), rect.right, rect.bottom + dp(if (themeId >= 5) 1.5f else 2f))
+                    canvas.drawRoundRect(shadowRect, radius, radius, paint)
+                    paint.color = 0xFFFFFFFF.toInt()
+                    paint.shader = keyShader(keyRectCount - 1, rect,
+                        if (themeId == 5) 0xFF51434D.toInt() else if (themeId == 1 || themeId == 2) 0xFF64718A.toInt() else 0xFFFFFFFF.toInt(),
+                        keyColor(special = key.special, modeKey = key.value == "MODE"))
+                    canvas.drawRoundRect(rect, radius, radius, paint)
+                    paint.shader = null
+                    if (themeId >= 5 && !reduceAnimations) {
+                        paint.shader = furTextureShader()
+                        paint.color = 0x22FFFFFF
+                        canvas.drawRoundRect(rect, radius, radius, paint)
+                        paint.shader = null
+                    }
+                    paint.color = if (themeId == 1 || themeId == 2) 0x33FFFFFF else 0x99FFFFFF.toInt()
+                    highlightRect.set(rect.left + dp(3f), rect.top + dp(2f), rect.right - dp(3f), rect.top + dp(5f))
+                    canvas.drawRoundRect(highlightRect, dp(3f), dp(3f), paint)
+                    paint.style = Paint.Style.STROKE
+                    paint.strokeWidth = dp(if (themeId == 3 || themeId >= 5) 1.2f else 0.8f)
+                    paint.color = accentColor()
+                    paint.alpha = if (key.special) 190 else 125
+                    canvas.drawRoundRect(rect, radius, radius, paint)
+                    paint.style = Paint.Style.FILL
+                    paint.alpha = 255
                 }
                 val pressed = keyRectCount - 1 == pressedKeyIndex
                 if (pressed && !reduceAnimations) {
@@ -768,6 +932,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             furTextureBitmap?.recycle()
             furTextureBitmap = null
             furTextureShader = null
+            releasePlushStaticLayer()
             backgroundGradient = null
             keyGradientCache.clear()
             invalidate()
