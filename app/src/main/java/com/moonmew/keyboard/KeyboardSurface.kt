@@ -514,6 +514,8 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     }
 
     private fun drawPlushBackdrop(target: Canvas) {
+        paint.style = Paint.Style.FILL
+        paint.alpha = 255
         paint.shader = backgroundShader()
         paint.color = 0xFFFFFFFF.toInt()
         target.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
@@ -570,6 +572,10 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         val bitmap = try {
             Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         } catch (_: OutOfMemoryError) {
+            memoryFallback = true
+            furTextureBitmap?.recycle()
+            furTextureBitmap = null
+            furTextureShader = null
             return false
         }
         val layer = Canvas(bitmap)
