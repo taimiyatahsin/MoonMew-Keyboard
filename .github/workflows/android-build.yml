@@ -10,6 +10,7 @@ on:
     branches:
       - main
       - fix/grapheme-test-syntax
+      - test/bangla-transliteration-coverage
 
 permissions:
   contents: write
