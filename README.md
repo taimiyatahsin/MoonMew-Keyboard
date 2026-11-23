@@ -13,7 +13,7 @@ A lightweight, offline-first Android keyboard with English, Bangla phonetic, and
 - Adjustable keyboard height: **140–280 dp** (default: **210 dp**).
 - Five themes: Pink Plush, Moonlit Blue, Lavender Dream, Glass Candy, and Moon Garden.
 - Soft gradients, glossy rounded keycaps, subtle moon/star details, and compact toolbar.
-- Optional key sounds; haptics follow device settings.
+- Optional key sounds and a separate light key-vibration toggle; Android's system haptic setting is still respected.
 - Optional clipboard history: off by default; explicit opt-in; reads plain text only when the clipboard button is tapped; stores up to 5 items locally for up to 24 hours; unavailable in password fields.
 - Password fields switch to the English layout and disable swipe and clipboard history.
 - Android 6.0 (API 23) and newer.
