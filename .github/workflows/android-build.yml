@@ -6,6 +6,7 @@ on:
       - main
       - codex/moonmew-foundation
       - feat/spacebar-cursor-navigation-v2
+      - feat/emoji-picker-pagination
   pull_request:
     branches:
       - main
