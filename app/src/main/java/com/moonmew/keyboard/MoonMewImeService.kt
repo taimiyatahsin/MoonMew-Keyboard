@@ -136,7 +136,7 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
             // Informational/empty clipboard rows are not text keys. Never let their
             // internal action IDs fall through to the printable-character handler.
             key == "CLIP_NOTICE" || key == "CLIP_EMPTY" -> Unit
-            key == "CLIP_CLEAR" -> { saveClipboardItems(emptyList()); keyboard?.setClipboardItems(emptyList()) }
+            key == "CLIP_CLEAR" -> { saveClipboardEntries(emptyList()); keyboard?.setClipboardItems(emptyList()) }
             key.startsWith("CLIP_ITEM:") -> {
                 val index = key.substringAfter(":").toIntOrNull() ?: -1
                 val item = loadClipboardItems().getOrNull(index)
@@ -214,38 +214,38 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
         val manager = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
         val clip = manager.primaryClip
         val captured = if (clip != null && clip.itemCount > 0) clip.getItemAt(0).coerceToText(this)?.toString() else null
-        if (!captured.isNullOrBlank() && captured.length <= 1000) {
-            val items = (listOf(captured) + loadClipboardItems().filterNot { it == captured }).take(5)
-            saveClipboardItems(items)
+        if (!captured.isNullOrBlank() && captured.length <= ClipboardHistoryPolicy.MAX_TEXT_LENGTH) {
+            val entries = ClipboardHistoryPolicy.add(loadClipboardEntries(), captured, System.currentTimeMillis())
+            saveClipboardEntries(entries)
         }
         keyboard?.setClipboardItems(loadClipboardItems())
         keyboard?.setClipboard(true)
     }
 
-    private fun loadClipboardItems(): List<String> {
-        val raw = getSharedPreferences("moonmew_settings", MODE_PRIVATE).getString("clipboard_history", "[]") ?: "[]"
-        val cutoff = System.currentTimeMillis() - 24L * 60L * 60L * 1000L
+    private fun loadClipboardEntries(): List<ClipboardHistoryPolicy.Entry> {
+        val raw = getSharedPreferences("moonmew_settings", MODE_PRIVATE)
+            .getString("clipboard_history", "[]") ?: "[]"
         return try {
             val array = JSONArray(raw)
-            val values = mutableListOf<Pair<Long, String>>()
+            val entries = mutableListOf<ClipboardHistoryPolicy.Entry>()
             for (i in 0 until array.length()) {
                 val entry = array.getJSONObject(i)
-                val timestamp = entry.optLong("time", 0L)
-                val value = entry.optString("text", "")
-                if (timestamp >= cutoff && value.isNotBlank()) values.add(timestamp to value)
+                entries.add(ClipboardHistoryPolicy.Entry(
+                    timestampMs = entry.optLong("time", 0L),
+                    text = entry.optString("text", "")
+                ))
             }
-            saveClipboardEntries(values)
-            values.sortedByDescending { it.first }.map { it.second }.take(5)
-        } catch (_: Exception) { emptyList() }
+            ClipboardHistoryPolicy.prune(entries, System.currentTimeMillis()).also(::saveClipboardEntries)
+        } catch (_: Exception) {
+            emptyList()
+        }
     }
 
-    private fun saveClipboardItems(items: List<String>) {
-        saveClipboardEntries(items.take(5).map { System.currentTimeMillis() to it })
-    }
+    private fun loadClipboardItems(): List<String> = loadClipboardEntries().map { it.text }
 
-    private fun saveClipboardEntries(entries: List<Pair<Long, String>>) {
+    private fun saveClipboardEntries(entries: List<ClipboardHistoryPolicy.Entry>) {
         val array = JSONArray()
-        entries.take(5).forEach { (time, value) ->
+        entries.forEach { (time, value) ->
             array.put(JSONObject().put("time", time).put("text", value))
         }
         getSharedPreferences("moonmew_settings", MODE_PRIVATE).edit()
