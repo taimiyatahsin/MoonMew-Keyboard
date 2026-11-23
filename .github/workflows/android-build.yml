@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - codex/moonmew-foundation
+      - fix/ime-selection-sync
   pull_request:
     branches:
       - main
