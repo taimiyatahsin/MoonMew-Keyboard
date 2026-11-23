@@ -232,6 +232,21 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         }
     }
 
+    // A detached IME view must not retain an active press animator or its
+    // cached plush key layer. The view may be recreated during IME/window changes.
+    override fun onDetachedFromWindow() {
+        pressAnimator?.cancel()
+        pressAnimator = null
+        pressedKeyIndex = -1
+        pressedScale = 1f
+        downKeyIndex = -1
+        downSuggestionIndex = -1
+        multiTouchCancelled = false
+        resetSwipeTracking()
+        releasePlushStaticLayer()
+        super.onDetachedFromWindow()
+    }
+
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val displayHeightPx = resources.displayMetrics.heightPixels
         val screenCapPx = (displayHeightPx * 0.44f).toInt().coerceAtLeast(dp(120f).toInt())
