@@ -10,6 +10,7 @@ on:
       - main
       - fix/grapheme-test-syntax
       - perf/reuse-key-draw-rectangles
+      - feat/instant-key-feedback-polish
 
 permissions:
   contents: write
