@@ -75,7 +75,6 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         key.value == "EMOJI" -> "Open emoji picker"
         key.value == "CLIP" -> "Open clipboard history"
         key.value == "CLIP_CLOSE" -> "Close clipboard history"
-        key.value == "EMOJI_PAGE_STATUS" -> "Emoji page indicator"
         else -> key.label
     }
 
@@ -107,7 +106,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 contentDescription = label ?: "Keyboard key"
                 isEnabled = true
                 isClickable = true
-        importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
+                importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
                 addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_CLICK)
                 val nodeBounds = Rect()
                 rect.roundOut(nodeBounds)
