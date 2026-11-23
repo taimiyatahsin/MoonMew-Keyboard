@@ -2,6 +2,13 @@ package com.moonmew.keyboard
 
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.BitmapShader
+import android.graphics.Path
+import android.graphics.Shader
+import android.content.ComponentCallbacks2
+import android.util.Base64
 import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Rect
@@ -29,6 +36,10 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private var backgroundGradientBottom = 0
     private data class CachedKeyGradient(val bounds: RectF, val topColor: Int, val bottomColor: Int, val shader: android.graphics.LinearGradient)
     private val keyGradientCache = mutableListOf<CachedKeyGradient>()
+    // One tiny pre-rendered transparent fiber tile is decoded lazily and reused.
+    private var furTextureBitmap: Bitmap? = null
+    private var furTextureShader: BitmapShader? = null
+    private val catEarPath = Path()
     // Reused draw rectangles avoid allocating temporary RectF objects for every key on every frame.
     private val shadowRect = RectF()
     private val highlightRect = RectF()
@@ -226,7 +237,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     }
 
     fun refreshPreferences() {
-        themeId = preferences.getInt("theme_id", if (preferences.getBoolean("rose_theme", true)) 0 else 1).coerceIn(0, 4)
+        themeId = preferences.getInt("theme_id", if (preferences.getBoolean("rose_theme", true)) 0 else 1).coerceIn(0, 6)
         keySound = preferences.getBoolean("key_sound", false)
         reduceAnimations = preferences.getBoolean("reduce_animations", false)
         // If clipboard history was switched off in Settings while this IME was alive,
@@ -242,6 +253,8 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     }
 
     private fun backgroundTopColor() = when (themeId) {
+        5 -> 0xFF0F0E13.toInt()
+        6 -> 0xFFD8C2E8.toInt()
         1 -> 0xFF172B43.toInt()
         2 -> 0xFF30213F.toInt()
         3 -> 0xFFFFD9EC.toInt()
@@ -249,6 +262,8 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         else -> 0xFFFFEAF1.toInt()
     }
     private fun backgroundBottomColor() = when (themeId) {
+        5 -> 0xFF0F0E13.toInt()
+        6 -> 0xFFF2C6DC.toInt()
         1 -> 0xFF0B1422.toInt()
         2 -> 0xFF171020.toInt()
         3 -> 0xFFFFB9D9.toInt()
@@ -256,6 +271,8 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         else -> 0xFFF7C9DA.toInt()
     }
     private fun accentColor() = when (themeId) {
+        5 -> 0xFFF5DCE6.toInt()
+        6 -> 0xFFC7B2E3.toInt()
         1 -> 0xFFB9DFFF.toInt()
         2 -> 0xFFE0C8FF.toInt()
         3 -> 0xFFFFFFFF.toInt()
@@ -263,6 +280,8 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         else -> 0xFFFF8FB9.toInt()
     }
     private fun keyColor(special: Boolean, modeKey: Boolean = false) = when (themeId) {
+        5 -> if (modeKey) 0xFF9E6B7B.toInt() else if (special) 0xFF8C5C6B.toInt() else 0xFF222028.toInt()
+        6 -> if (modeKey) 0xFFF3B8CE.toInt() else if (special) 0xFFC7B2E3.toInt() else 0xFFFBF5F8.toInt()
         1 -> if (modeKey) 0xFF416B8B.toInt() else if (special) 0xFF2B405B.toInt() else 0xFF1D2B3E.toInt()
         2 -> if (modeKey) 0xFF795A99.toInt() else if (special) 0xFF49365F.toInt() else 0xFF302541.toInt()
         3 -> if (modeKey) 0xFFFF83BA.toInt() else if (special) 0xFFFFC4E0.toInt() else 0xFFFFF8FC.toInt()
@@ -270,6 +289,8 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         else -> if (modeKey) 0xFFFFA9C8.toInt() else if (special) 0xFFFFD5E3.toInt() else 0xFFFFF8F5.toInt()
     }
     private fun keyTextColor() = when (themeId) {
+        5 -> 0xFFF5DCE6.toInt()
+        6 -> 0xFF3D243B.toInt()
         1 -> 0xFFEAF5FF.toInt()
         2 -> 0xFFF4EAFF.toInt()
         3 -> 0xFF713B60.toInt()
@@ -456,8 +477,8 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 Key("EN", "MODE", 1.4f, true), Key("⌫", "DELETE", 1.2f, true)))
             rows.add(listOf(
                 Key("?123", "SYMBOLS", 1.1f, true), Key(",", ",", .7f),
-                Key("☾  English / বাংলা", "SPACE", 4.2f, true),
-                Key(".", ".", .7f), Key(editorActionLabel(), "ENTER", 1.1f, true)
+                Key(if (themeId == 6) "☾ 🎀 English / বাংলা" else "☾  English / বাংলা", "SPACE", 4.2f, true),
+                Key(".", ".", .7f), Key(if (themeId >= 5) "🐾 ${editorActionLabel()}" else editorActionLabel(), "ENTER", 1.1f, true)
             ))
         }
         rows.forEach { flatKeys.addAll(it) }
@@ -477,8 +498,17 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             canvas.drawCircle(width * point.first, height * point.second, dp(if (index % 2 == 0) 1.4f else 1f), paint)
         }
         paint.alpha = 255
+        // Dark plush uses restrained static moonlit stars; pastel plush keeps candy/paw motifs.
+        if (themeId == 5) {
+            paint.color = 0xFFF5DCE6.toInt()
+            paint.alpha = 90
+            starPoints.forEachIndexed { index, point ->
+                canvas.drawCircle(width * point.first, height * point.second, dp(if (index % 2 == 0) 1.5f else 1f), paint)
+            }
+            paint.alpha = 255
+        }
         // Decorative candy dots and tiny bow-like accents for the kawaii palettes.
-        if (themeId == 0 || themeId == 3) {
+        if (themeId == 0 || themeId == 3 || themeId == 6) {
             candyAccentPoints.forEachIndexed { index, point ->
                 val cx = width * point.first
                 val cy = height * point.second
@@ -507,6 +537,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         }
         val moonX = width - dp(18f)
         val moonY = dp(12f)
+        paint.color = if (themeId >= 5) accentColor() else keyTextColor()
         canvas.drawCircle(moonX, moonY, dp(6f), paint)
         paint.color = backgroundTopColor()
         canvas.drawCircle(moonX + dp(3f), moonY - dp(2f), dp(5.5f), paint)
@@ -553,16 +584,22 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                     set(x, top + previewHeight + rowIndex * rowHeight + dp(2f),
                         x + w, top + previewHeight + (rowIndex + 1) * rowHeight - dp(3f))
                 }
-                val radius = dp(if (themeId == 3) 13f else 10f)
+                val radius = dp(if (themeId == 3 || themeId >= 5) 13f else 10f)
                 // Soft offset edge gives the keycap a tactile, raised appearance.
                 paint.color = if (themeId == 1 || themeId == 2) 0x66000000 else 0x55B65F83
-                shadowRect.set(rect.left, rect.top + dp(2f), rect.right, rect.bottom + dp(2f))
+                shadowRect.set(rect.left, rect.top + dp(if (themeId >= 5) 1.5f else 2f), rect.right, rect.bottom + dp(if (themeId >= 5) 1.5f else 2f))
                 canvas.drawRoundRect(shadowRect, radius, radius, paint)
                 val base = keyColor(special = key.special, modeKey = key.value == "MODE")
                 val topTint = if (themeId == 1 || themeId == 2) 0xFF64718A.toInt() else 0xFFFFFFFF.toInt()
                 paint.shader = keyShader(keyRectCount - 1, rect, topTint, base)
                 canvas.drawRoundRect(rect, radius, radius, paint)
                 paint.shader = null
+                if (themeId >= 5 && !reduceAnimations) {
+                    paint.shader = furTextureShader()
+                    paint.color = 0x22FFFFFF
+                    canvas.drawRoundRect(rect, radius, radius, paint)
+                    paint.shader = null
+                }
                 if (keyRectCount - 1 == pressedKeyIndex) {
                     // Instant tactile feedback without animation, blur, or shadow layers.
                     paint.color = if (themeId == 1 || themeId == 2) 0x22FFFFFF else 0x18000000
@@ -586,6 +623,19 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 paint.textSize = minOf(preferredTextSize, rect.height() * 0.68f)
                 paint.typeface = keyTypeface
                 val baseline = rect.centerY() - (paint.ascent() + paint.descent()) / 2
+                if (themeId >= 5 && rowIndex == 0 && key.value == "TOOLBAR_BRAND") {
+                    paint.color = accentColor()
+                    catEarPath.reset()
+                    catEarPath.moveTo(rect.left + dp(8f), rect.top + dp(8f))
+                    catEarPath.lineTo(rect.left + dp(11f), rect.top + dp(1f))
+                    catEarPath.lineTo(rect.left + dp(15f), rect.top + dp(8f))
+                    catEarPath.close()
+                    catEarPath.moveTo(rect.left + dp(15f), rect.top + dp(8f))
+                    catEarPath.lineTo(rect.left + dp(19f), rect.top + dp(1f))
+                    catEarPath.lineTo(rect.left + dp(22f), rect.top + dp(8f))
+                    catEarPath.close()
+                    canvas.drawPath(catEarPath, paint)
+                }
                 canvas.drawText(key.label, rect.centerX(), baseline, paint)
                 x += w + gap
             }
@@ -690,6 +740,26 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             }
         }
         return true
+    }
+
+    private fun furTextureShader(): BitmapShader {
+        furTextureShader?.let { return it }
+        val bytes = Base64.decode("iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAACIUlEQVR42uVX204bMRA906KCFrJNoNlAQiVKy/9/EOIigSgXcWloadSWnr6M0TBaO97dwEvnyesd+9hnjmdsQdwqAJe2g+TH0BaRE5Ijbf8GcKM+AxG59ZOR7KnvPVJGcmja62hgJHdJ7nrgAF5n4sFF5CqAi8hNLrDu7tB0F/pvy7B2EF0AyVKdHkku54J3NQngIvII4Ifb2XvrJyJ3DeevSM507HRuCIxY3uigbyT7AIbPBonsR0KxZnwKL2Lj9yUWy96cWE9IThZFP8nPTZwniX9l0JAVYLYGOuygrIlvAYDO9af7HuG/M5J9FbTtG8f8Ry0AtkluawiKFLAFF6P+dxrPJQAXMRBzzE5tX/gOoHU5g+Sm+p4/zUOyV1cgDNgfOwDAqv5fNn2DkGpj4I3pbJRAuqbiBgv7pDs9cpVyI5UhW5XRGPhrMFCZ9uUCj+Ga10wyBDa1RipZH8BM27NX0YADv7OitcdQ+/YyKmgpLagc64RnupBgb53rdSK8szYxHPvUSyLy98iEaKtF5/aqy4khOSQ5fMrVdfk6YUWTmp8qPkEDnsKrOeAPZtIt1cTXOcevBDAVke9NT0EZucKH/H+cwRYA/K0T31Kg3hSQEclf4XVDsojcbm4zmX8AsGLBSX5IxWngvnde/F2QWMxOBsUxymG04m/b9/5hMjYZ6yznodrB7O15miPCyjB1EQtNC6aSuQSGut4LXVIrAPgHZJtNe2chgosAAAAASUVORK5CYII=", Base64.DEFAULT)
+        val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+            ?: throw IllegalStateException("Unable to decode bundled plush texture")
+        furTextureBitmap = bitmap
+        return BitmapShader(bitmap, Shader.TileMode.REPEAT, Shader.TileMode.REPEAT).also { furTextureShader = it }
+    }
+
+    fun onTrimMemory(level: Int) {
+        if (level >= ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW) {
+            furTextureBitmap?.recycle()
+            furTextureBitmap = null
+            furTextureShader = null
+            backgroundGradient = null
+            keyGradientCache.clear()
+            invalidate()
+        }
     }
 
     private fun setPressedKey(index: Int) {
