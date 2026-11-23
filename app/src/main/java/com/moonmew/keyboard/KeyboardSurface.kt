@@ -59,6 +59,26 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private val rows = mutableListOf<List<Key>>()
     private val flatKeys = mutableListOf<Key>()
 
+    private fun accessibilityLabel(key: Key): String = when {
+        key.value == "EMOJI_PAGE_PREV" -> "Previous emoji page"
+        key.value == "EMOJI_PAGE_NEXT" -> "Next emoji page"
+        key.value == "EMOJI_PAGE_STATUS" -> "Emoji page ${key.label}"
+        key.value.startsWith("EMOJI_CAT:") -> {
+            val names = listOf("Faces", "Animals", "Nature", "Food", "Activities", "Travel", "Objects", "Hearts and symbols")
+            "Emoji category: ${names.getOrNull(key.value.substringAfter(":").toIntOrNull() ?: -1) ?: "Unknown"}"
+        }
+        key.value == "DELETE" -> "Backspace"
+        key.value == "SPACE" -> "Space"
+        key.value == "ENTER" -> "Enter"
+        key.value == "SHIFT" -> "Shift"
+        key.value == "EMOJI_BACK" -> "Return to keyboard"
+        key.value == "EMOJI" -> "Open emoji picker"
+        key.value == "CLIP" -> "Open clipboard history"
+        key.value == "CLIP_CLOSE" -> "Close clipboard history"
+        key.value == "EMOJI_PAGE_STATUS" -> "Emoji page indicator"
+        else -> key.label
+    }
+
     private val keyboardAccessibilityProvider = object : AccessibilityNodeProvider() {
         override fun createAccessibilityNodeInfo(virtualViewId: Int): AccessibilityNodeInfo? {
             if (virtualViewId == HOST_VIEW_ID) {
@@ -77,7 +97,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             val isSuggestion = suggestionIndex >= 0
             val rect = if (isSuggestion) suggestionBounds.getOrNull(suggestionIndex) else bounds.getOrNull(virtualViewId)
             if (rect == null) return null
-            val label = if (isSuggestion) suggestions.getOrNull(suggestionIndex) else flatKeys.getOrNull(virtualViewId)?.label
+            val label = if (isSuggestion) suggestions.getOrNull(suggestionIndex)?.let { "Suggestion: $it" } else flatKeys.getOrNull(virtualViewId)?.let(::accessibilityLabel)
             return AccessibilityNodeInfo.obtain().apply {
                 setSource(this@KeyboardSurface, virtualViewId)
                 setParent(this@KeyboardSurface)
