@@ -440,14 +440,17 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             paint.textSize = dp(12f)
             paint.textAlign = Paint.Align.LEFT
             canvas.drawText(composition + "  →  " + preview, pad * 2, top + dp(15f), paint)
-            val shown = suggestions.take(3)
-            if (shown.isNotEmpty()) {
+            val shownCount = minOf(suggestions.size, 3)
+            if (shownCount > 0) {
                 val gap = dp(5f)
-                val itemWidth = (width - pad * 2 - gap * (shown.size - 1)) / shown.size
-                shown.forEachIndexed { index, word ->
+                val itemWidth = (width - pad * 2 - gap * (shownCount - 1)) / shownCount
+                for (index in 0 until shownCount) {
+                    val word = suggestions[index]
                     val left = pad + index * (itemWidth + gap)
-                    val rect = RectF(left, top + dp(23f), left + itemWidth, top + dp(45f))
-                    suggestionBounds.add(rect)
+                    val rect = obtainRect(suggestionBounds, index).apply {
+                        set(left, top + dp(23f), left + itemWidth, top + dp(45f))
+                    }
+                    suggestionRectCount++
                     paint.color = keyColor(special = true)
                     canvas.drawRoundRect(rect, dp(6f), dp(6f), paint)
                     paint.color = keyTextColor()
@@ -457,6 +460,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 }
             }
         }
+        trimRectPool(suggestionBounds, suggestionRectCount)
         val rowHeight = (height - top - previewHeight - pad) / rows.size
         var keyRectCount = 0
         rows.forEachIndexed { rowIndex, row ->
