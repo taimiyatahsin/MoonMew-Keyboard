@@ -199,6 +199,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             multiTouchCancelled = true
             downKeyIndex = -1
             downSuggestionIndex = -1
+            setPressedKey(-1)
             resetSwipeTracking()
             bounds.clear()
             suggestionBounds.clear()
@@ -333,6 +334,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         multiTouchCancelled = true
         downKeyIndex = -1
         downSuggestionIndex = -1
+        setPressedKey(-1)
         resetSwipeTracking()
         rows.clear()
         flatKeys.clear()
@@ -651,6 +653,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                     listener.onKey("SWIPE:$swipePath")
                     downKeyIndex = -1
                     downSuggestionIndex = -1
+                    setPressedKey(-1)
                     resetSwipeTracking()
                     performClick()
                     return true
