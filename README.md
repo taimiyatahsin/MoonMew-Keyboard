@@ -63,7 +63,18 @@ The project is built for Android 6.0+ and the keyboard limits its height instead
 3. Select **Build → Build APK(s)**.
 4. Find the debug APK at `app/build/outputs/apk/debug/app-debug.apk`.
 
-GitHub Actions runs unit tests and builds a debug APK for pull requests and pushes to `main`. Successful main-branch builds update the latest test APK release.
+GitHub Actions runs unit tests and builds separate debug and release APK artifacts for pull requests and pushes to `main`. Only successful main-branch pushes publish the debug test APK to the latest test release. The build job uses read-only repository permissions; release publishing runs in a separate job with write access only for eligible main-branch pushes.
+
+## Release signing
+
+The release variant can be built with `gradle assembleRelease`. To produce a signed release APK, provide all four environment variables before running Gradle:
+
+- `MOONMEW_RELEASE_STORE_FILE`
+- `MOONMEW_RELEASE_STORE_PASSWORD`
+- `MOONMEW_RELEASE_KEY_ALIAS`
+- `MOONMEW_RELEASE_KEY_PASSWORD`
+
+The signing keystore and passwords must stay outside the repository (for example, in a protected local environment or GitHub Actions secrets). If these values are not provided, CI builds an **unsigned release APK** for build validation only; it is not ready to install or publish. Do not commit a keystore or signing passwords. Keep the release key backed up securely because future app updates must use the same signing identity.
 
 ## Test-build notice
 
