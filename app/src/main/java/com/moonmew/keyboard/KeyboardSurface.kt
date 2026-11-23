@@ -430,7 +430,6 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             // activities, travel, objects and hearts/symbols.
             val categories = emojiCategories()
             rows.add(listOf("😀", "🐱", "🌿", "🍓", "⚽", "🚗", "💡", "♡").mapIndexed { index, label ->
-            rows.add(listOf("😀", "🐱", "🌿", "🍓", "⚽", "🚗", "💡", "♡").mapIndexed { index, label ->
                 Key(label, "EMOJI_CAT:$index", 1f, true)
             })
             val pageCount = EmojiPaginationPolicy.pageCount(categories[emojiCategory].size)
