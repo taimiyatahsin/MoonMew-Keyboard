@@ -88,24 +88,26 @@ class SetupActivity : Activity() {
             gravity = Gravity.CENTER
             setPadding(dp(14), dp(16), dp(14), dp(16))
         }
-        val themeNames = listOf("Pink Plush", "Moonlit Blue", "Lavender Dream", "Glass Candy", "Moon Garden")
+        val themeNames = listOf("Pink Plush", "Moonlit Blue", "Lavender Dream", "Glass Candy", "Moon Garden", "Midnight Fur", "Lavender Kitty Plush")
         val themeColors = listOf(
             0xFFFFD5E2.toInt() to 0xFFFFF8F5.toInt(),
             0xFF416B8B.toInt() to 0xFF1D2B3E.toInt(),
             0xFF795A99.toInt() to 0xFF302541.toInt(),
             0xFFFF83BA.toInt() to 0xFFFFF8FC.toInt(),
-            0xFF7866C8.toInt() to 0xFF292743.toInt()
+            0xFF7866C8.toInt() to 0xFF292743.toInt(),
+            0xFF0F0E13.toInt() to 0xFF222028.toInt(),
+            0xFFD8C2E8.toInt() to 0xFFF2C6DC.toInt()
         )
         fun updateThemePreview(id: Int) {
-            val pair = themeColors[id.coerceIn(0, 4)]
+            val pair = themeColors[id.coerceIn(0, 6)]
             themePreview.text = "🐱   Aa   ♥   ☾   🎀"
-            themePreview.setTextColor(if (id == 0 || id == 3) 0xFF713B60.toInt() else 0xFFF8F2FF.toInt())
+            themePreview.setTextColor(if (id == 0 || id == 3 || id == 6) 0xFF3D243B.toInt() else 0xFFF5DCE6.toInt())
             themePreview.background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(pair.first, pair.second)).apply { cornerRadius = dp(18).toFloat() }
         }
-        fun selectedTheme(): Int = preferences.getInt("theme_id", if (preferences.getBoolean("rose_theme", true)) 0 else 1).coerceIn(0, 4)
+        fun selectedTheme(): Int = preferences.getInt("theme_id", if (preferences.getBoolean("rose_theme", true)) 0 else 1).coerceIn(0, 6)
         updateThemePreview(selectedTheme())
         lateinit var themeButton: Button
-        themeButton = actionButton("🎨  Browse all 5 themes  ·  " + themeNames[selectedTheme()]) {
+        themeButton = actionButton("🎨  Browse all 7 themes  ·  " + themeNames[selectedTheme()]) {
             val choices = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), dp(8), dp(16), dp(8)) }
             val dialog = AlertDialog.Builder(this).setTitle("Choose your MoonMew look")
                 .setView(ScrollView(this).apply { addView(choices) }).setNegativeButton("Close", null).create()
@@ -114,7 +116,7 @@ class SetupActivity : Activity() {
                 val option = TextView(this).apply {
                     this.text = (if (selectedTheme() == index) "✓  " else "") + "🐱  " + name + "     Aa  ♥  ☾  🎀"
                     textSize = 16f; gravity = Gravity.CENTER_VERTICAL
-                    setTextColor(if (index == 0 || index == 3) 0xFF713B60.toInt() else 0xFFF8F2FF.toInt())
+                    setTextColor(if (index == 0 || index == 3 || index == 6) 0xFF3D243B.toInt() else 0xFFF5DCE6.toInt())
                     setPadding(dp(14), dp(17), dp(14), dp(17))
                     background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(pair.first, pair.second)).apply { cornerRadius = dp(16).toFloat() }
                     setOnClickListener {
