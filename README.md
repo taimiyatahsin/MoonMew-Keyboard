@@ -65,6 +65,17 @@ The project is built for Android 6.0+ and the keyboard limits its height instead
 
 GitHub Actions runs unit tests and builds a debug APK for pull requests and pushes to `main`. Successful main-branch builds update the latest test APK release.
 
+## Release signing
+
+The release variant can be built with `gradle assembleRelease`. To produce a signed release APK, provide all four environment variables before running Gradle:
+
+- `MOONMEW_RELEASE_STORE_FILE`
+- `MOONMEW_RELEASE_STORE_PASSWORD`
+- `MOONMEW_RELEASE_KEY_ALIAS`
+- `MOONMEW_RELEASE_KEY_PASSWORD`
+
+The signing keystore and passwords must stay outside the repository (for example, in a protected local environment or GitHub Actions secrets). If these values are not provided, CI builds an **unsigned release APK** for build validation only; it is not ready to install or publish. Do not commit a keystore or signing passwords. Keep the release key backed up securely because future app updates must use the same signing identity.
+
 ## Test-build notice
 
 This APK is an automatically generated **debug/test build**, not a signed Play Store release. Android may show its normal warning when installing apps from outside the Play Store.

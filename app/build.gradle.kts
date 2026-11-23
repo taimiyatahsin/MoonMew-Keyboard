@@ -3,6 +3,14 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
+val releaseStoreFile = System.getenv("MOONMEW_RELEASE_STORE_FILE")
+val releaseStorePassword = System.getenv("MOONMEW_RELEASE_STORE_PASSWORD")
+val releaseKeyAlias = System.getenv("MOONMEW_RELEASE_KEY_ALIAS")
+val releaseKeyPassword = System.getenv("MOONMEW_RELEASE_KEY_PASSWORD")
+val releaseSigningConfigured = listOf(
+    releaseStoreFile, releaseStorePassword, releaseKeyAlias, releaseKeyPassword
+).all { !it.isNullOrBlank() }
+
 android {
     namespace = "com.moonmew.keyboard"
     compileSdk = 35
@@ -13,6 +21,27 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0.0"
+    }
+
+    signingConfigs {
+        if (releaseSigningConfigured) {
+            create("release") {
+                storeFile = file(releaseStoreFile!!)
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
+        }
+    }
+
+    buildTypes {
+        getByName("release") {
+            // Keep release shrinking disabled until a measured, tested R8 rule set exists.
+            isMinifyEnabled = false
+            if (releaseSigningConfigured) {
+                signingConfig = signingConfigs.getByName("release")
+            }
+        }
     }
 
     compileOptions {
