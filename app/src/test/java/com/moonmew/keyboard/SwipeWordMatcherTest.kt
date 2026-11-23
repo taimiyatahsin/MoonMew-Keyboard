@@ -30,3 +30,37 @@ class SwipeWordMatcherTest {
         assertTrue(SwipeWordMatcher.suggest("hello", limit = -1).isEmpty())
     }
 }
+
+
+class BanglaTransliteratorRegressionTest {
+    @Test fun emptyInputStaysEmpty() {
+        assertEquals("", BanglaTransliterator.convert(""))
+    }
+
+    @Test fun commonConsonantAndVowelCombinationsCompose() {
+        assertEquals("কা", BanglaTransliterator.convert("ka"))
+        assertEquals("খা", BanglaTransliterator.convert("kha"))
+        assertEquals("ক্ষ", BanglaTransliterator.convert("ksh"))
+    }
+
+    @Test fun independentVowelsUseIndependentForms() {
+        assertEquals("আ", BanglaTransliterator.convert("a"))
+        assertEquals("ই", BanglaTransliterator.convert("i"))
+        assertEquals("ঐ", BanglaTransliterator.convert("oi"))
+    }
+
+    @Test fun exactDictionaryEntriesTakePrecedence() {
+        assertEquals("আমি", BanglaTransliterator.convert("ami"))
+        assertEquals("বাংলাদেশ", BanglaTransliterator.convert("BANGLADESH"))
+    }
+
+    @Test fun spacesAndPunctuationArePreserved() {
+        assertEquals("কা তা", BanglaTransliterator.convert("ka ta"))
+        assertEquals("কা!", BanglaTransliterator.convert("ka!"))
+    }
+
+    @Test fun unknownCharactersPassThroughWithoutCrashing() {
+        assertEquals("@", BanglaTransliterator.convert("@"))
+        assertEquals("কা🙂", BanglaTransliterator.convert("ka🙂"))
+    }
+}
