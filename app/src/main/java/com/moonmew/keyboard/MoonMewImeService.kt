@@ -22,6 +22,11 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
 
     override fun onEvaluateFullscreenMode(): Boolean = false
 
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        keyboard?.onTrimMemory(level)
+    }
+
     override fun onCreateInputView(): View {
         return KeyboardSurface(this, this).also {
             keyboard = it
