@@ -5,6 +5,7 @@ A lightweight, offline-first Android keyboard with English, Bangla phonetic, and
 ## Features
 
 - English QWERTY keyboard with long-press number and symbol alternatives.
+- Double-space period shortcut in ordinary English text fields: tap Space twice within 500 ms after a word to insert `. `; it is excluded from password, numeric, and Bangla input.
 - Bangla phonetic starter mode with live conversion preview and offline word suggestions.
 - Dedicated direct Bangla layout with independent vowels, vowel signs on long press, consonants, and alternate characters.
 - Emoji panel with categories and Unicode emoji.

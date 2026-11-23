@@ -19,6 +19,8 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
     private var numericInput = false
     private var numericDecimal = false
     private var numericSigned = false
+    private var doubleSpacePeriodEnabled = false
+    private var lastSpaceTime = 0L
 
     override fun onEvaluateFullscreenMode(): Boolean = false
 
@@ -46,6 +48,11 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
         val type = attribute?.inputType ?: InputType.TYPE_CLASS_TEXT
         val cls = type and InputType.TYPE_MASK_CLASS
         val variation = type and InputType.TYPE_MASK_VARIATION
+        // Sentence capitalization is an input flag, not a variation constant.
+        // The normal text variation covers ordinary text editors safely.
+        doubleSpacePeriodEnabled = cls == InputType.TYPE_CLASS_TEXT &&
+            variation == InputType.TYPE_TEXT_VARIATION_NORMAL
+        lastSpaceTime = 0L
         val numericConfig = NumericInputPolicy.fromInputType(type)
         numericInput = numericConfig.enabled
         numericDecimal = numericConfig.decimal
@@ -81,6 +88,7 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
     }
 
     override fun onKey(key: String) {
+        if (key != "SPACE") lastSpaceTime = 0L
         if (swipePending && !key.startsWith("SUGGEST:")) {
             swipePending = false
             keyboard?.setComposition("")
@@ -155,7 +163,20 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
                     }
                 }
             }
-            key == "SPACE" -> commitPending(" ")
+            key == "SPACE" -> {
+                val now = android.os.SystemClock.elapsedRealtime()
+                val beforeCursor = currentInputConnection?.getTextBeforeCursor(2, 0)?.toString().orEmpty()
+                val eligible = doubleSpacePeriodEnabled && !passwordField && !numericInput &&
+                    mode == KeyboardSurface.Mode.ENGLISH && composing.isEmpty() && !swipePending
+                if (DoubleSpacePeriodPolicy.shouldInsertPeriod(beforeCursor, now - lastSpaceTime, eligible)) {
+                    currentInputConnection?.deleteSurroundingText(1, 0)
+                    currentInputConnection?.commitText(". ", 1)
+                    lastSpaceTime = 0L
+                } else {
+                    commitPending(" ")
+                    lastSpaceTime = now
+                }
+            }
             key == "ENTER" -> {
                 commitPending("")
                 val imeOptions = currentInputEditorInfo?.imeOptions
