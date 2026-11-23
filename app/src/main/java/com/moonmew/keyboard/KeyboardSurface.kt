@@ -67,6 +67,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private var symbolsPage = 0
     private var composition = ""
     private var preview = ""
+    private var compositionPreviewText = ""
     private var suggestions = emptyList<String>()
     private val bounds = mutableListOf<RectF>()
     private val suggestionBounds = mutableListOf<RectF>()
@@ -293,8 +294,20 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     fun setClipboard(value: Boolean) { clipboardMode = value; emojiMode = false; symbols = false; rebuild(); invalidate() }
     fun setClipboardItems(value: List<String>) { clipboardItems = value.take(5); if (clipboardMode) rebuild(); invalidate() }
     fun nextSymbolsPage() { if (symbols) { symbolsPage = 1 - symbolsPage; rebuild(); invalidate() } }
-    fun setComposition(value: String) { composition = value; suggestionBounds.clear(); invalidate() }
-    fun setPreview(value: String) { preview = value; invalidate() }
+    private fun updateCompositionPreviewText() {
+        compositionPreviewText = if (composition.isEmpty()) "" else "$composition  →  $preview"
+    }
+    fun setComposition(value: String) {
+        composition = value
+        updateCompositionPreviewText()
+        suggestionBounds.clear()
+        invalidate()
+    }
+    fun setPreview(value: String) {
+        preview = value
+        updateCompositionPreviewText()
+        invalidate()
+    }
     fun setSuggestions(value: List<String>) { suggestions = value.take(3); suggestionBounds.clear(); invalidate() }
 
     private fun rebuild() {
@@ -478,7 +491,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             paint.color = accentColor()
             paint.textSize = dp(12f)
             paint.textAlign = Paint.Align.LEFT
-            canvas.drawText(composition + "  →  " + preview, pad * 2, top + dp(15f), paint)
+            canvas.drawText(compositionPreviewText, pad * 2, top + dp(15f), paint)
             val shownCount = minOf(suggestions.size, 3)
             if (shownCount > 0) {
                 val gap = dp(5f)
