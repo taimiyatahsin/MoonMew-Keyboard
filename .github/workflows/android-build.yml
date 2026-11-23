@@ -8,7 +8,8 @@ on:
   pull_request:
     branches:
       - main
-      - feat/instant-key-feedback-polish
+      - fix/grapheme-test-syntax
+      - perf/reuse-key-draw-rectangles
 
 permissions:
   contents: write
