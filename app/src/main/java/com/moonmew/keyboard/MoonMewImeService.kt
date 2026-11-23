@@ -156,7 +156,7 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
                         connection?.commitText("", 1)
                     } else {
                         // Delete a whole user-perceived character (including joined emoji and flags).
-                        val beforeCursor = connection?.getTextBeforeCursor(64, 0)
+                        val beforeCursor = connection?.getTextBeforeCursor(BackspaceDeletion.MAX_CONTEXT_UTF16_UNITS, 0)
                         val units = BackspaceDeletion.utf16UnitsBeforeCursor(beforeCursor)
                         connection?.deleteSurroundingText(units, 0)
                     }
