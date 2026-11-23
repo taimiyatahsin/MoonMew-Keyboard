@@ -5,10 +5,12 @@ on:
     branches:
       - main
       - codex/moonmew-foundation
+      - test/transliterator-boundary-cases
   pull_request:
     branches:
       - main
       - fix/grapheme-test-syntax
+      - test/bangla-transliteration-coverage
 
 permissions:
   contents: write
