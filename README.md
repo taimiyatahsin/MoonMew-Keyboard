@@ -5,6 +5,7 @@ A lightweight, offline-first Android keyboard with English, Bangla phonetic, and
 ## Features
 
 - English QWERTY keyboard with long-press number and symbol alternatives.
+- Hold Backspace to repeat deletions, with a short initial delay and faster repeat cadence for longer holds.
 - Bangla phonetic starter mode with live conversion preview and offline word suggestions.
 - Dedicated direct Bangla layout with independent vowels, vowel signs on long press, consonants, and alternate characters.
 - Emoji panel with categories and Unicode emoji.
