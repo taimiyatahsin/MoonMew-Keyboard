@@ -299,14 +299,14 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 Key(label, "EMOJI_CAT:$index", 1f, true)
             })
             val emojiRows = categories[emojiCategory].chunked(8)
-            val pageCount = ((emojiRows.size + 2) / 3).coerceAtLeast(1)
-            emojiPage = emojiPage.coerceIn(0, pageCount - 1)
-            emojiRows.drop(emojiPage * 3).take(3).forEach { line ->
+            val pageWindow = EmojiPagination.window(emojiRows.size, emojiPage)
+            emojiPage = pageWindow.pageIndex
+            emojiRows.subList(pageWindow.startRow, pageWindow.endRowExclusive).forEach { line ->
                 rows.add(line.map { emoji -> Key(emoji, emoji) })
             }
             rows.add(listOf(
                 Key("‹", "EMOJI_PAGE_PREV", 1f, true),
-                Key("${emojiPage + 1}/$pageCount", "EMOJI_PAGE_STATUS", 1f, true),
+                Key("${emojiPage + 1}/${pageWindow.pageCount}", "EMOJI_PAGE_STATUS", 1f, true),
                 Key("›", "EMOJI_PAGE_NEXT", 1f, true)
             ))
             rows.add(listOf(Key("ABC", "EMOJI_BACK", 1.2f, true), Key("⌫", "DELETE", 1.2f, true), Key("Space", "SPACE", 3.6f, true)))
