@@ -12,7 +12,6 @@ on:
       - feat/backspace-hold-repeat
       - feat/spacebar-cursor-navigation
       - feat/spacebar-cursor-control
-      - feat/spacebar-cursor-navigation
 
 permissions:
   contents: write
