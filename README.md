@@ -32,6 +32,21 @@ If the direct link does not start, open the [Latest Test Build page](https://git
 
 On Samsung, the setting is usually **Settings → General management → Keyboard list and default**. Menu names may vary by Android version and manufacturer.
 
+### Manufacturer setup tips
+
+The exact menu names vary by device and Android version. If the keyboard does not appear immediately:
+
+- **Samsung:** Open Settings → General management → Keyboard list and default. Enable MoonMew, then choose it under Default keyboard.
+- **Xiaomi / Redmi / POCO:** Open Settings → Additional settings → Languages & input → Manage keyboards. Enable MoonMew, then select it as the current keyboard.
+- **OPPO / realme:** Open Settings → Additional settings (or System settings) → Keyboard & input method → Manage keyboards. Enable and select MoonMew.
+- **vivo:** Open Settings → System management → Input method (menu wording may vary), then enable and select MoonMew.
+
+These are navigation hints, not permissions the app needs. MoonMew does not need background-running or battery-optimization exemptions to function as an input method.
+
+### Play Protect and sideloading
+
+Install only an APK downloaded from this project's official GitHub Releases page. Android may ask you to allow **Install unknown apps** for the browser or file manager you used; grant that permission only to the app you trust and turn it off again after installation. If Play Protect displays a warning, read the app name and warning carefully. Do not bypass a block or disable Play Protect just to install an APK; stop and verify the release source and file integrity first.
+
 ## Privacy
 
 - The app requests no `INTERNET` permission and contains no network client or analytics. Ordinary keystrokes are not stored.
