@@ -25,6 +25,11 @@ class BanglaTransliteratorBoundaryTest {
         assertEquals("(খা)!", BanglaTransliterator.convert("(kha)!"))
     }
 
+    @Test fun vowelContextResetsAfterWhitespaceAndPunctuation() {
+        assertEquals("কা আ", BanglaTransliterator.convert("ka a"))
+        assertEquals("কা-আ", BanglaTransliterator.convert("ka-a"))
+    }
+
     @Test fun nasalDigraphIsMatchedAsOneSequence() {
         assertEquals("ং", BanglaTransliterator.convert("ng"))
     }
