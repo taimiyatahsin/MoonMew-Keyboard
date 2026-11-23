@@ -48,9 +48,10 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
         val type = attribute?.inputType ?: InputType.TYPE_CLASS_TEXT
         val cls = type and InputType.TYPE_MASK_CLASS
         val variation = type and InputType.TYPE_MASK_VARIATION
+        // Sentence capitalization is an input flag, not a variation constant.
+        // The normal text variation covers ordinary text editors safely.
         doubleSpacePeriodEnabled = cls == InputType.TYPE_CLASS_TEXT &&
-            (variation == InputType.TYPE_TEXT_VARIATION_NORMAL ||
-                variation == InputType.TYPE_TEXT_VARIATION_SENTENCES)
+            variation == InputType.TYPE_TEXT_VARIATION_NORMAL
         lastSpaceTime = 0L
         val numericConfig = NumericInputPolicy.fromInputType(type)
         numericInput = numericConfig.enabled
