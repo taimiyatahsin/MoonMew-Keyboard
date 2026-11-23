@@ -170,6 +170,15 @@ class SetupActivity : Activity() {
                 preferences.edit().putBoolean("key_sound", checked).apply()
             }
         }
+        val hapticSwitch = Switch(this).apply {
+            this.text = "Light key vibration"
+            textSize = 15f
+            setTextColor(text)
+            isChecked = preferences.getBoolean("key_haptics", true)
+            setOnCheckedChangeListener { _, checked ->
+                preferences.edit().putBoolean("key_haptics", checked).apply()
+            }
+        }
         val clipboardSwitch = Switch(this).apply {
             this.text = "Optional clipboard history (local only)"
             textSize = 14f
@@ -207,6 +216,7 @@ class SetupActivity : Activity() {
         root.addView(themeButton, matchWithTop(dp(6)))
         root.addView(themePreview, matchWithTop(dp(8)))
         root.addView(soundSwitch, matchWithTop(dp(6)))
+        root.addView(hapticSwitch, matchWithTop(dp(4)))
         root.addView(clipboardSwitch, matchWithTop(dp(10)))
         root.addView(clipboardWarning, matchWithTop(dp(2)))
         root.addView(note, matchWithTop(dp(4)))
