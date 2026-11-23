@@ -554,6 +554,9 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         val moonX = width - dp(18f)
         val moonY = dp(12f)
         paint.color = accentColor()
+        paint.alpha = 42
+        target.drawCircle(moonX, moonY, dp(8f), paint)
+        paint.alpha = 255
         target.drawCircle(moonX, moonY, dp(6f), paint)
         paint.color = backgroundTopColor()
         target.drawCircle(moonX + dp(3f), moonY - dp(2f), dp(5.5f), paint)
@@ -603,7 +606,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                     keyColor(special = key.special, modeKey = key.value == "MODE"))
                 layer.drawRoundRect(rect, radius, radius, paint)
                 paint.shader = furTextureShader()
-                paint.color = 0x22FFFFFF
+                paint.color = 0x55FFFFFF
                 layer.drawRoundRect(rect, radius, radius, paint)
                 paint.shader = null
                 paint.color = if (themeId == 5) 0x33F5DCE6 else 0x66FFFFFF
@@ -745,7 +748,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                     paint.shader = null
                     if (themeId >= 5 && !reduceAnimations && !memoryFallback) {
                         paint.shader = furTextureShader()
-                        paint.color = 0x22FFFFFF
+                        paint.color = 0x55FFFFFF
                         canvas.drawRoundRect(rect, radius, radius, paint)
                         paint.shader = null
                     }
