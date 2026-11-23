@@ -6,6 +6,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import android.text.InputType
 import android.view.View
+import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
 
 class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
@@ -158,6 +159,8 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
                     }
                 }
             }
+            key == "CURSOR_LEFT" -> sendCursorKey(KeyEvent.KEYCODE_DPAD_LEFT)
+            key == "CURSOR_RIGHT" -> sendCursorKey(KeyEvent.KEYCODE_DPAD_RIGHT)
             key == "SPACE" -> commitPending(" ")
             key == "ENTER" -> {
                 commitPending("")
@@ -190,6 +193,12 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
         }
     }
 
+
+    private fun sendCursorKey(keyCode: Int) {
+        val connection = currentInputConnection ?: return
+        connection.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, keyCode))
+        connection.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, keyCode))
+    }
 
     private fun openClipboardHistory() {
         if (passwordField) return
