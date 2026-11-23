@@ -65,3 +65,13 @@ GitHub Actions runs unit tests and builds a debug APK for pull requests and push
 ## Test-build notice
 
 This APK is an automatically generated **debug/test build**, not a signed Play Store release. Android may show its normal warning when installing apps from outside the Play Store.
+
+
+## Rendering and touch responsiveness
+
+- Key press feedback is shown immediately on touch-down and cleared on release or cancelled gestures.
+- Press feedback invalidates the affected key region rather than scheduling a separate animation.
+- Key gradients and drawing rectangles are reused to reduce repeated allocations.
+- The keycap look uses a small faux bottom lip and a thin highlight instead of real-time blur or shadow layers.
+- A full keyboard bitmap cache is intentionally avoided because suggestions, editor actions, and key layouts change dynamically; retaining a large bitmap would add memory pressure on low-RAM devices.
+- A stable 60 FPS target must be confirmed with frame-timing/profiling on physical devices; it is not guaranteed by source-level changes alone.
