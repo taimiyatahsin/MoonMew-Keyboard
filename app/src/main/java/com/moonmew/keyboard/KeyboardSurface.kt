@@ -31,6 +31,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private var symbols = false
     private var emojiMode = false
     private var emojiCategory = 0
+    private var emojiPage = 0
     private var clipboardMode = false
     private var clipboardItems = emptyList<String>()
     private var downKeyIndex = -1
@@ -232,7 +233,8 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     fun setShifted(value: Boolean) { shifted = value; rebuild(); invalidate() }
     fun setSymbols(value: Boolean) { symbols = value; emojiMode = false; clipboardMode = false; symbolsPage = 0; rebuild(); invalidate() }
     fun setEmoji(value: Boolean) { emojiMode = value; if (value) emojiCategory = 0; clipboardMode = false; symbols = false; rebuild(); invalidate() }
-    fun setEmojiCategory(value: Int) { emojiCategory = value.coerceIn(0, 7); if (emojiMode) { rebuild(); invalidate() } }
+    fun setEmojiCategory(value: Int) { emojiCategory = value.coerceIn(0, 7); emojiPage = 0; if (emojiMode) { rebuild(); invalidate() } }
+    fun moveEmojiPage(delta: Int) { if (emojiMode) { emojiPage = (emojiPage + delta).coerceAtLeast(0); rebuild(); invalidate() } }
     fun setClipboard(value: Boolean) { clipboardMode = value; emojiMode = false; symbols = false; rebuild(); invalidate() }
     fun setClipboardItems(value: List<String>) { clipboardItems = value.take(5); if (clipboardMode) rebuild(); invalidate() }
     fun nextSymbolsPage() { if (symbols) { symbolsPage = 1 - symbolsPage; rebuild(); invalidate() } }
@@ -277,9 +279,17 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             rows.add(listOf("😀", "🐱", "🌿", "🍓", "⚽", "🚗", "💡", "♡").mapIndexed { index, label ->
                 Key(label, "EMOJI_CAT:$index", 1f, true)
             })
-            categories[emojiCategory].chunked(8).forEach { line ->
+            val emojiRows = categories[emojiCategory].chunked(8)
+            val pageCount = ((emojiRows.size + 2) / 3).coerceAtLeast(1)
+            emojiPage = emojiPage.coerceIn(0, pageCount - 1)
+            emojiRows.drop(emojiPage * 3).take(3).forEach { line ->
                 rows.add(line.map { emoji -> Key(emoji, emoji) })
             }
+            rows.add(listOf(
+                Key("‹", "EMOJI_PAGE_PREV", 1f, true),
+                Key("${emojiPage + 1}/$pageCount", "EMOJI_PAGE_STATUS", 1f, true),
+                Key("›", "EMOJI_PAGE_NEXT", 1f, true)
+            ))
             rows.add(listOf(Key("ABC", "EMOJI_BACK", 1.2f, true), Key("⌫", "DELETE", 1.2f, true), Key("Space", "SPACE", 3.6f, true)))
         } else if (numericInput && !symbols) {
             // Dedicated number-pad layout for numeric editors; avoids showing a
