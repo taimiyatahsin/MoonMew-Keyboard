@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - codex/moonmew-foundation
+      - feat/haptic-feedback-toggle
   pull_request:
     branches:
       - main
