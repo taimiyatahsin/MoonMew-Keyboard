@@ -63,6 +63,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private var themeId = preferences.getInt("theme_id", if (preferences.getBoolean("rose_theme", true)) 0 else 1)
     private var keySound = preferences.getBoolean("key_sound", false)
     private var reduceAnimations = preferences.getBoolean("reduce_animations", false)
+    private var memoryFallback = false
     private var mode = Mode.ENGLISH
     private var shifted = false
     private var symbols = false
@@ -253,6 +254,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         themeId = preferences.getInt("theme_id", if (preferences.getBoolean("rose_theme", true)) 0 else 1).coerceIn(0, 6)
         keySound = preferences.getBoolean("key_sound", false)
         reduceAnimations = preferences.getBoolean("reduce_animations", false)
+        memoryFallback = false
         // If clipboard history was switched off in Settings while this IME was alive,
         // immediately discard the in-memory panel contents as well as the saved data.
         if (!preferences.getBoolean("clipboard_history_enabled", false)) {
@@ -556,7 +558,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     }
 
     private fun ensurePlushStaticLayer(pad: Float, top: Float, previewHeight: Float): Boolean {
-        if (themeId < 5 || reduceAnimations || width <= 0 || height <= 0) return false
+        if (themeId < 5 || reduceAnimations || memoryFallback || width <= 0 || height <= 0) return false
         val rowsHash = rows.hashCode()
         val cached = plushStaticBitmap
         if (cached != null && plushStaticWidth == width && plushStaticHeight == height &&
@@ -735,7 +737,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                         keyColor(special = key.special, modeKey = key.value == "MODE"))
                     canvas.drawRoundRect(rect, radius, radius, paint)
                     paint.shader = null
-                    if (themeId >= 5 && !reduceAnimations) {
+                    if (themeId >= 5 && !reduceAnimations && !memoryFallback) {
                         paint.shader = furTextureShader()
                         paint.color = 0x22FFFFFF
                         canvas.drawRoundRect(rect, radius, radius, paint)
@@ -901,6 +903,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
 
     fun onTrimMemory(level: Int) {
         if (level >= ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW) {
+            memoryFallback = true
             pressAnimator?.cancel()
             pressAnimator = null
             pressedScale = 1f
