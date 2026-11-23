@@ -22,6 +22,21 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     enum class Mode { ENGLISH, BANGLA_PHONETIC, BANGLA_DIRECT }
     private data class Key(val label: String, val value: String, val weight: Float = 1f, val special: Boolean = false, val longPressValue: String? = null)
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private var backgroundGradient: android.graphics.LinearGradient? = null
+    private var backgroundGradientWidth = -1
+    private var backgroundGradientHeight = -1
+    private var backgroundGradientTop = 0
+    private var backgroundGradientBottom = 0
+    private data class CachedKeyGradient(val bounds: RectF, val topColor: Int, val bottomColor: Int, val shader: android.graphics.LinearGradient)
+    private val keyGradientCache = mutableListOf<CachedKeyGradient>()
+    // Reused draw rectangles avoid allocating temporary RectF objects for every key on every frame.
+    private val shadowRect = RectF()
+    private val highlightRect = RectF()
+    private val pawOvalRect = RectF()
+    // Immutable normalized decoration points are created once, not on every redraw.
+    private val starPoints = arrayOf(0.08f to 0.12f, 0.22f to 0.05f, 0.78f to 0.09f, 0.93f to 0.22f, 0.13f to 0.86f, 0.88f to 0.82f)
+    private val candyAccentPoints = arrayOf(0.08f to 0.08f, 0.27f to 0.07f, 0.73f to 0.07f, 0.92f to 0.08f, 0.05f to 0.92f, 0.95f to 0.92f)
+    private val pawPrintPoints = arrayOf(0.16f to 0.18f, 0.84f to 0.18f, 0.10f to 0.78f, 0.90f to 0.78f)
     private val keyTypeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
     private val preferences = context.getSharedPreferences("moonmew_settings", Context.MODE_PRIVATE)
     private var themeId = preferences.getInt("theme_id", if (preferences.getBoolean("rose_theme", true)) 0 else 1)
@@ -52,11 +67,54 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private var symbolsPage = 0
     private var composition = ""
     private var preview = ""
+    private var compositionPreviewText = ""
     private var suggestions = emptyList<String>()
     private val bounds = mutableListOf<RectF>()
     private val suggestionBounds = mutableListOf<RectF>()
     private val rows = mutableListOf<List<Key>>()
     private val flatKeys = mutableListOf<Key>()
+
+    // Keep hit-test rectangles across frames; rebuild() clears them when key structure changes.
+    private fun backgroundShader(): android.graphics.LinearGradient {
+        val topColor = backgroundTopColor()
+        val bottomColor = backgroundBottomColor()
+        val cached = backgroundGradient
+        if (cached == null || backgroundGradientWidth != width || backgroundGradientHeight != height ||
+            backgroundGradientTop != topColor || backgroundGradientBottom != bottomColor) {
+            return android.graphics.LinearGradient(0f, 0f, 0f, height.toFloat(), topColor, bottomColor,
+                android.graphics.Shader.TileMode.CLAMP).also {
+                backgroundGradient = it
+                backgroundGradientWidth = width
+                backgroundGradientHeight = height
+                backgroundGradientTop = topColor
+                backgroundGradientBottom = bottomColor
+            }
+        }
+        return cached
+    }
+
+    private fun keyShader(index: Int, rect: RectF, topColor: Int, bottomColor: Int): android.graphics.LinearGradient {
+        while (keyGradientCache.size <= index) {
+            keyGradientCache.add(CachedKeyGradient(RectF(), 0, 0,
+                android.graphics.LinearGradient(0f, 0f, 0f, 1f, 0, 0, android.graphics.Shader.TileMode.CLAMP)))
+        }
+        val cached = keyGradientCache[index]
+        if (cached.topColor == topColor && cached.bottomColor == bottomColor && cached.bounds == rect) return cached.shader
+        val boundsCopy = RectF(rect)
+        val shader = android.graphics.LinearGradient(rect.left, rect.top, rect.left, rect.bottom,
+            topColor, bottomColor, android.graphics.Shader.TileMode.CLAMP)
+        keyGradientCache[index] = CachedKeyGradient(boundsCopy, topColor, bottomColor, shader)
+        return shader
+    }
+
+    private fun obtainRect(pool: MutableList<RectF>, index: Int): RectF {
+        while (pool.size <= index) pool.add(RectF())
+        return pool[index]
+    }
+
+    private fun trimRectPool(pool: MutableList<RectF>, used: Int) {
+        while (pool.size > used) pool.removeAt(pool.lastIndex)
+    }
 
     private val keyboardAccessibilityProvider = object : AccessibilityNodeProvider() {
         override fun createAccessibilityNodeInfo(virtualViewId: Int): AccessibilityNodeInfo? {
@@ -170,6 +228,22 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
 
     // IME parents on some Android builds measure their input view at almost the
     // full display height. Do not let that turn the keyboard into a full-screen view.
+    // A resize changes every key's hitbox. Clear old geometry before another touch
+    // can be dispatched; onDraw will repopulate the pools using the new dimensions.
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        if (w != oldw || h != oldh) {
+            // A finger may still be down while Android resizes the IME. Cancel that
+            // gesture too: onDraw can repopulate the same indices before ACTION_UP.
+            multiTouchCancelled = true
+            downKeyIndex = -1
+            downSuggestionIndex = -1
+            resetSwipeTracking()
+            bounds.clear()
+            suggestionBounds.clear()
+        }
+    }
+
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val displayHeightPx = resources.displayMetrics.heightPixels
         val screenCapPx = (displayHeightPx * 0.44f).toInt().coerceAtLeast(dp(120f).toInt())
@@ -276,16 +350,35 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     fun setClipboard(value: Boolean) { clipboardMode = value; emojiMode = false; symbols = false; rebuild(); invalidate() }
     fun setClipboardItems(value: List<String>) { clipboardItems = value.take(5); if (clipboardMode) rebuild(); invalidate() }
     fun nextSymbolsPage() { if (symbols) { symbolsPage = 1 - symbolsPage; rebuild(); invalidate() } }
-    fun setComposition(value: String) { composition = value; suggestionBounds.clear(); invalidate() }
-    fun setPreview(value: String) { preview = value; invalidate() }
+    private fun updateCompositionPreviewText() {
+        compositionPreviewText = if (composition.isEmpty()) "" else "$composition  →  $preview"
+    }
+    fun setComposition(value: String) {
+        composition = value
+        updateCompositionPreviewText()
+        suggestionBounds.clear()
+        invalidate()
+    }
+    fun setPreview(value: String) {
+        preview = value
+        updateCompositionPreviewText()
+        invalidate()
+    }
     fun setSuggestions(value: List<String>) { suggestions = value.take(3); suggestionBounds.clear(); invalidate() }
 
     private fun rebuild() {
+        // A layout rebuild invalidates the geometry captured by an in-flight touch.
+        // Cancel it so ACTION_UP cannot activate a different key at the same index.
+        multiTouchCancelled = true
+        downKeyIndex = -1
+        downSuggestionIndex = -1
+        resetSwipeTracking()
         rows.clear()
         flatKeys.clear()
         // Old hitboxes must not point at a newly rebuilt key list before the next draw.
         bounds.clear()
         suggestionBounds.clear()
+        keyGradientCache.clear()
         if (clipboardMode) {
             if (clipboardItems.isEmpty()) {
                 val enabled = preferences.getBoolean("clipboard_history_enabled", false)
@@ -410,22 +503,18 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         if (rows.isEmpty()) return
-        paint.shader = android.graphics.LinearGradient(0f, 0f, 0f, height.toFloat(),
-            backgroundTopColor(), backgroundBottomColor(), android.graphics.Shader.TileMode.CLAMP)
+        paint.shader = backgroundShader()
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
         paint.shader = null
         paint.color = accentColor()
         paint.alpha = 58
-        val stars = arrayOf(0.08f to 0.12f, 0.22f to 0.05f, 0.78f to 0.09f, 0.93f to 0.22f, 0.13f to 0.86f, 0.88f to 0.82f)
-        stars.forEachIndexed { index, point ->
+        starPoints.forEachIndexed { index, point ->
             canvas.drawCircle(width * point.first, height * point.second, dp(if (index % 2 == 0) 1.4f else 1f), paint)
         }
         paint.alpha = 255
         // Decorative candy dots and tiny bow-like accents for the kawaii palettes.
         if (themeId == 0 || themeId == 3) {
-            val accents = arrayOf(0.08f to 0.08f, 0.27f to 0.07f, 0.73f to 0.07f, 0.92f to 0.08f,
-                0.05f to 0.92f, 0.95f to 0.92f)
-            accents.forEachIndexed { index, point ->
+            candyAccentPoints.forEachIndexed { index, point ->
                 val cx = width * point.first
                 val cy = height * point.second
                 paint.color = if (index % 2 == 0) 0xFFFF8FB9.toInt() else 0xFFFFFFFF.toInt()
@@ -436,8 +525,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             }
             // Tiny paw-print motifs add a recognisable kitty detail without
             // covering keys or competing with the labels.
-            val paws = arrayOf(0.16f to 0.18f, 0.84f to 0.18f, 0.10f to 0.78f, 0.90f to 0.78f)
-            paws.forEachIndexed { index, point ->
+            pawPrintPoints.forEachIndexed { index, point ->
                 val cx = width * point.first
                 val cy = height * point.second
                 val paw = if (index % 2 == 0) 0xFFFF8FB9.toInt() else 0xFFFFFFFF.toInt()
@@ -447,7 +535,8 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 canvas.drawCircle(cx - r * 1.35f, cy - r * 1.15f, r, paint)
                 canvas.drawCircle(cx, cy - r * 1.65f, r, paint)
                 canvas.drawCircle(cx + r * 1.35f, cy - r * 1.15f, r, paint)
-                canvas.drawOval(RectF(cx - r * 1.5f, cy - r * 0.4f, cx + r * 1.5f, cy + r * 1.65f), paint)
+                pawOvalRect.set(cx - r * 1.5f, cy - r * 0.4f, cx + r * 1.5f, cy + r * 1.65f)
+                canvas.drawOval(pawOvalRect, paint)
             }
             paint.alpha = 255
         }
@@ -459,20 +548,23 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         val pad = dp(5f)
         val top = dp(7f)
         val previewHeight = if (composition.isNotEmpty()) dp(49f) else dp(5f)
-        suggestionBounds.clear()
+        var suggestionRectCount = 0
         if (composition.isNotEmpty()) {
             paint.color = accentColor()
             paint.textSize = dp(12f)
             paint.textAlign = Paint.Align.LEFT
-            canvas.drawText(composition + "  →  " + preview, pad * 2, top + dp(15f), paint)
-            val shown = suggestions.take(3)
-            if (shown.isNotEmpty()) {
+            canvas.drawText(compositionPreviewText, pad * 2, top + dp(15f), paint)
+            val shownCount = minOf(suggestions.size, 3)
+            if (shownCount > 0) {
                 val gap = dp(5f)
-                val itemWidth = (width - pad * 2 - gap * (shown.size - 1)) / shown.size
-                shown.forEachIndexed { index, word ->
+                val itemWidth = (width - pad * 2 - gap * (shownCount - 1)) / shownCount
+                for (index in 0 until shownCount) {
+                    val word = suggestions[index]
                     val left = pad + index * (itemWidth + gap)
-                    val rect = RectF(left, top + dp(23f), left + itemWidth, top + dp(45f))
-                    suggestionBounds.add(rect)
+                    val rect = obtainRect(suggestionBounds, index).apply {
+                        set(left, top + dp(23f), left + itemWidth, top + dp(45f))
+                    }
+                    suggestionRectCount++
                     paint.color = keyColor(special = true)
                     canvas.drawRoundRect(rect, dp(6f), dp(6f), paint)
                     paint.color = keyTextColor()
@@ -482,8 +574,9 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 }
             }
         }
+        trimRectPool(suggestionBounds, suggestionRectCount)
         val rowHeight = (height - top - previewHeight - pad) / rows.size
-        bounds.clear()
+        var keyRectCount = 0
         rows.forEachIndexed { rowIndex, row ->
             val gap = dp(4f)
             val total = row.sumOf { it.weight.toDouble() }.toFloat()
@@ -491,23 +584,24 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             var x = pad
             row.forEach { key ->
                 val w = usable * key.weight / total
-                val rect = RectF(x, top + previewHeight + rowIndex * rowHeight + dp(2f),
-                    x + w, top + previewHeight + (rowIndex + 1) * rowHeight - dp(3f))
-                bounds.add(rect)
+                val rect = obtainRect(bounds, keyRectCount++).apply {
+                    set(x, top + previewHeight + rowIndex * rowHeight + dp(2f),
+                        x + w, top + previewHeight + (rowIndex + 1) * rowHeight - dp(3f))
+                }
                 val radius = dp(if (themeId == 3) 13f else 10f)
                 // Soft offset edge gives the keycap a tactile, raised appearance.
                 paint.color = if (themeId == 1 || themeId == 2) 0x66000000 else 0x55B65F83
-                canvas.drawRoundRect(RectF(rect.left, rect.top + dp(2f), rect.right, rect.bottom + dp(2f)), radius, radius, paint)
+                shadowRect.set(rect.left, rect.top + dp(2f), rect.right, rect.bottom + dp(2f))
+                canvas.drawRoundRect(shadowRect, radius, radius, paint)
                 val base = keyColor(special = key.special, modeKey = key.value == "MODE")
                 val topTint = if (themeId == 1 || themeId == 2) 0xFF64718A.toInt() else 0xFFFFFFFF.toInt()
-                paint.shader = android.graphics.LinearGradient(rect.left, rect.top, rect.left, rect.bottom,
-                    topTint, base, android.graphics.Shader.TileMode.CLAMP)
+                paint.shader = keyShader(keyRectCount - 1, rect, topTint, base)
                 canvas.drawRoundRect(rect, radius, radius, paint)
                 paint.shader = null
                 // A small glossy highlight makes pink and glass keys feel like crafted keycaps.
                 paint.color = if (themeId == 1 || themeId == 2) 0x33FFFFFF else 0x99FFFFFF.toInt()
-                canvas.drawRoundRect(RectF(rect.left + dp(3f), rect.top + dp(2f), rect.right - dp(3f), rect.top + dp(5f)),
-                    dp(3f), dp(3f), paint)
+                highlightRect.set(rect.left + dp(3f), rect.top + dp(2f), rect.right - dp(3f), rect.top + dp(5f))
+                canvas.drawRoundRect(highlightRect, dp(3f), dp(3f), paint)
                 paint.style = Paint.Style.STROKE
                 paint.strokeWidth = dp(if (themeId == 3) 1.2f else 0.8f)
                 paint.color = accentColor()
@@ -526,6 +620,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 x += w + gap
             }
         }
+        trimRectPool(bounds, keyRectCount)
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {

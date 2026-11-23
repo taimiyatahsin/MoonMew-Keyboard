@@ -9,6 +9,7 @@ on:
     branches:
       - main
       - fix/grapheme-test-syntax
+      - perf/reuse-key-draw-rectangles
 
 permissions:
   contents: write
