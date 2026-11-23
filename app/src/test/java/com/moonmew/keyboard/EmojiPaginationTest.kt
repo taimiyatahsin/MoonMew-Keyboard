@@ -23,6 +23,13 @@ class EmojiPaginationTest {
         assertEquals(EmojiPageWindow(1, 3, 1, 2), EmojiPagination.window(3, 1, 0))
     }
 
+    @Test fun veryLargeRowCountsDoNotOverflowPageMath() {
+        val window = EmojiPagination.window(Int.MAX_VALUE, Int.MAX_VALUE)
+        assertEquals(715827882, window.pageIndex)
+        assertEquals(715827883, window.pageCount)
+        assertEquals(Int.MAX_VALUE, window.endRowExclusive)
+    }
+
     @Test fun negativeRowCountIsTreatedAsEmpty() {
         assertEquals(EmojiPageWindow(0, 1, 0, 0), EmojiPagination.window(-4, 2))
     }
