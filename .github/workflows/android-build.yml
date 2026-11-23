@@ -11,6 +11,7 @@ on:
       - feat/instant-key-feedback-polish
       - feat/backspace-hold-repeat
       - feat/spacebar-cursor-navigation
+      - feat/spacebar-cursor-navigation
 
 permissions:
   contents: write
