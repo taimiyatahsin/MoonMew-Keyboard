@@ -95,29 +95,39 @@ object BanglaWordSuggestions {
         "protidin" to "প্রতিদিন", "shobshomoy" to "সবসময়", "shobsomoy" to "সবসময়"
     )
 
+    // Rank the small local lexicon once at startup instead of sorting and
+    // allocating a sequence pipeline on every keystroke.
+    private val rankedWords: List<Pair<String, String>> = words.entries
+        .sortedWith(
+            compareByDescending<Map.Entry<String, String>> { false }
+                .thenBy { it.key.length }
+                .thenBy { it.key }
+        )
+        .map { it.key to it.value }
+
     /** Exact dictionary lookup, tolerant of accidental surrounding spaces/case. */
     fun exact(roman: String): String? = words[roman.trim().lowercase()]
 
     /**
-     * Returns a small, deterministic candidate list for the current roman prefix.
-     * Exact matches rank first; duplicate Bangla spellings are collapsed so the
-     * suggestion strip never wastes slots on aliases (for example, "ami"/"ami").
+     * Returns deterministic prefix candidates. Exact matches rank first and
+     * aliases with the same Bangla spelling share one suggestion slot.
      */
     fun suggest(prefix: String, limit: Int = 3): List<String> {
         val query = prefix.trim().lowercase()
         val safeLimit = limit.coerceIn(0, 5)
         if (query.isBlank() || safeLimit == 0) return emptyList()
 
-        return words.entries.asSequence()
-            .filter { it.key.startsWith(query) }
-            .sortedWith(
-                compareByDescending<Map.Entry<String, String>> { it.key == query }
-                    .thenBy { it.key.length }
-                    .thenBy { it.key }
-            )
-            .map { it.value }
-            .distinct()
-            .take(safeLimit)
-            .toList()
+        val result = ArrayList<String>(safeLimit)
+        words[query]?.let { exact ->
+            result.add(exact)
+            if (result.size == safeLimit) return result
+        }
+        for ((roman, bangla) in rankedWords) {
+            if (roman != query && roman.startsWith(query) && bangla !in result) {
+                result.add(bangla)
+                if (result.size == safeLimit) break
+            }
+        }
+        return result
     }
 }
