@@ -66,6 +66,16 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private val rows = mutableListOf<List<Key>>()
     private val flatKeys = mutableListOf<Key>()
 
+    // Keep hit-test rectangles across frames; rebuild() clears them when key structure changes.
+    private fun obtainRect(pool: MutableList<RectF>, index: Int): RectF {
+        while (pool.size <= index) pool.add(RectF())
+        return pool[index]
+    }
+
+    private fun trimRectPool(pool: MutableList<RectF>, used: Int) {
+        while (pool.size > used) pool.removeAt(pool.lastIndex)
+    }
+
     private val keyboardAccessibilityProvider = object : AccessibilityNodeProvider() {
         override fun createAccessibilityNodeInfo(virtualViewId: Int): AccessibilityNodeInfo? {
             if (virtualViewId == HOST_VIEW_ID) {
@@ -424,7 +434,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         val pad = dp(5f)
         val top = dp(7f)
         val previewHeight = if (composition.isNotEmpty()) dp(49f) else dp(5f)
-        suggestionBounds.clear()
+        var suggestionRectCount = 0
         if (composition.isNotEmpty()) {
             paint.color = accentColor()
             paint.textSize = dp(12f)
@@ -448,7 +458,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             }
         }
         val rowHeight = (height - top - previewHeight - pad) / rows.size
-        bounds.clear()
+        var keyRectCount = 0
         rows.forEachIndexed { rowIndex, row ->
             val gap = dp(4f)
             val total = row.sumOf { it.weight.toDouble() }.toFloat()
@@ -456,9 +466,10 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             var x = pad
             row.forEach { key ->
                 val w = usable * key.weight / total
-                val rect = RectF(x, top + previewHeight + rowIndex * rowHeight + dp(2f),
-                    x + w, top + previewHeight + (rowIndex + 1) * rowHeight - dp(3f))
-                bounds.add(rect)
+                val rect = obtainRect(bounds, keyRectCount++).apply {
+                    set(x, top + previewHeight + rowIndex * rowHeight + dp(2f),
+                        x + w, top + previewHeight + (rowIndex + 1) * rowHeight - dp(3f))
+                }
                 val radius = dp(if (themeId == 3) 13f else 10f)
                 // Soft offset edge gives the keycap a tactile, raised appearance.
                 paint.color = if (themeId == 1 || themeId == 2) 0x66000000 else 0x55B65F83
@@ -492,6 +503,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 x += w + gap
             }
         }
+        trimRectPool(bounds, keyRectCount)
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
