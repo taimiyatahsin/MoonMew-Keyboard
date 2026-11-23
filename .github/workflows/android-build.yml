@@ -11,6 +11,10 @@ on:
       - fix/grapheme-test-syntax
       - perf/reuse-key-draw-rectangles
       - feat/instant-key-feedback-polish
+      - feat/backspace-hold-repeat
+      - feat/spacebar-cursor-control
+      - feat/spacebar-cursor-navigation-v2
+      - feat/emoji-picker-pagination
 
 permissions:
   contents: write
