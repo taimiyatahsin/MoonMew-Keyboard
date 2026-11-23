@@ -15,6 +15,7 @@ on:
       - feat/spacebar-cursor-navigation
       - feat/spacebar-cursor-control
       - feat/spacebar-cursor-navigation-v2
+      - feat/emoji-picker-pagination
 
 permissions:
   contents: write
