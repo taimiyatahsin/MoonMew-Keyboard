@@ -57,6 +57,8 @@ class BackspaceDeletionTest {
 
     @Test fun longJoinedEmojiSequenceDeletesAsOneUnit() {
         val sequence = List(6) { "👨‍👩‍👧‍👦" }.joinToString("\u200D")
+        assertEquals(true, sequence.length > 64)
+        assertEquals(true, sequence.length <= BackspaceDeletion.MAX_CONTEXT_UTF16_UNITS)
         assertEquals(sequence.length, BackspaceDeletion.utf16UnitsBeforeCursor(sequence))
     }
 
