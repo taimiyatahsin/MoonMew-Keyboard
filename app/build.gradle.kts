@@ -1,3 +1,8 @@
+plugins {
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+}
+
 val releaseStoreFile = System.getenv("MOONMEW_RELEASE_STORE_FILE")
 val releaseStorePassword = System.getenv("MOONMEW_RELEASE_STORE_PASSWORD")
 val releaseKeyAlias = System.getenv("MOONMEW_RELEASE_KEY_ALIAS")
@@ -5,11 +10,6 @@ val releaseKeyPassword = System.getenv("MOONMEW_RELEASE_KEY_PASSWORD")
 val releaseSigningConfigured = listOf(
     releaseStoreFile, releaseStorePassword, releaseKeyAlias, releaseKeyPassword
 ).all { !it.isNullOrBlank() }
-
-plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-}
 
 android {
     namespace = "com.moonmew.keyboard"
