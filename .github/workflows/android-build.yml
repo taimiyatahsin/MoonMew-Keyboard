@@ -15,6 +15,7 @@ on:
       - feat/spacebar-cursor-control
       - feat/spacebar-cursor-navigation-v2
       - feat/emoji-picker-pagination
+      - test/clipboard-history-policy
 
 permissions:
   contents: write
