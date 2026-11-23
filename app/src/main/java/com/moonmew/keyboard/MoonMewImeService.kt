@@ -119,6 +119,8 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
             key == "EMOJI" -> { commitPending(""); keyboard?.setEmoji(true) }
             key == "EMOJI_BACK" -> keyboard?.setEmoji(false)
             key.startsWith("EMOJI_CAT:") -> keyboard?.setEmojiCategory(key.substringAfter(":").toIntOrNull() ?: 0)
+            key == "EMOJI_PAGE_PREV" -> keyboard?.moveEmojiPage(-1)
+            key == "EMOJI_PAGE_NEXT" -> keyboard?.moveEmojiPage(1)
             key == "CLIP" -> openClipboardHistory()
             key == "CLIP_CLOSE" -> keyboard?.setClipboard(false)
             // Informational/empty clipboard rows are not text keys. Never let their
