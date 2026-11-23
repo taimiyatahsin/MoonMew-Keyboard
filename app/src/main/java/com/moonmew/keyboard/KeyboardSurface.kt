@@ -77,6 +77,9 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private var pressAnimator: ValueAnimator? = null
     private var downSuggestionIndex = -1
     private var downTime = 0L
+    private var deleteRepeatRunnable: Runnable? = null
+    private var deleteRepeatStartedAt = 0L
+    private var deleteRepeatFired = false
     private val swipePath = StringBuilder()
     private var lastSwipeKeyIndex = -1
     private var swipeTravel = 0f
@@ -219,6 +222,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         if (w != oldw || h != oldh) {
+            cancelDeleteRepeat()
             // A finger may still be down while Android resizes the IME. Cancel that
             // gesture too: onDraw can repopulate the same indices before ACTION_UP.
             multiTouchCancelled = true
@@ -367,6 +371,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     fun setSuggestions(value: List<String>) { suggestions = value.take(3); suggestionBounds.clear(); invalidate() }
 
     private fun rebuild() {
+        cancelDeleteRepeat()
         // A layout rebuild invalidates the geometry captured by an in-flight touch.
         // Cancel it so ACTION_UP cannot activate a different key at the same index.
         multiTouchCancelled = true
@@ -812,6 +817,36 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         trimRectPool(bounds, keyRectCount)
     }
 
+    private fun cancelDeleteRepeat() {
+        deleteRepeatRunnable?.let(::removeCallbacks)
+        deleteRepeatRunnable = null
+    }
+
+    private fun startDeleteRepeat(index: Int) {
+        if (flatKeys.getOrNull(index)?.value != "DELETE") return
+        cancelDeleteRepeat()
+        deleteRepeatStartedAt = SystemClock.elapsedRealtime()
+        deleteRepeatFired = false
+        val repeat = object : Runnable {
+            override fun run() {
+                if (downKeyIndex != index || multiTouchCancelled ||
+                    bounds.getOrNull(index)?.contains(lastTouchX, lastTouchY) != true
+                ) return
+                deleteRepeatFired = true
+                listener.onKey("DELETE")
+                val heldFor = SystemClock.elapsedRealtime() - deleteRepeatStartedAt
+                postDelayed(this, if (heldFor >= 1_200L) 48L else 88L)
+            }
+        }
+        deleteRepeatRunnable = repeat
+        postDelayed(repeat, 420L)
+    }
+
+    override fun onDetachedFromWindow() {
+        cancelDeleteRepeat()
+        super.onDetachedFromWindow()
+    }
+
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
@@ -820,6 +855,8 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 downKeyIndex = bounds.indexOfFirst { it.contains(event.x, event.y) }
                 setPressedKey(downKeyIndex)
                 downTime = SystemClock.elapsedRealtime()
+                deleteRepeatFired = false
+                startDeleteRepeat(downKeyIndex)
                 swipePath.setLength(0)
                 lastSwipeKeyIndex = -1
                 swipeTravel = 0f
@@ -840,8 +877,12 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 }
                 lastTouchX = event.x
                 lastTouchY = event.y
+                if (deleteRepeatRunnable != null &&
+                    bounds.getOrNull(downKeyIndex)?.contains(event.x, event.y) != true
+                ) cancelDeleteRepeat()
             }
             MotionEvent.ACTION_POINTER_DOWN -> {
+                cancelDeleteRepeat()
                 // A second finger can otherwise turn one gesture into an accidental key press.
                 // Cancel the entire gesture until every pointer is lifted.
                 multiTouchCancelled = true
@@ -851,6 +892,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 resetSwipeTracking()
             }
             MotionEvent.ACTION_UP -> {
+                cancelDeleteRepeat()
                 if (multiTouchCancelled) {
                     multiTouchCancelled = false
                     downKeyIndex = -1
@@ -888,8 +930,12 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                         if (keySound) playSoundEffect(SoundEffectConstants.CLICK)
                         performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
                         flatKeys.getOrNull(index)?.let { key ->
-                            val held = SystemClock.elapsedRealtime() - downTime >= 450L
-                            listener.onKey(if (held && key.longPressValue != null) "LONG:${key.longPressValue}" else key.value)
+                            // Repeated Backspace already deleted while held; avoid one extra
+                            // deletion when the finger is released.
+                            if (!(key.value == "DELETE" && deleteRepeatFired)) {
+                                val held = SystemClock.elapsedRealtime() - downTime >= 450L
+                                listener.onKey(if (held && key.longPressValue != null) "LONG:${key.longPressValue}" else key.value)
+                            }
                         }
                     }
                 }
@@ -900,6 +946,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 performClick()
             }
             MotionEvent.ACTION_CANCEL -> {
+                cancelDeleteRepeat()
                 multiTouchCancelled = false
                 downKeyIndex = -1
                 downSuggestionIndex = -1
