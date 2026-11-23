@@ -902,8 +902,19 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         postDelayed(repeat, 420L)
     }
 
+    // A detached IME view must not retain active press animations or cached
+    // plush pixels. The system can recreate this view during window/IME changes.
     override fun onDetachedFromWindow() {
         cancelDeleteRepeat()
+        pressAnimator?.cancel()
+        pressAnimator = null
+        pressedKeyIndex = -1
+        pressedScale = 1f
+        downKeyIndex = -1
+        downSuggestionIndex = -1
+        multiTouchCancelled = false
+        resetSwipeTracking()
+        releasePlushStaticLayer()
         super.onDetachedFromWindow()
     }
 
