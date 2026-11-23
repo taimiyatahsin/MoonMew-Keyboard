@@ -52,6 +52,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     // Reused draw rectangles avoid allocating temporary RectF objects for every key on every frame.
     private val shadowRect = RectF()
     private val highlightRect = RectF()
+    private val pressedOverlayRect = RectF()
     private val pawOvalRect = RectF()
     // Immutable normalized decoration points are created once, not on every redraw.
     private val starPoints = arrayOf(0.08f to 0.12f, 0.22f to 0.05f, 0.78f to 0.09f, 0.93f to 0.22f, 0.13f to 0.86f, 0.88f to 0.82f)
@@ -752,42 +753,16 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                     paint.alpha = 255
                 }
                 val pressed = keyRectCount - 1 == pressedKeyIndex
-                if (pressed && !reduceAnimations) {
-                    canvas.save()
-                    canvas.scale(pressedScale, pressedScale, rect.centerX(), rect.centerY())
-                }
                 val radius = dp(if (themeId == 3 || themeId >= 5) 13f else 10f)
-                // Soft offset edge gives the keycap a tactile, raised appearance.
-                paint.color = if (themeId == 1 || themeId == 2) 0x66000000 else 0x55B65F83
-                shadowRect.set(rect.left, rect.top + dp(if (themeId >= 5) 1.5f else 2f), rect.right, rect.bottom + dp(if (themeId >= 5) 1.5f else 2f))
-                canvas.drawRoundRect(shadowRect, radius, radius, paint)
-                val base = keyColor(special = key.special, modeKey = key.value == "MODE")
-                val topTint = if (themeId == 1 || themeId == 2) 0xFF64718A.toInt() else 0xFFFFFFFF.toInt()
-                paint.shader = keyShader(keyRectCount - 1, rect, topTint, base)
-                canvas.drawRoundRect(rect, radius, radius, paint)
-                paint.shader = null
-                if (themeId >= 5 && !reduceAnimations) {
-                    paint.shader = furTextureShader()
-                    paint.color = 0x22FFFFFF
-                    canvas.drawRoundRect(rect, radius, radius, paint)
-                    paint.shader = null
+                if (pressed && !reduceAnimations) {
+                    // A 65ms 0.95-scale inset overlay gives immediate press feedback
+                    // without repainting the cached keycap or allocating a layer.
+                    val insetX = rect.width() * (1f - pressedScale) * 0.5f
+                    val insetY = rect.height() * (1f - pressedScale) * 0.5f
+                    pressedOverlayRect.set(rect.left + insetX, rect.top + insetY, rect.right - insetX, rect.bottom - insetY)
+                    paint.color = if (themeId == 5) 0x33F5DCE6 else 0x33000000
+                    canvas.drawRoundRect(pressedOverlayRect, radius, radius, paint)
                 }
-                if (keyRectCount - 1 == pressedKeyIndex) {
-                    // Instant tactile feedback without animation, blur, or shadow layers.
-                    paint.color = if (themeId == 1 || themeId == 2) 0x22FFFFFF else 0x18000000
-                    canvas.drawRoundRect(rect, radius, radius, paint)
-                }
-                // A small glossy highlight makes pink and glass keys feel like crafted keycaps.
-                paint.color = if (themeId == 1 || themeId == 2) 0x33FFFFFF else 0x99FFFFFF.toInt()
-                highlightRect.set(rect.left + dp(3f), rect.top + dp(2f), rect.right - dp(3f), rect.top + dp(5f))
-                canvas.drawRoundRect(highlightRect, dp(3f), dp(3f), paint)
-                paint.style = Paint.Style.STROKE
-                paint.strokeWidth = dp(if (themeId == 3) 1.2f else 0.8f)
-                paint.color = accentColor()
-                paint.alpha = if (key.special) 190 else 125
-                canvas.drawRoundRect(rect, radius, radius, paint)
-                paint.style = Paint.Style.FILL
-                paint.alpha = 255
                 paint.color = keyTextColor()
                 paint.textAlign = Paint.Align.CENTER
                 val preferredTextSize = if (key.label.length > 5) dp(11f) else dp(18f)
@@ -809,7 +784,6 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                     canvas.drawPath(catEarPath, paint)
                 }
                 canvas.drawText(key.label, rect.centerX(), baseline, paint)
-                if (pressed && !reduceAnimations) canvas.restore()
                 x += w + gap
             }
         }
