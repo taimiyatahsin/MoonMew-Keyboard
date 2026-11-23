@@ -31,6 +31,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private var symbols = false
     private var emojiMode = false
     private var emojiCategory = 0
+    private var emojiPage = 0
     private var clipboardMode = false
     private var clipboardItems = emptyList<String>()
     private var downKeyIndex = -1
@@ -58,6 +59,25 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private val rows = mutableListOf<List<Key>>()
     private val flatKeys = mutableListOf<Key>()
 
+    private fun emojiPickerAccessibilityLabel(key: Key): String = when {
+        key.value == "EMOJI_PAGE_PREV" -> "Previous emoji page"
+        key.value == "EMOJI_PAGE_NEXT" -> "Next emoji page"
+        key.value == "EMOJI_PAGE_STATUS" -> "Emoji page ${key.label}"
+        key.value.startsWith("EMOJI_CAT:") -> {
+            val names = listOf("Faces", "Animals", "Nature", "Food", "Activities", "Travel", "Objects", "Hearts and symbols")
+            "Emoji category: ${names.getOrNull(key.value.substringAfter(":").toIntOrNull() ?: -1) ?: "Unknown"}"
+        }
+        key.value == "DELETE" -> "Backspace"
+        key.value == "SPACE" -> "Space"
+        key.value == "ENTER" -> "Enter"
+        key.value == "SHIFT" -> "Shift"
+        key.value == "EMOJI_BACK" -> "Return to keyboard"
+        key.value == "EMOJI" -> "Open emoji picker"
+        key.value == "CLIP" -> "Open clipboard history"
+        key.value == "CLIP_CLOSE" -> "Close clipboard history"
+        else -> key.label
+    }
+
     private val keyboardAccessibilityProvider = object : AccessibilityNodeProvider() {
         override fun createAccessibilityNodeInfo(virtualViewId: Int): AccessibilityNodeInfo? {
             if (virtualViewId == HOST_VIEW_ID) {
@@ -76,7 +96,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             val isSuggestion = suggestionIndex >= 0
             val rect = if (isSuggestion) suggestionBounds.getOrNull(suggestionIndex) else bounds.getOrNull(virtualViewId)
             if (rect == null) return null
-            val label = if (isSuggestion) suggestions.getOrNull(suggestionIndex) else flatKeys.getOrNull(virtualViewId)?.label
+            val label = if (isSuggestion) suggestions.getOrNull(suggestionIndex)?.let { "Suggestion: $it" } else flatKeys.getOrNull(virtualViewId)?.let(::emojiPickerAccessibilityLabel)
             return AccessibilityNodeInfo.obtain().apply {
                 setSource(this@KeyboardSurface, virtualViewId)
                 setParent(this@KeyboardSurface)
@@ -86,7 +106,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 contentDescription = label ?: "Keyboard key"
                 isEnabled = true
                 isClickable = true
-        importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
+                importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
                 addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_CLICK)
                 val nodeBounds = Rect()
                 rect.roundOut(nodeBounds)
@@ -231,8 +251,9 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     fun setMode(value: Mode) { mode = value; symbols = false; emojiMode = false; clipboardMode = false; symbolsPage = 0; rebuild(); invalidate() }
     fun setShifted(value: Boolean) { shifted = value; rebuild(); invalidate() }
     fun setSymbols(value: Boolean) { symbols = value; emojiMode = false; clipboardMode = false; symbolsPage = 0; rebuild(); invalidate() }
-    fun setEmoji(value: Boolean) { emojiMode = value; if (value) emojiCategory = 0; clipboardMode = false; symbols = false; rebuild(); invalidate() }
-    fun setEmojiCategory(value: Int) { emojiCategory = value.coerceIn(0, 7); if (emojiMode) { rebuild(); invalidate() } }
+    fun setEmoji(value: Boolean) { emojiMode = value; if (value) { emojiCategory = 0; emojiPage = 0 }; clipboardMode = false; symbols = false; rebuild(); invalidate() }
+    fun setEmojiCategory(value: Int) { emojiCategory = value.coerceIn(0, 7); emojiPage = 0; if (emojiMode) { rebuild(); invalidate() } }
+    fun moveEmojiPage(delta: Int) { if (emojiMode) { emojiPage = (emojiPage + delta).coerceAtLeast(0); rebuild(); invalidate() } }
     fun setClipboard(value: Boolean) { clipboardMode = value; emojiMode = false; symbols = false; rebuild(); invalidate() }
     fun setClipboardItems(value: List<String>) { clipboardItems = value.take(5); if (clipboardMode) rebuild(); invalidate() }
     fun nextSymbolsPage() { if (symbols) { symbolsPage = 1 - symbolsPage; rebuild(); invalidate() } }
@@ -277,9 +298,17 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             rows.add(listOf("😀", "🐱", "🌿", "🍓", "⚽", "🚗", "💡", "♡").mapIndexed { index, label ->
                 Key(label, "EMOJI_CAT:$index", 1f, true)
             })
-            categories[emojiCategory].chunked(8).forEach { line ->
+            val emojiRows = categories[emojiCategory].chunked(8)
+            val pageWindow = EmojiPagination.window(emojiRows.size, emojiPage)
+            emojiPage = pageWindow.pageIndex
+            emojiRows.subList(pageWindow.startRow, pageWindow.endRowExclusive).forEach { line ->
                 rows.add(line.map { emoji -> Key(emoji, emoji) })
             }
+            rows.add(listOf(
+                Key("‹", "EMOJI_PAGE_PREV", 1f, true),
+                Key("${emojiPage + 1}/${pageWindow.pageCount}", "EMOJI_PAGE_STATUS", 1f, true),
+                Key("›", "EMOJI_PAGE_NEXT", 1f, true)
+            ))
             rows.add(listOf(Key("ABC", "EMOJI_BACK", 1.2f, true), Key("⌫", "DELETE", 1.2f, true), Key("Space", "SPACE", 3.6f, true)))
         } else if (numericInput && !symbols) {
             // Dedicated number-pad layout for numeric editors; avoids showing a
