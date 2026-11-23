@@ -8,6 +8,10 @@ on:
   pull_request:
     branches:
       - main
+      - feat/instant-key-feedback-polish
+  push:
+    branches:
+      - feat/haptic-feedback-toggle
 
 permissions:
   contents: write
