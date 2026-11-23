@@ -1,6 +1,7 @@
 package com.moonmew.keyboard
 
 import android.content.Context
+import android.animation.ValueAnimator
 import android.graphics.Canvas
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -62,6 +63,8 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private var clipboardItems = emptyList<String>()
     private var downKeyIndex = -1
     private var pressedKeyIndex = -1
+    private var pressedScale = 1f
+    private var pressAnimator: ValueAnimator? = null
     private var downSuggestionIndex = -1
     private var downTime = 0L
     private val swipePath = StringBuilder()
@@ -584,6 +587,11 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                     set(x, top + previewHeight + rowIndex * rowHeight + dp(2f),
                         x + w, top + previewHeight + (rowIndex + 1) * rowHeight - dp(3f))
                 }
+                val pressed = keyRectCount - 1 == pressedKeyIndex
+                if (pressed && !reduceAnimations) {
+                    canvas.save()
+                    canvas.scale(pressedScale, pressedScale, rect.centerX(), rect.centerY())
+                }
                 val radius = dp(if (themeId == 3 || themeId >= 5) 13f else 10f)
                 // Soft offset edge gives the keycap a tactile, raised appearance.
                 paint.color = if (themeId == 1 || themeId == 2) 0x66000000 else 0x55B65F83
@@ -637,6 +645,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                     canvas.drawPath(catEarPath, paint)
                 }
                 canvas.drawText(key.label, rect.centerX(), baseline, paint)
+                if (pressed && !reduceAnimations) canvas.restore()
                 x += w + gap
             }
         }
@@ -744,7 +753,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
 
     private fun furTextureShader(): BitmapShader {
         furTextureShader?.let { return it }
-        val bytes = Base64.decode("iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAACIUlEQVR42uVX204bMRA906KCFrJNoNlAQiVKy/9/EOIigSgXcWloadSWnr6M0TBaO97dwEvnyesd+9hnjmdsQdwqAJe2g+TH0BaRE5Ijbf8GcKM+AxG59ZOR7KnvPVJGcmja62hgJHdJ7nrgAF5n4sFF5CqAi8hNLrDu7tB0F/pvy7B2EF0AyVKdHkku54J3NQngIvII4Ifb2XvrJyJ3DeevSM507HRuCIxY3uigbyT7AIbPBonsR0KxZnwKL2Lj9yUWy96cWE9IThZFP8nPTZwniX9l0JAVYLYGOuygrIlvAYDO9af7HuG/M5J9FbTtG8f8Ry0AtkluawiKFLAFF6P+dxrPJQAXMRBzzE5tX/gOoHU5g+Sm+p4/zUOyV1cgDNgfOwDAqv5fNn2DkGpj4I3pbJRAuqbiBgv7pDs9cpVyI5UhW5XRGPhrMFCZ9uUCj+Ga10wyBDa1RipZH8BM27NX0YADv7OitcdQ+/YyKmgpLagc64RnupBgb53rdSK8szYxHPvUSyLy98iEaKtF5/aqy4khOSQ5fMrVdfk6YUWTmp8qPkEDnsKrOeAPZtIt1cTXOcevBDAVke9NT0EZucKH/H+cwRYA/K0T31Kg3hSQEclf4XVDsojcbm4zmX8AsGLBSX5IxWngvnde/F2QWMxOBsUxymG04m/b9/5hMjYZ6yznodrB7O15miPCyjB1EQtNC6aSuQSGut4LXVIrAPgHZJtNe2chgosAAAAASUVORK5CYII=", Base64.DEFAULT)
+        val bytes = Base64.decode("iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAACIUlEQVR42uVX204bMRA906KCFrJNoNlAQiVKy/9/EOIigSgXcWloadSWnr6M0TBaO97dwEvnyesd+9hnjmdsQdwqAJe2g+TH0BaRE5Ijbf8GcKM+AxG59ZOR7KnvPVJGcmja62hgJHdJ7nrgAF5n4sFF5CqAi8hNLrDu7tB0F/pvy7B2EF0AyVKdHkku54J3NQngIvII4Ifb2XvrJyJ3DeevSM507HRuCIxY3uigbyT7AIbPBonsR0KxZnwKL2Lj9yUWy96cWE9IThZFP8nPTZwniX9l0JAVYLYGOuygrIlvAYDO9af7HuG/M5J9FbTtG8f8Ry0AtkluawiKFLAFF6P+dxrPJQAXMRBzzE5tX/gOoHU5g+Sm+p4/zUOyV1cgDNgfOwDAqv5fNn2DkGpj4I3pbJRAuqbiBgv7pDs9cpVyI5UhW5XRGPhrMFCZ9uUCj+Ga10wyBDa1RipZH8BM27NX0YADv7OitcdQ+/YyKmgpLagc64RnupBgb53rdSK8szYxHPvUSbLy98iEaKtF5/aqy4khOSQ5fMrVdfk6YUWTmp8qPkEDnsKrOeAPZtIt1cTXOcevBDAVke9NT0EZucKH/H+cwRYA/K0T31Kg3hSQEclf4XVDsojcbm4zmX8AsGLBSX5IxWngvnde/F2QWMxOBsUxymG04m/b9/5hMjYZ6yznodrB7O15miPCyjB1EQtNC6aSuQSGut4LXVIrAPgHZJtNe2chgosAAAAASUVORK5CYII=", Base64.DEFAULT)
         val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
             ?: throw IllegalStateException("Unable to decode bundled plush texture")
         furTextureBitmap = bitmap
@@ -753,6 +762,9 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
 
     fun onTrimMemory(level: Int) {
         if (level >= ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW) {
+            pressAnimator?.cancel()
+            pressAnimator = null
+            pressedScale = 1f
             furTextureBitmap?.recycle()
             furTextureBitmap = null
             furTextureShader = null
@@ -763,9 +775,24 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     }
 
     private fun setPressedKey(index: Int) {
-        // Low-end devices can disable the pressed-key visual overlay entirely.
+        // Low-end devices can disable pressed visuals and their tiny scale animation.
         val visibleIndex = if (reduceAnimations) -1 else index
         if (pressedKeyIndex == visibleIndex) return
+        pressAnimator?.cancel()
+        pressAnimator = null
+        pressedScale = 1f
+        if (visibleIndex >= 0) {
+            pressAnimator = ValueAnimator.ofFloat(1f, 0.95f).apply {
+                duration = 65L
+                addUpdateListener {
+                    pressedScale = it.animatedValue as Float
+                    bounds.getOrNull(visibleIndex)?.let { rect ->
+                        invalidate(rect.left.toInt(), rect.top.toInt(), rect.right.toInt() + 1, rect.bottom.toInt() + 1)
+                    }
+                }
+                start()
+            }
+        }
         bounds.getOrNull(pressedKeyIndex)?.let { old ->
             invalidate(old.left.toInt(), old.top.toInt(), old.right.toInt() + 1, old.bottom.toInt() + 1)
         }
