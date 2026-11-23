@@ -2,6 +2,9 @@ package com.moonmew.keyboard
 
 /** UTF-16 length of the complete user-perceived character immediately before the cursor. */
 internal object BackspaceDeletion {
+    // Bound cursor context while allowing long joined emoji/conjunct graphemes.
+    const val MAX_CONTEXT_UTF16_UNITS = 256
+
     fun utf16UnitsBeforeCursor(textBeforeCursor: CharSequence?): Int {
         if (textBeforeCursor.isNullOrEmpty()) return 1
 
