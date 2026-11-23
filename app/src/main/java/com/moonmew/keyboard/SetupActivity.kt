@@ -11,6 +11,7 @@ import android.provider.Settings
 import android.view.Gravity
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
+import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.ScrollView
@@ -58,6 +59,38 @@ class SetupActivity : Activity() {
         val choose = actionButton("2. Choose MoonMew keyboard") {
             val manager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
             manager.showInputMethodPicker()
+        }
+        val testTitle = TextView(this).apply {
+            this.text = "3. Test MoonMew"
+            textSize = 16f
+            setTextColor(rose)
+            gravity = Gravity.START
+            setPadding(0, dp(24), 0, dp(8))
+        }
+        val testHint = TextView(this).apply {
+            this.text = "After selecting MoonMew, tap the box and try English, বাংলা, emoji, and your favourite theme."
+            textSize = 13f
+            setTextColor(muted)
+            setPadding(0, 0, 0, dp(8))
+        }
+        val testBox = EditText(this).apply {
+            hint = "Type here to test MoonMew…"
+            textSize = 16f
+            minLines = 2
+            maxLines = 4
+            setTextColor(0xFF302541.toInt())
+            setHintTextColor(0xFF806F7C.toInt())
+            setPadding(dp(14), dp(12), dp(14), dp(12))
+            background = GradientDrawable().apply {
+                setColor(0xFFFFF8FC.toInt())
+                cornerRadius = dp(14).toFloat()
+                setStroke(dp(1), 0xFFFFB8D0.toInt())
+            }
+        }
+        val testButton = actionButton("Try typing in the test box") {
+            testBox.requestFocus()
+            val manager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            manager.showSoftInput(testBox, InputMethodManager.SHOW_IMPLICIT)
         }
         val settingsTitle = TextView(this).apply {
             this.text = "PERSONALISE YOUR KEYBOARD"
@@ -164,6 +197,10 @@ class SetupActivity : Activity() {
         root.addView(status, match())
         root.addView(enable, matchWithTop(dp(8)))
         root.addView(choose, matchWithTop(dp(10)))
+        root.addView(testTitle, matchWithTop(dp(4)))
+        root.addView(testHint, match())
+        root.addView(testBox, match())
+        root.addView(testButton, matchWithTop(dp(8)))
         root.addView(settingsTitle, matchWithTop(dp(8)))
         root.addView(heightLabel, matchWithTop(dp(4)))
         root.addView(heightControl, match())
