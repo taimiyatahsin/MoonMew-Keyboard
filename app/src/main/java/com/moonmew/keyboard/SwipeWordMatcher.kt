@@ -20,14 +20,15 @@ object SwipeWordMatcher {
         "to","today","tomorrow","time","take","talk","thank","thanks","than","they",
         "up","us","use","very","want","was","way","work","world","write"
     )
+    private val distanceBufferSize = words.maxOf { it.length } + 1
+
     fun suggest(path: String, limit: Int = 3): List<String> {
         val query = path.lowercase().filter { it in 'a'..'z' }
         if (query.length < 3 || limit <= 0) return emptyList()
         // Reuse two bounded DP rows across every dictionary candidate.
         // The previous implementation allocated two IntArrays per word on each swipe.
-        val bufferSize = words.maxOf { it.length } + 1
-        val firstRow = IntArray(bufferSize)
-        val secondRow = IntArray(bufferSize)
+        val firstRow = IntArray(distanceBufferSize)
+        val secondRow = IntArray(distanceBufferSize)
         return words.asSequence().map { it to distance(query, it, firstRow, secondRow) }
             .filter { (word, score) -> score <= maxOf(1, word.length / 3) }
             .sortedWith(compareBy<Pair<String, Int>> { it.second }.thenBy { it.first.length })
