@@ -9,6 +9,7 @@ on:
     branches:
       - main
       - feat/instant-key-feedback-polish
+      - feat/backspace-hold-repeat
 
 permissions:
   contents: write
