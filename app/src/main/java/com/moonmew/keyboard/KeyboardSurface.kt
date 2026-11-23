@@ -188,6 +188,16 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
 
     // IME parents on some Android builds measure their input view at almost the
     // full display height. Do not let that turn the keyboard into a full-screen view.
+    // A resize changes every key's hitbox. Clear old geometry before another touch
+    // can be dispatched; onDraw will repopulate the pools using the new dimensions.
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        if (w != oldw || h != oldh) {
+            bounds.clear()
+            suggestionBounds.clear()
+        }
+    }
+
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val displayHeightPx = resources.displayMetrics.heightPixels
         val screenCapPx = (displayHeightPx * 0.44f).toInt().coerceAtLeast(dp(120f).toInt())
