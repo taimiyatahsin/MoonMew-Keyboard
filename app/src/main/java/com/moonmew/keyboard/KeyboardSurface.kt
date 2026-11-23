@@ -782,6 +782,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                     catEarPath.lineTo(rect.left + dp(22f), rect.top + dp(8f))
                     catEarPath.close()
                     canvas.drawPath(catEarPath, paint)
+                    paint.color = keyTextColor()
                 }
                 canvas.drawText(key.label, rect.centerX(), baseline, paint)
                 x += w + gap
