@@ -11,6 +11,7 @@ import android.provider.Settings
 import android.view.Gravity
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
+import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.ScrollView
@@ -58,6 +59,38 @@ class SetupActivity : Activity() {
         val choose = actionButton("2. Choose MoonMew keyboard") {
             val manager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
             manager.showInputMethodPicker()
+        }
+        val testTitle = TextView(this).apply {
+            this.text = "3. Test MoonMew"
+            textSize = 16f
+            setTextColor(rose)
+            gravity = Gravity.START
+            setPadding(0, dp(24), 0, dp(8))
+        }
+        val testHint = TextView(this).apply {
+            this.text = "After selecting MoonMew, tap the box and try English, বাংলা, emoji, and your favourite theme."
+            textSize = 13f
+            setTextColor(muted)
+            setPadding(0, 0, 0, dp(8))
+        }
+        val testBox = EditText(this).apply {
+            hint = "Type here to test MoonMew…"
+            textSize = 16f
+            minLines = 2
+            maxLines = 4
+            setTextColor(0xFF302541.toInt())
+            setHintTextColor(0xFF806F7C.toInt())
+            setPadding(dp(14), dp(12), dp(14), dp(12))
+            background = GradientDrawable().apply {
+                setColor(0xFFFFF8FC.toInt())
+                cornerRadius = dp(14).toFloat()
+                setStroke(dp(1), 0xFFFFB8D0.toInt())
+            }
+        }
+        val testButton = actionButton("Try typing in the test box") {
+            testBox.requestFocus()
+            val manager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            manager.showSoftInput(testBox, InputMethodManager.SHOW_IMPLICIT)
         }
         val settingsTitle = TextView(this).apply {
             this.text = "PERSONALISE YOUR KEYBOARD"
@@ -137,6 +170,15 @@ class SetupActivity : Activity() {
                 preferences.edit().putBoolean("key_sound", checked).apply()
             }
         }
+        val hapticSwitch = Switch(this).apply {
+            this.text = "Light key vibration"
+            textSize = 15f
+            setTextColor(text)
+            isChecked = preferences.getBoolean("key_haptics", true)
+            setOnCheckedChangeListener { _, checked ->
+                preferences.edit().putBoolean("key_haptics", checked).apply()
+            }
+        }
         val clipboardSwitch = Switch(this).apply {
             this.text = "Optional clipboard history (local only)"
             textSize = 14f
@@ -164,12 +206,17 @@ class SetupActivity : Activity() {
         root.addView(status, match())
         root.addView(enable, matchWithTop(dp(8)))
         root.addView(choose, matchWithTop(dp(10)))
+        root.addView(testTitle, matchWithTop(dp(4)))
+        root.addView(testHint, match())
+        root.addView(testBox, match())
+        root.addView(testButton, matchWithTop(dp(8)))
         root.addView(settingsTitle, matchWithTop(dp(8)))
         root.addView(heightLabel, matchWithTop(dp(4)))
         root.addView(heightControl, match())
         root.addView(themeButton, matchWithTop(dp(6)))
         root.addView(themePreview, matchWithTop(dp(8)))
         root.addView(soundSwitch, matchWithTop(dp(6)))
+        root.addView(hapticSwitch, matchWithTop(dp(4)))
         root.addView(clipboardSwitch, matchWithTop(dp(10)))
         root.addView(clipboardWarning, matchWithTop(dp(2)))
         root.addView(note, matchWithTop(dp(4)))
