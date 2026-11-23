@@ -37,7 +37,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private val starPoints = arrayOf(0.08f to 0.12f, 0.22f to 0.05f, 0.78f to 0.09f, 0.93f to 0.22f, 0.13f to 0.86f, 0.88f to 0.82f)
     private val candyAccentPoints = arrayOf(0.08f to 0.08f, 0.27f to 0.07f, 0.73f to 0.07f, 0.92f to 0.08f, 0.05f to 0.92f, 0.95f to 0.92f)
     private val pawPrintPoints = arrayOf(0.16f to 0.18f, 0.84f to 0.18f, 0.10f to 0.78f, 0.90f to 0.78f)
-    private val keyTypeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+    private val keyTypeface = Typeface.create("sans-serif-rounded", Typeface.NORMAL)
     private val preferences = context.getSharedPreferences("moonmew_settings", Context.MODE_PRIVATE)
     private var themeId = preferences.getInt("theme_id", if (preferences.getBoolean("rose_theme", true)) 0 else 1)
     private var keySound = preferences.getBoolean("key_sound", false)
@@ -49,6 +49,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private var clipboardMode = false
     private var clipboardItems = emptyList<String>()
     private var downKeyIndex = -1
+    private var pressedKeyIndex = -1
     private var downSuggestionIndex = -1
     private var downTime = 0L
     private val swipePath = StringBuilder()
@@ -385,7 +386,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             bottom.add(Key("0", "0"))
             if (numericDecimal) bottom.add(Key(".", "."))
             bottom.add(Key("⌫", "DELETE", 1.2f, true))
-            bottom.add(Key(editorActionLabel(), "ENTER", 1.2f, true))
+            bottom.add(Key("🐾 ${editorActionLabel()}", "ENTER", 1.2f, true))
             rows.add(bottom)
         } else if (symbols) {
             val lines = if (symbolsPage == 0)
@@ -403,7 +404,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 Key("⌫", "DELETE", 1.2f, true)))
             rows.add(listOf(Key(if (symbolsPage == 0) "=\\<" else "123", "SYMBOLS_MORE", 1.1f, true),
                 Key(",", ",", .7f), Key("English / বাংলা", "SPACE", 4.6f, true),
-                Key(".", ".", .7f), Key(editorActionLabel(), "ENTER", 1.1f, true)))
+                Key(".", ".", .7f), Key("🐾 ${editorActionLabel()}", "ENTER", 1.1f, true)))
         } else if (mode == Mode.BANGLA_DIRECT) {
             // Dedicated compact Direct Bangla layout: four character rows and one action row.
             // Independent vowels stay on tap; their matching vowel signs are available on long press.
@@ -430,7 +431,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 Key("ঃ", "ঃ", 0.8f),
                 Key("⌫", "DELETE", 1.0f, true),
                 Key("Space", "SPACE", 2.8f, true),
-                Key(editorActionLabel(), "ENTER", 0.9f, true)
+                Key("🐾 ${editorActionLabel()}", "ENTER", 0.9f, true)
             ))
         } else {
             // A compact action strip keeps common tools reachable without adding
@@ -451,7 +452,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 Key("EN", "MODE", 1.4f, true), Key("⌫", "DELETE", 1.2f, true)))
             rows.add(listOf(
                 Key("?123", "SYMBOLS", 1.1f, true), Key(",", ",", .7f),
-                Key("English / বাংলা", "SPACE", 4.2f, true),
+                Key("☾  English / বাংলা", "SPACE", 4.2f, true),
                 Key(".", ".", .7f), Key(editorActionLabel(), "ENTER", 1.1f, true)
             ))
         }
@@ -558,6 +559,11 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 paint.shader = keyShader(keyRectCount - 1, rect, topTint, base)
                 canvas.drawRoundRect(rect, radius, radius, paint)
                 paint.shader = null
+                if (keyRectCount - 1 == pressedKeyIndex) {
+                    // Instant tactile feedback without animation, blur, or shadow layers.
+                    paint.color = if (themeId == 1 || themeId == 2) 0x22FFFFFF else 0x18000000
+                    canvas.drawRoundRect(rect, radius, radius, paint)
+                }
                 // A small glossy highlight makes pink and glass keys feel like crafted keycaps.
                 paint.color = if (themeId == 1 || themeId == 2) 0x33FFFFFF else 0x99FFFFFF.toInt()
                 highlightRect.set(rect.left + dp(3f), rect.top + dp(2f), rect.right - dp(3f), rect.top + dp(5f))
@@ -589,6 +595,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 multiTouchCancelled = false
                 downSuggestionIndex = suggestionBounds.indexOfFirst { it.contains(event.x, event.y) }
                 downKeyIndex = bounds.indexOfFirst { it.contains(event.x, event.y) }
+                setPressedKey(downKeyIndex)
                 downTime = SystemClock.elapsedRealtime()
                 swipePath.setLength(0)
                 lastSwipeKeyIndex = -1
@@ -617,6 +624,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 multiTouchCancelled = true
                 downKeyIndex = -1
                 downSuggestionIndex = -1
+                setPressedKey(-1)
                 resetSwipeTracking()
             }
             MotionEvent.ACTION_UP -> {
@@ -624,6 +632,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                     multiTouchCancelled = false
                     downKeyIndex = -1
                     downSuggestionIndex = -1
+                    setPressedKey(-1)
                     resetSwipeTracking()
                     return true
                 }
@@ -662,6 +671,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 }
                 downKeyIndex = -1
                 downSuggestionIndex = -1
+                setPressedKey(-1)
                 resetSwipeTracking()
                 performClick()
             }
@@ -669,11 +679,23 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 multiTouchCancelled = false
                 downKeyIndex = -1
                 downSuggestionIndex = -1
+                setPressedKey(-1)
                 resetSwipeTracking()
                 return true
             }
         }
         return true
+    }
+
+    private fun setPressedKey(index: Int) {
+        if (pressedKeyIndex == index) return
+        bounds.getOrNull(pressedKeyIndex)?.let { old ->
+            invalidate(old.left.toInt(), old.top.toInt(), old.right.toInt() + 1, old.bottom.toInt() + 1)
+        }
+        pressedKeyIndex = index
+        bounds.getOrNull(pressedKeyIndex)?.let { current ->
+            invalidate(current.left.toInt(), current.top.toInt(), current.right.toInt() + 1, current.bottom.toInt() + 1)
+        }
     }
 
     /**
