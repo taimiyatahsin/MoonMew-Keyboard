@@ -147,4 +147,43 @@ class KeyboardSmokeTest {
         }
     }
 
+    @Test
+    fun virtualAccessibilitySuggestionCanBeReadAndActivated() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val activatedKeys = mutableListOf<String>()
+        val surface = KeyboardSurface(context, object : KeyboardSurface.Listener {
+            override fun onKey(key: String) {
+                activatedKeys.add(key)
+            }
+        })
+        surface.setSuggestions(listOf("hello", "help"))
+        val metrics = context.resources.displayMetrics
+        val width = metrics.widthPixels.coerceAtLeast(1)
+        val height = (210f * metrics.density).toInt().coerceAtLeast(1)
+
+        surface.measure(
+            View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY)
+        )
+        surface.layout(0, 0, width, height)
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        try {
+            surface.draw(Canvas(bitmap))
+            val provider = surface.accessibilityNodeProvider
+            val suggestionId = (0..80).firstOrNull { virtualId ->
+                provider.createAccessibilityNodeInfo(virtualId)?.contentDescription
+                    ?.toString() == "Suggestion: hello"
+            }
+
+            assertNotNull("Suggestion should be exposed with a spoken label", suggestionId)
+            assertTrue(
+                "Suggestion should support accessibility activation",
+                provider.performAction(suggestionId!!, AccessibilityNodeInfo.ACTION_CLICK, null)
+            )
+            assertEquals(listOf("SUGGEST:hello"), activatedKeys)
+        } finally {
+            bitmap.recycle()
+        }
+    }
+
 }
