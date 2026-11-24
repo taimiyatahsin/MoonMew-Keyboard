@@ -53,6 +53,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private var downKeyIndex = -1
     private var downSuggestionIndex = -1
     private var downTime = 0L
+    private var lastShiftTapAt = 0L
     private var deleteRepeatRunnable: Runnable? = null
     private var deleteRepeatStartedAt = 0L
     private var deleteRepeatFired = false
@@ -747,8 +748,17 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                         if (keySound) playSoundEffect(SoundEffectConstants.CLICK)
                         if (keyHaptics) performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
                         flatKeys.getOrNull(index)?.let { key ->
-                            // A held Backspace has already emitted repeat deletions.
-                            if (!(key.value == "DELETE" && deleteRepeatFired)) {
+                            if (key.value == "SHIFT") {
+                                val now = SystemClock.elapsedRealtime()
+                                if (ShiftTapPolicy.isDoubleTap(lastShiftTapAt, now)) {
+                                    listener.onKey("CAPS_LOCK_TOGGLE")
+                                    lastShiftTapAt = 0L
+                                } else {
+                                    listener.onKey("SHIFT")
+                                    lastShiftTapAt = now
+                                }
+                            } else {
+                                lastShiftTapAt = 0L
                                 val held = SystemClock.elapsedRealtime() - downTime >= 450L
                                 listener.onKey(if (held && key.longPressValue != null) "LONG:${key.longPressValue}" else key.value)
                             }
