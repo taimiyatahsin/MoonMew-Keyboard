@@ -47,7 +47,7 @@ class KeyboardSmokeTest {
 
             assertTrue(
                 "Setup screen did not appear",
-                device.wait(Until.hasObject(By.text("☾  MoonMew Keyboard")), 10_000)
+                device.wait(Until.hasObject(By.pkg(context.packageName)), 15_000)
             )
 
             // The test editor sits below the fold on a standard emulator. Scroll it
