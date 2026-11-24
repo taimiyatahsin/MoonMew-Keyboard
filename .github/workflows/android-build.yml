@@ -6,7 +6,6 @@ on:
       - main
       - codex/moonmew-foundation
       - fix/ime-selection-sync
-      - test/android-emulator-ime-smoke
   # Run CI for every PR target, including stacked feature branches.
   pull_request:
 
