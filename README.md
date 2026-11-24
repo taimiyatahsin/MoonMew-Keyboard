@@ -7,6 +7,7 @@ A lightweight, offline-first Android keyboard with English, Bangla phonetic, and
 - English QWERTY keyboard with long-press number and symbol alternatives.
 - Double-tap Shift within 350 ms to toggle Caps Lock; a normal Shift tap remains one-shot.
 - Hold Backspace to repeat deletions, with a short initial delay and faster repeat cadence for longer holds.
+- Drag horizontally across the spacebar to move the text cursor; a normal tap still inserts a space.
 - Bangla phonetic starter mode with live conversion preview and offline word suggestions.
 - Dedicated direct Bangla layout with independent vowels, vowel signs on long press, consonants, and alternate characters.
 - Emoji panel with categories and Unicode emoji.
