@@ -53,6 +53,10 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private var downKeyIndex = -1
     private var downSuggestionIndex = -1
     private var downTime = 0L
+    private var lastShiftTapAt = 0L
+    private var spaceCursorGesture = false
+    private var spaceCursorMoved = false
+    private var cursorMoveRemainder = 0f
     private var deleteRepeatRunnable: Runnable? = null
     private var deleteRepeatStartedAt = 0L
     private var deleteRepeatFired = false
@@ -239,6 +243,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         super.onSizeChanged(w, h, oldw, oldh)
         if (w != oldw || h != oldh) {
             cancelDeleteRepeat()
+            lastShiftTapAt = 0L
             // A finger may still be down while Android resizes the IME. Cancel that
             // gesture too: onDraw can repopulate the same indices before ACTION_UP.
             multiTouchCancelled = true
@@ -349,7 +354,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         invalidate()
     }
     private fun resetSwipeTracking() { swipePath.setLength(0); lastSwipeKeyIndex = -1; swipeTravel = 0f; swipeDetected = false }
-    fun setMode(value: Mode) { mode = value; symbols = false; emojiMode = false; clipboardMode = false; symbolsPage = 0; rebuild(); invalidate() }
+    fun setMode(value: Mode) { mode = value; lastShiftTapAt = 0L; symbols = false; emojiMode = false; clipboardMode = false; symbolsPage = 0; rebuild(); invalidate() }
     fun setShifted(value: Boolean) { shifted = value; rebuild(); invalidate() }
     fun setSymbols(value: Boolean) { symbols = value; emojiMode = false; clipboardMode = false; symbolsPage = 0; rebuild(); invalidate() }
     fun setEmoji(value: Boolean) { emojiMode = value; if (value) { emojiCategory = 0; emojiPage = 0 }; clipboardMode = false; symbols = false; rebuild(); invalidate() }
@@ -676,6 +681,9 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 multiTouchCancelled = false
                 downSuggestionIndex = suggestionBounds.indexOfFirst { it.contains(event.x, event.y) }
                 downKeyIndex = bounds.indexOfFirst { it.contains(event.x, event.y) }
+                spaceCursorGesture = mode == Mode.ENGLISH && !symbols && !emojiMode && !clipboardMode && !passwordField && flatKeys.getOrNull(downKeyIndex)?.value == "SPACE"
+                spaceCursorMoved = false
+                cursorMoveRemainder = 0f
                 downTime = SystemClock.elapsedRealtime()
                 deleteRepeatFired = false
                 startDeleteRepeat(downKeyIndex)
@@ -685,17 +693,29 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 swipeDetected = false
                 lastTouchX = event.x
                 lastTouchY = event.y
-                if (swipeEnabled && mode == Mode.ENGLISH && !symbols && !emojiMode && !clipboardMode) appendSwipeKey(event.x, event.y)
+                if (!spaceCursorGesture && swipeEnabled && mode == Mode.ENGLISH && !symbols && !emojiMode && !clipboardMode) appendSwipeKey(event.x, event.y)
             }
             MotionEvent.ACTION_MOVE -> {
                 val dx = event.x - lastTouchX
                 val dy = event.y - lastTouchY
-                swipeTravel += Math.hypot(dx.toDouble(), dy.toDouble()).toFloat()
-                if (swipeTravel >= dp(38f)) swipeDetected = true
-                // Track the path before the swipe threshold is crossed too; otherwise
-                // early letters can be lost when the gesture becomes a swipe later.
-                if (swipeEnabled && mode == Mode.ENGLISH && !symbols && !emojiMode && !clipboardMode) {
-                    appendSwipeSegment(lastTouchX, lastTouchY, event.x, event.y)
+                if (spaceCursorGesture) {
+                    cursorMoveRemainder += dx
+                    val stepPx = dp(SpacebarCursorPolicy.STEP_DP)
+                    val steps = SpacebarCursorPolicy.stepsForDistance(cursorMoveRemainder, stepPx)
+                    if (steps != 0) {
+                        val action = if (steps < 0) "CURSOR_LEFT" else "CURSOR_RIGHT"
+                        repeat(if (steps < 0) -steps else steps) { listener.onKey(action) }
+                        cursorMoveRemainder -= steps * stepPx
+                        spaceCursorMoved = true
+                    }
+                } else {
+                    swipeTravel += Math.hypot(dx.toDouble(), dy.toDouble()).toFloat()
+                    if (swipeTravel >= dp(38f)) swipeDetected = true
+                    // Track the path before the swipe threshold is crossed too; otherwise
+                    // early letters can be lost when the gesture becomes a swipe later.
+                    if (swipeEnabled && mode == Mode.ENGLISH && !symbols && !emojiMode && !clipboardMode) {
+                        appendSwipeSegment(lastTouchX, lastTouchY, event.x, event.y)
+                    }
                 }
                 lastTouchX = event.x
                 lastTouchY = event.y
@@ -703,11 +723,15 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             }
             MotionEvent.ACTION_POINTER_DOWN -> {
                 cancelDeleteRepeat()
+                lastShiftTapAt = 0L
                 // A second finger can otherwise turn one gesture into an accidental key press.
                 // Cancel the entire gesture until every pointer is lifted.
                 multiTouchCancelled = true
                 downKeyIndex = -1
                 downSuggestionIndex = -1
+                spaceCursorGesture = false
+                spaceCursorMoved = false
+                cursorMoveRemainder = 0f
                 resetSwipeTracking()
             }
             MotionEvent.ACTION_UP -> {
@@ -716,7 +740,31 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                     multiTouchCancelled = false
                     downKeyIndex = -1
                     downSuggestionIndex = -1
+                    spaceCursorGesture = false
+                    spaceCursorMoved = false
+                    cursorMoveRemainder = 0f
                     resetSwipeTracking()
+                    return true
+                }
+                if (spaceCursorGesture) {
+                    cursorMoveRemainder += event.x - lastTouchX
+                    val stepPx = dp(SpacebarCursorPolicy.STEP_DP)
+                    val steps = SpacebarCursorPolicy.stepsForDistance(cursorMoveRemainder, stepPx)
+                    if (steps != 0) {
+                        val action = if (steps < 0) "CURSOR_LEFT" else "CURSOR_RIGHT"
+                        repeat(if (steps < 0) -steps else steps) { listener.onKey(action) }
+                        cursorMoveRemainder -= steps * stepPx
+                        spaceCursorMoved = true
+                    }
+                }
+                if (spaceCursorGesture && spaceCursorMoved) {
+                    downKeyIndex = -1
+                    downSuggestionIndex = -1
+                    spaceCursorGesture = false
+                    spaceCursorMoved = false
+                    cursorMoveRemainder = 0f
+                    resetSwipeTracking()
+                    performClick()
                     return true
                 }
                 // Include the final segment in distance detection too. Some devices may
@@ -747,24 +795,43 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                         if (keySound) playSoundEffect(SoundEffectConstants.CLICK)
                         if (keyHaptics) performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
                         flatKeys.getOrNull(index)?.let { key ->
-                            // A held Backspace has already emitted repeat deletions.
-                            if (!(key.value == "DELETE" && deleteRepeatFired)) {
-                                val held = SystemClock.elapsedRealtime() - downTime >= 450L
-                                listener.onKey(if (held && key.longPressValue != null) "LONG:${key.longPressValue}" else key.value)
+                            if (key.value == "SHIFT") {
+                                val now = SystemClock.elapsedRealtime()
+                                if (ShiftTapPolicy.isDoubleTap(lastShiftTapAt, now)) {
+                                    listener.onKey("CAPS_LOCK_TOGGLE")
+                                    lastShiftTapAt = 0L
+                                } else {
+                                    listener.onKey("SHIFT")
+                                    lastShiftTapAt = now
+                                }
+                            } else {
+                                lastShiftTapAt = 0L
+                                // Backspace repeat already deleted while held; do not delete again on release.
+                                if (!(key.value == "DELETE" && deleteRepeatFired)) {
+                                    val held = SystemClock.elapsedRealtime() - downTime >= 450L
+                                    listener.onKey(if (held && key.longPressValue != null) "LONG:${key.longPressValue}" else key.value)
+                                }
                             }
                         }
                     }
                 }
                 downKeyIndex = -1
                 downSuggestionIndex = -1
+                spaceCursorGesture = false
+                spaceCursorMoved = false
+                cursorMoveRemainder = 0f
                 resetSwipeTracking()
                 performClick()
             }
             MotionEvent.ACTION_CANCEL -> {
                 cancelDeleteRepeat()
+                lastShiftTapAt = 0L
                 multiTouchCancelled = false
                 downKeyIndex = -1
                 downSuggestionIndex = -1
+                spaceCursorGesture = false
+                spaceCursorMoved = false
+                cursorMoveRemainder = 0f
                 resetSwipeTracking()
                 return true
             }
