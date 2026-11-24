@@ -348,11 +348,6 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         furTextureBitmap = null
     }
 
-    override fun onDetachedFromWindow() {
-        releaseFurTexture()
-        super.onDetachedFromWindow()
-    }
-
     private fun furShader(): BitmapShader {
         furTextureShader?.let { return it }
         val bitmap = Bitmap.createBitmap(24, 24, Bitmap.Config.ARGB_8888)
@@ -596,6 +591,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
 
     override fun onDetachedFromWindow() {
         cancelDeleteRepeat()
+        releaseFurTexture()
         super.onDetachedFromWindow()
     }
 
