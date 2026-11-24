@@ -36,8 +36,11 @@ adb shell am instrument -w -r \
 instrument_status=${PIPESTATUS[0]}
 set -e
 
+# AndroidJUnitRunner may print INSTRUMENTATION_CODE: -1 after a successful
+# run on some platform versions. Use the process exit status and test summary
+# to decide success; explicit failure markers still fail the smoke test.
 if [[ "$instrument_status" -ne 0 ]] || \
-   grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED|INSTRUMENTATION_CODE: -1' emulator-diagnostics/instrumentation.txt || \
+   grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED' emulator-diagnostics/instrumentation.txt || \
    ! grep -q 'OK (' emulator-diagnostics/instrumentation.txt; then
   echo "Android instrumentation tests failed. See emulator-diagnostics/instrumentation.txt."
   exit 1
