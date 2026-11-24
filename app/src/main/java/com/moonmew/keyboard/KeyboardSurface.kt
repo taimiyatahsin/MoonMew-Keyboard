@@ -240,6 +240,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         super.onSizeChanged(w, h, oldw, oldh)
         if (w != oldw || h != oldh) {
             cancelDeleteRepeat()
+            lastShiftTapAt = 0L
             // A finger may still be down while Android resizes the IME. Cancel that
             // gesture too: onDraw can repopulate the same indices before ACTION_UP.
             multiTouchCancelled = true
@@ -704,6 +705,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             }
             MotionEvent.ACTION_POINTER_DOWN -> {
                 cancelDeleteRepeat()
+                lastShiftTapAt = 0L
                 // A second finger can otherwise turn one gesture into an accidental key press.
                 // Cancel the entire gesture until every pointer is lifted.
                 multiTouchCancelled = true
@@ -775,6 +777,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             }
             MotionEvent.ACTION_CANCEL -> {
                 cancelDeleteRepeat()
+                lastShiftTapAt = 0L
                 multiTouchCancelled = false
                 downKeyIndex = -1
                 downSuggestionIndex = -1
