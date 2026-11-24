@@ -283,6 +283,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         themeId = preferences.getInt("theme_id", if (preferences.getBoolean("rose_theme", true)) 0 else 1).coerceIn(0, 6)
         keySound = preferences.getBoolean("key_sound", false)
         keyHaptics = preferences.getBoolean("key_haptics", true)
+        if (themeId < 5) releaseFurTexture()
         // If clipboard history was switched off in Settings while this IME was alive,
         // immediately discard the in-memory panel contents as well as the saved data.
         if (!preferences.getBoolean("clipboard_history_enabled", false)) {
@@ -339,6 +340,17 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         5 -> 0xFFF7EAF0.toInt()
         6 -> 0xFF49334E.toInt()
         else -> 0xFF805365.toInt()
+    }
+
+    private fun releaseFurTexture() {
+        furTextureShader = null
+        furTextureBitmap?.recycle()
+        furTextureBitmap = null
+    }
+
+    override fun onDetachedFromWindow() {
+        releaseFurTexture()
+        super.onDetachedFromWindow()
     }
 
     private fun furShader(): BitmapShader {
@@ -687,6 +699,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 paint.shader = null
                 if (themeId == 5 || themeId == 6) {
                     paint.shader = furShader()
+                    paint.color = 0xFFFFFFFF.toInt()
                     paint.alpha = if (themeId == 5) 42 else 30
                     canvas.drawRoundRect(rect, radius, radius, paint)
                     paint.shader = null
