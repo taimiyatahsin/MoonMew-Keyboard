@@ -163,10 +163,10 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
             // Informational/empty clipboard rows are not text keys. Never let their
             // internal action IDs fall through to the printable-character handler.
             key == "CLIP_NOTICE" || key == "CLIP_EMPTY" -> Unit
-            key == "CLIP_CLEAR" -> { saveClipboardItems(emptyList()); keyboard?.setClipboardItems(emptyList()) }
+            key == "CLIP_CLEAR" -> { saveClipboardEntries(emptyList()); keyboard?.setClipboardItems(emptyList()) }
             key.startsWith("CLIP_ITEM:") -> {
                 val index = key.substringAfter(":").toIntOrNull() ?: -1
-                val item = loadClipboardItems().getOrNull(index)
+                val item = loadClipboardEntries().getOrNull(index)?.text
                 if (!passwordField && item != null) { commitPending(""); currentInputConnection?.commitText(item, 1); keyboard?.setClipboard(false) }
             }
             key == "SYMBOLS_MORE" -> keyboard?.nextSymbolsPage()
@@ -241,39 +241,38 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
         val manager = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
         val clip = manager.primaryClip
         val captured = ClipboardTextPolicy.capture(clip?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.text)
-        if (!captured.isNullOrBlank() && captured.length <= 1000) {
-            val items = (listOf(captured) + loadClipboardItems().filterNot { it == captured }).take(5)
-            saveClipboardItems(items)
+        val existing = loadClipboardEntries()
+        if (captured != null) {
+            saveClipboardEntries(ClipboardHistoryPolicy.add(captured, existing, System.currentTimeMillis()))
         }
-        keyboard?.setClipboardItems(loadClipboardItems())
+        keyboard?.setClipboardItems(loadClipboardEntries().map { it.text })
         keyboard?.setClipboard(true)
     }
 
-    private fun loadClipboardItems(): List<String> {
+    private fun loadClipboardEntries(): List<ClipboardHistoryEntry> {
         val raw = getSharedPreferences("moonmew_settings", MODE_PRIVATE).getString("clipboard_history", "[]") ?: "[]"
-        val cutoff = System.currentTimeMillis() - 24L * 60L * 60L * 1000L
         return try {
             val array = JSONArray(raw)
-            val values = mutableListOf<Pair<Long, String>>()
+            val entries = mutableListOf<ClipboardHistoryEntry>()
             for (i in 0 until array.length()) {
                 val entry = array.getJSONObject(i)
-                val timestamp = entry.optLong("time", 0L)
-                val value = entry.optString("text", "")
-                if (timestamp >= cutoff && value.isNotBlank()) values.add(timestamp to value)
+                entries.add(
+                    ClipboardHistoryEntry(
+                        timestampMillis = entry.optLong("time", 0L),
+                        text = entry.optString("text", "")
+                    )
+                )
             }
-            saveClipboardEntries(values)
-            values.sortedByDescending { it.first }.map { it.second }.take(5)
-        } catch (_: Exception) { emptyList() }
+            ClipboardHistoryPolicy.prune(entries, System.currentTimeMillis()).also(::saveClipboardEntries)
+        } catch (_: Exception) {
+            emptyList()
+        }
     }
 
-    private fun saveClipboardItems(items: List<String>) {
-        saveClipboardEntries(items.take(5).map { System.currentTimeMillis() to it })
-    }
-
-    private fun saveClipboardEntries(entries: List<Pair<Long, String>>) {
+    private fun saveClipboardEntries(entries: List<ClipboardHistoryEntry>) {
         val array = JSONArray()
-        entries.take(5).forEach { (time, value) ->
-            array.put(JSONObject().put("time", time).put("text", value))
+        entries.take(ClipboardHistoryPolicy.MAX_ITEMS).forEach { entry ->
+            array.put(JSONObject().put("time", entry.timestampMillis).put("text", entry.text))
         }
         getSharedPreferences("moonmew_settings", MODE_PRIVATE).edit()
             .putString("clipboard_history", array.toString()).apply()
