@@ -1,6 +1,10 @@
 package com.moonmew.keyboard
 
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.view.View
+import android.view.accessibility.AccessibilityNodeInfo
 import android.content.pm.PackageManager
 import android.os.SystemClock
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -11,6 +15,7 @@ import androidx.test.uiautomator.UiObject
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -102,4 +107,37 @@ class KeyboardSmokeTest {
             runCatching { device.executeShellCommand("ime reset") }
         }
     }
+
+    @Test
+    fun virtualAccessibilityKeyCanBeReadAndActivated() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val activatedKeys = mutableListOf<String>()
+        val surface = KeyboardSurface(context) { key -> activatedKeys.add(key) }
+        val metrics = context.resources.displayMetrics
+        val width = metrics.widthPixels.coerceAtLeast(1)
+        val height = (210f * metrics.density).toInt().coerceAtLeast(1)
+
+        surface.measure(
+            View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY)
+        )
+        surface.layout(0, 0, width, height)
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        try {
+            surface.draw(Canvas(bitmap))
+            val provider = surface.accessibilityNodeProvider
+            val firstKey = provider.createAccessibilityNodeInfo(0)
+
+            assertNotNull("First virtual keyboard key should be exposed", firstKey)
+            assertEquals("q", firstKey?.text?.toString())
+            assertTrue(
+                "Virtual keyboard key should support accessibility activation",
+                provider.performAction(0, AccessibilityNodeInfo.ACTION_CLICK, null)
+            )
+            assertEquals(listOf("q"), activatedKeys)
+        } finally {
+            bitmap.recycle()
+        }
+    }
+
 }
