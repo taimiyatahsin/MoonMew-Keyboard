@@ -73,6 +73,8 @@ Swipe typing is an experimental English-only prototype using a small on-device w
 
 The project is built for Android 6.0+ and the keyboard limits its height instead of using the full screen. However, compatibility, touch accuracy, layout, and performance still need hands-on testing across manufacturers, Android versions, screen sizes, and apps. Automated CI tests cannot replace physical-device testing.
 
+Use the [physical-device test checklist](docs/PHYSICAL_DEVICE_TEST_CHECKLIST.md) to record device details, setup, layout, typing, password/privacy, performance, and experimental swipe results. Do not mark a device or Android version as tested until it has been exercised on physical hardware.
+
 ## Build from source
 
 1. Open this repository in Android Studio.
