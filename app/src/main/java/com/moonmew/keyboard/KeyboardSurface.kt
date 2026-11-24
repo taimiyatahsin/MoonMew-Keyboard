@@ -2,6 +2,9 @@ package com.moonmew.keyboard
 
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.Bitmap
+import android.graphics.BitmapShader
+import android.graphics.Shader
 import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Rect
@@ -22,6 +25,9 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     enum class Mode { ENGLISH, BANGLA_PHONETIC, BANGLA_DIRECT }
     private data class Key(val label: String, val value: String, val weight: Float = 1f, val special: Boolean = false, val longPressValue: String? = null)
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    // One tiny reusable tiled fiber texture; allocated lazily only for plush themes.
+    private var furTextureBitmap: Bitmap? = null
+    private var furTextureShader: BitmapShader? = null
     private var backgroundGradient: android.graphics.LinearGradient? = null
     private var backgroundGradientWidth = -1
     private var backgroundGradientHeight = -1
@@ -274,9 +280,10 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     }
 
     fun refreshPreferences() {
-        themeId = preferences.getInt("theme_id", if (preferences.getBoolean("rose_theme", true)) 0 else 1).coerceIn(0, 4)
+        themeId = preferences.getInt("theme_id", if (preferences.getBoolean("rose_theme", true)) 0 else 1).coerceIn(0, 6)
         keySound = preferences.getBoolean("key_sound", false)
         keyHaptics = preferences.getBoolean("key_haptics", true)
+        if (themeId < 5) releaseFurTexture()
         // If clipboard history was switched off in Settings while this IME was alive,
         // immediately discard the in-memory panel contents as well as the saved data.
         if (!preferences.getBoolean("clipboard_history_enabled", false)) {
@@ -294,6 +301,8 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         2 -> 0xFF30213F.toInt()
         3 -> 0xFFFFD9EC.toInt()
         4 -> 0xFF24213D.toInt()
+        5 -> 0xFF17151B.toInt()
+        6 -> 0xFFD8C2E8.toInt()
         else -> 0xFFFFEAF1.toInt()
     }
     private fun backgroundBottomColor() = when (themeId) {
@@ -301,6 +310,8 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         2 -> 0xFF171020.toInt()
         3 -> 0xFFFFB9D9.toInt()
         4 -> 0xFF111329.toInt()
+        5 -> 0xFF09090F.toInt()
+        6 -> 0xFFF4D7E8.toInt()
         else -> 0xFFF7C9DA.toInt()
     }
     private fun accentColor() = when (themeId) {
@@ -308,6 +319,8 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         2 -> 0xFFE0C8FF.toInt()
         3 -> 0xFFFFFFFF.toInt()
         4 -> 0xFFB9A7FF.toInt()
+        5 -> 0xFFF4DCE6.toInt()
+        6 -> 0xFFC7A9E2.toInt()
         else -> 0xFFFF8FB9.toInt()
     }
     private fun keyColor(special: Boolean, modeKey: Boolean = false) = when (themeId) {
@@ -315,6 +328,8 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         2 -> if (modeKey) 0xFF795A99.toInt() else if (special) 0xFF49365F.toInt() else 0xFF302541.toInt()
         3 -> if (modeKey) 0xFFFF83BA.toInt() else if (special) 0xFFFFC4E0.toInt() else 0xFFFFF8FC.toInt()
         4 -> if (modeKey) 0xFF7866C8.toInt() else if (special) 0xFF39365D.toInt() else 0xFF292743.toInt()
+        5 -> if (modeKey) 0xFF9A667A.toInt() else if (special) 0xFF39313D.toInt() else 0xFF211F29.toInt()
+        6 -> if (modeKey) 0xFFE9AFCB.toInt() else if (special) 0xFFDCC8EC.toInt() else 0xFFFFF8FC.toInt()
         else -> if (modeKey) 0xFFFFA9C8.toInt() else if (special) 0xFFFFD5E3.toInt() else 0xFFFFF8F5.toInt()
     }
     private fun keyTextColor() = when (themeId) {
@@ -322,7 +337,34 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         2 -> 0xFFF4EAFF.toInt()
         3 -> 0xFF713B60.toInt()
         4 -> 0xFFF0ECFF.toInt()
+        5 -> 0xFFF7EAF0.toInt()
+        6 -> 0xFF49334E.toInt()
         else -> 0xFF805365.toInt()
+    }
+
+    private fun releaseFurTexture() {
+        furTextureShader = null
+        furTextureBitmap?.recycle()
+        furTextureBitmap = null
+    }
+
+    private fun furShader(): BitmapShader {
+        furTextureShader?.let { return it }
+        val bitmap = Bitmap.createBitmap(24, 24, Bitmap.Config.ARGB_8888)
+        val tileCanvas = Canvas(bitmap)
+        val fiberPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.STROKE
+            strokeWidth = 0.8f
+        }
+        // Deterministic, sparse fibers: no random work or allocations during drawing.
+        for (i in 0 until 18) {
+            val x = ((i * 7 + 3) % 23).toFloat()
+            val y = ((i * 11 + 5) % 23).toFloat()
+            fiberPaint.color = if (i % 3 == 0) 0x55FFFFFF else 0x332B1D35
+            tileCanvas.drawLine(x, y, x + if (i % 2 == 0) 2.5f else -1.5f, y - 3f, fiberPaint)
+        }
+        furTextureBitmap = bitmap
+        return BitmapShader(bitmap, Shader.TileMode.REPEAT, Shader.TileMode.REPEAT).also { furTextureShader = it }
     }
 
     fun setSwipeEnabled(value: Boolean) { swipeEnabled = value; if (!value) resetSwipeTracking() }
@@ -549,6 +591,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
 
     override fun onDetachedFromWindow() {
         cancelDeleteRepeat()
+        releaseFurTexture()
         super.onDetachedFromWindow()
     }
 
@@ -650,6 +693,14 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 paint.shader = keyShader(keyRectCount - 1, rect, topTint, base)
                 canvas.drawRoundRect(rect, radius, radius, paint)
                 paint.shader = null
+                if (themeId == 5 || themeId == 6) {
+                    paint.shader = furShader()
+                    paint.color = 0xFFFFFFFF.toInt()
+                    paint.alpha = if (themeId == 5) 42 else 30
+                    canvas.drawRoundRect(rect, radius, radius, paint)
+                    paint.shader = null
+                    paint.alpha = 255
+                }
                 // A small glossy highlight makes pink and glass keys feel like crafted keycaps.
                 paint.color = if (themeId == 1 || themeId == 2) 0x33FFFFFF else 0x99FFFFFF.toInt()
                 highlightRect.set(rect.left + dp(3f), rect.top + dp(2f), rect.right - dp(3f), rect.top + dp(5f))
