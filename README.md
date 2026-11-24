@@ -14,9 +14,11 @@ A lightweight, offline-first Android keyboard with English, Bangla phonetic, and
 - Two-page symbol keyboard, including Bengali punctuation and additional Bangla signs.
 - Experimental English swipe typing with local word suggestions.
 - Adjustable keyboard height: **140–280 dp** (default: **210 dp**).
-- Five themes: Pink Plush, Moonlit Blue, Lavender Dream, Glass Candy, and Moon Garden.
+- Seven themes: Pink Plush, Moonlit Blue, Lavender Dream, Glass Candy, Moon Garden, Midnight Fur, and Lavender Kitty Plush.
 - Soft gradients, glossy rounded keycaps, subtle moon/star details, and compact toolbar.
 - Optional key sounds and a separate light key-vibration toggle; Android's system haptic setting is still respected.
+- Optional **Reduce animations & visual effects** setting to skip decorative details and plush fur overlays on lower-end devices.
+- Releases optional rendering caches and plush textures when Android reports memory pressure.
 - Optional clipboard history: off by default; explicit opt-in; reads plain text only when the clipboard button is tapped; stores up to 5 items locally for up to 24 hours; unavailable in password fields.
 - Password fields switch to the English layout and disable swipe and clipboard history.
 - Android 6.0 (API 23) and newer.
