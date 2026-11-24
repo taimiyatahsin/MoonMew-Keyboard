@@ -18,7 +18,7 @@ Automated unit tests and APK builds do not verify real keyboard behavior. Use th
 
 | Priority | Device / Android | Focus |
 |---|---|---|
-| P0 | Samsung Galaxy M02s, Android version installed on the device | Primary low-end performance, touch accuracy, memory use |
+| P0 | One lower-end Android phone, using its installed Android version | Baseline performance, touch accuracy and memory use |
 | P1 | One small-screen Android phone (Android 6–10 if available) | Minimum supported OS, compact layout |
 | P1 | One Android 11–13 phone | IME compatibility and permission/settings flow |
 | P1 | One Android 14–16 phone, where available | Current platform compatibility |
@@ -32,7 +32,7 @@ Do not mark a version as tested unless it was exercised on a physical device.
 - [ ] Enable MoonMew in system keyboard settings and select it as default.
 - [ ] Open the keyboard in portrait and landscape.
 - [ ] Confirm it does not cover the entire screen and the editor remains visible.
-- [ ] Test minimum (140 dp), default (210 dp), and maximum (280 dp) heights.
+- [ ] Test minimum (140 dp), default (210 dp) and maximum (280 dp) heights.
 - [ ] Rotate the device and reopen the keyboard; confirm it remains correctly sized.
 - [ ] Switch away from and back to MoonMew; confirm no stale pressed key or panel remains.
 
