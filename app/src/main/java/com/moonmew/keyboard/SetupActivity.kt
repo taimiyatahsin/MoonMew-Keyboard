@@ -181,6 +181,16 @@ class SetupActivity : Activity() {
                 preferences.edit().putBoolean("key_haptics", checked).apply()
             }
         }
+
+        val reduceEffectsSwitch = Switch(this).apply {
+            this.text = "Reduce animations & visual effects"
+            textSize = 14f
+            setTextColor(text)
+            isChecked = preferences.getBoolean("reduce_animations", false)
+            setOnCheckedChangeListener { _, checked ->
+                preferences.edit().putBoolean("reduce_animations", checked).apply()
+            }
+        }
         val clipboardSwitch = Switch(this).apply {
             this.text = "Optional clipboard history (local only)"
             textSize = 14f
@@ -218,6 +228,7 @@ class SetupActivity : Activity() {
         root.addView(themeButton, matchWithTop(dp(6)))
         root.addView(themePreview, matchWithTop(dp(8)))
         root.addView(soundSwitch, matchWithTop(dp(6)))
+        root.addView(reduceEffectsSwitch, matchWithTop(dp(8)))
         root.addView(hapticSwitch, matchWithTop(dp(4)))
         root.addView(clipboardSwitch, matchWithTop(dp(10)))
         root.addView(clipboardWarning, matchWithTop(dp(2)))
