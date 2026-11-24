@@ -50,9 +50,9 @@ class KeyboardSmokeTest {
                 device.wait(Until.hasObject(By.pkg(context.packageName)), 15_000)
             )
 
-            // The test editor sits below the fold on a standard emulator. Scroll it
-            // into view and focus it directly rather than tapping a helper button
-            // whose position may be outside the visible viewport.
+            // The editor and its explicit test button sit below the fold on a
+            // standard emulator. Use the same showSoftInput action as the setup UI
+            // so recent Android releases exercise the real user-facing flow.
             val scrollable = UiScrollable(UiSelector().scrollable(true)).apply {
                 setAsVerticalList()
                 setMaxSearchSwipes(8)
@@ -63,7 +63,14 @@ class KeyboardSmokeTest {
             )
             val editor: UiObject = device.findObject(UiSelector().className("android.widget.EditText"))
             assertNotNull("Test editor was not available", editor)
-            editor.click()
+            assertTrue(
+                "Typing test button was not found on the setup screen",
+                scrollable.scrollIntoView(UiSelector().text("Try typing in the test box"))
+            )
+            val testButton = device.findObject(UiSelector().text("Try typing in the test box"))
+            device.waitForIdle(5_000)
+            testButton.click()
+            device.waitForIdle(2_000)
 
             // UIAutomator does not consistently expose the IME's custom virtual
             // accessibility nodes as part of the app window hierarchy. Confirm the
