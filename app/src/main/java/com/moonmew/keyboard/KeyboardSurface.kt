@@ -74,6 +74,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private var lastTouchX = 0f
     private var lastTouchY = 0f
     private var swipeDetected = false
+    private var swipeGestureEligible = false
     private var multiTouchCancelled = false
     private var swipeEnabled = true
     private var passwordField = false
@@ -407,7 +408,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         rebuild()
         invalidate()
     }
-    private fun resetSwipeTracking() { swipePath.setLength(0); lastSwipeKeyIndex = -1; swipeTravel = 0f; swipeDetected = false }
+    private fun resetSwipeTracking() { swipePath.setLength(0); lastSwipeKeyIndex = -1; swipeTravel = 0f; swipeDetected = false; swipeGestureEligible = false }
     fun setMode(value: Mode) { mode = value; lastShiftTapAt = 0L; symbols = false; emojiMode = false; clipboardMode = false; symbolsPage = 0; rebuild(); invalidate() }
     fun setShifted(value: Boolean) { shifted = value; rebuild(); invalidate() }
     fun setSymbols(value: Boolean) { symbols = value; emojiMode = false; clipboardMode = false; symbolsPage = 0; rebuild(); invalidate() }
@@ -754,6 +755,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 multiTouchCancelled = false
                 downSuggestionIndex = suggestionBounds.indexOfFirst { it.contains(event.x, event.y) }
                 downKeyIndex = bounds.indexOfFirst { it.contains(event.x, event.y) }
+                swipeGestureEligible = SwipeGesturePolicy.canStart(flatKeys.getOrNull(downKeyIndex)?.value)
                 spaceCursorGesture = mode == Mode.ENGLISH && !symbols && !emojiMode && !clipboardMode && !passwordField && flatKeys.getOrNull(downKeyIndex)?.value == "SPACE"
                 spaceCursorMoved = false
                 cursorMoveRemainder = 0f
@@ -767,7 +769,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 lastTouchX = event.x
                 lastTouchY = event.y
                 invalidate()
-                if (!spaceCursorGesture && swipeEnabled && mode == Mode.ENGLISH && !symbols && !emojiMode && !clipboardMode) appendSwipeKey(event.x, event.y)
+                if (swipeGestureEligible && !spaceCursorGesture && swipeEnabled && mode == Mode.ENGLISH && !symbols && !emojiMode && !clipboardMode) appendSwipeKey(event.x, event.y)
             }
             MotionEvent.ACTION_MOVE -> {
                 val dx = event.x - lastTouchX
@@ -789,7 +791,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                     if (swipeTravel >= dp(38f)) swipeDetected = true
                     // Track the path before the swipe threshold is crossed too; otherwise
                     // early letters can be lost when the gesture becomes a swipe later.
-                    if (swipeEnabled && mode == Mode.ENGLISH && !symbols && !emojiMode && !clipboardMode) {
+                    if (swipeGestureEligible && swipeEnabled && mode == Mode.ENGLISH && !symbols && !emojiMode && !clipboardMode) {
                         appendSwipeSegment(lastTouchX, lastTouchY, event.x, event.y)
                     }
                 }
@@ -860,7 +862,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 if (swipeTravel >= dp(38f)) swipeDetected = true
                 // ACTION_UP may be the only event delivered inside the final key.
                 // Capture it before matching so the last letter is not silently lost.
-                if (swipeEnabled && swipeDetected && mode == Mode.ENGLISH && !symbols && !emojiMode && !clipboardMode) {
+                if (swipeGestureEligible && swipeEnabled && swipeDetected && mode == Mode.ENGLISH && !symbols && !emojiMode && !clipboardMode) {
                     appendSwipeSegment(lastTouchX, lastTouchY, event.x, event.y)
                 }
                 if (swipeEnabled && swipeDetected && swipePath.length >= 3) {
