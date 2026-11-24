@@ -33,7 +33,7 @@ internal object BackspaceDeletion {
             return textBeforeCursor.length - offsets[start]
         }
 
-        // Include combining marks, variation selectors, emoji modifiers, and tag characters.
+        // Include combining marks, variation selectors, emoji modifiers and tag characters.
         while (start > 0 && isExtend(codePoints[start])) start--
 
         // Walk backwards over emoji ZWJ sequences and Indic conjuncts.
