@@ -155,7 +155,7 @@ class SetupActivity : Activity() {
                     setOnClickListener {
                         preferences.edit().putInt("theme_id", index).putBoolean("rose_theme", index == 0).apply()
                         updateThemePreview(index)
-                        themeButton.text = "🎨  Browse all 5 themes  ·  " + name
+                        themeButton.text = "🎨  Browse all 7 themes  ·  " + name
                         dialog.dismiss()
                     }
                 }
