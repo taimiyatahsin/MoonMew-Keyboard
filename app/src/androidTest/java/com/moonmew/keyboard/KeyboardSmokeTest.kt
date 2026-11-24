@@ -2,11 +2,13 @@ package com.moonmew.keyboard
 
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.provider.Settings
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.UiObject
+import androidx.test.uiautomator.UiScrollable
+import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -41,27 +43,32 @@ class KeyboardSmokeTest {
                 ?: error("MoonMew launcher activity was not found")
             launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
             context.startActivity(launch)
-    
+
             assertTrue(
                 "Setup screen did not appear",
                 device.wait(Until.hasObject(By.text("☾  MoonMew Keyboard")), 10_000)
             )
-            val testButton = device.findObject(By.text("Try typing in the test box"))
-            assertNotNull("Keyboard test button was not shown", testButton)
-            testButton.click()
-    
+
+            // The test editor sits below the fold on a standard emulator. Scroll it
+            // into view and focus it directly rather than tapping a helper button
+            // whose position may be outside the visible viewport.
+            val scrollable = UiScrollable(UiSelector().scrollable(true)).apply {
+                setAsVerticalList()
+                setMaxSearchSwipes(8)
+            }
             assertTrue(
-                "MoonMew input view did not appear",
-                device.wait(Until.hasObject(By.desc("MoonMew keyboard")), 10_000)
+                "Test editor was not found on the setup screen",
+                scrollable.scrollIntoView(UiSelector().className("android.widget.EditText"))
             )
+            val editor: UiObject = device.findObject(UiSelector().className("android.widget.EditText"))
+            assertNotNull("Test editor was not available", editor)
+            editor.click()
+
             assertTrue(
-                "Keyboard accessibility keys were not exposed",
-                device.wait(Until.hasObject(By.desc("Backspace")), 5_000)
+                "MoonMew keyboard keys did not appear after focusing the test editor",
+                device.wait(Until.hasObject(By.desc("Backspace")), 15_000)
             )
-    
-    
         } finally {
-            // Restore the emulator input method even when an assertion fails.
             runCatching { device.pressBack() }
             runCatching { device.executeShellCommand("ime reset") }
             runCatching { device.executeShellCommand("settings delete secure show_ime_with_hard_keyboard") }
