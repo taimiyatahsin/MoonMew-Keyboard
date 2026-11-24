@@ -52,12 +52,7 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
         numericInput = numericConfig.enabled
         numericDecimal = numericConfig.decimal
         numericSigned = numericConfig.signed
-        passwordField = (cls == InputType.TYPE_CLASS_TEXT &&
-            (variation == InputType.TYPE_TEXT_VARIATION_PASSWORD ||
-                variation == InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD ||
-                variation == InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD)) ||
-            (cls == InputType.TYPE_CLASS_NUMBER &&
-                variation == InputType.TYPE_NUMBER_VARIATION_PASSWORD)
+        passwordField = PasswordFieldPolicy.isPasswordField(type)
 
         currentInputConnection?.finishComposingText()
         if (passwordField && !wasPasswordField) {
