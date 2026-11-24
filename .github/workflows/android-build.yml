@@ -6,11 +6,8 @@ on:
       - main
       - codex/moonmew-foundation
       - fix/ime-selection-sync
+  # Run CI for every PR target, including stacked feature branches.
   pull_request:
-    branches:
-      - main
-      - fix/grapheme-test-syntax
-      - perf/reuse-key-draw-rectangles
 
 permissions:
   contents: write
