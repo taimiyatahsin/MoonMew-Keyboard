@@ -87,4 +87,13 @@ class BanglaTransliteratorTest {
         assertEquals("আমি, তুমি! 123", BanglaTransliterator.convert("ami, tumi! 123"))
         assertEquals("আমি  তুমি", BanglaTransliterator.convert("ami  tumi"))
     }
+
+    @Test fun dictionaryEntriesRemainAvailableAfterDuplicateCleanup() {
+        assertEquals("হবে", BanglaTransliterator.convert("hobe"))
+        assertEquals("ভালো", BanglaTransliterator.convert("valo"))
+        assertEquals("বিকেল", BanglaTransliterator.convert("bikel"))
+        assertEquals("পারব", BanglaTransliterator.convert("parbo"))
+        assertEquals("এখানে", BanglaTransliterator.convert("ekhane"))
+        assertEquals("হয়তো", BanglaTransliterator.convert("hoyto"))
+    }
 }

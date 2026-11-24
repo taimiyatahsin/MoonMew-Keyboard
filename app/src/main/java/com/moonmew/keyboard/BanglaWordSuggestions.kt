@@ -11,14 +11,14 @@ object BanglaWordSuggestions {
         "apnar" to "আপনার", "se" to "সে", "she" to "সে", "tara" to "তারা",
         "amader" to "আমাদের", "tomader" to "তোমাদের", "ki" to "কি", "keno" to "কেন",
         "kothay" to "কোথায়", "kemon" to "কেমন", "kobe" to "কবে", "ke" to "কে",
-        "kirokom" to "কীরকম", "hoy" to "হয়", "hobe" to "হবে", "hoye" to "হয়ে",
+        "kirokom" to "কীরকম", "hoy" to "হয়", "hoye" to "হয়ে",
         "ache" to "আছে", "achi" to "আছি", "achhi" to "আছি", "nei" to "নেই",
         "na" to "না", "hya" to "হ্যাঁ", "ha" to "হ্যাঁ", "bhalo" to "ভালো",
-        "valo" to "ভালো", "kharap" to "খারাপ", "sundor" to "সুন্দর", "onek" to "অনেক",
+        "kharap" to "খারাপ", "sundor" to "সুন্দর", "onek" to "অনেক",
         "khub" to "খুব", "beshi" to "বেশি", "kom" to "কম", "ekta" to "একটা",
         "ekhon" to "এখন", "aj" to "আজ", "kal" to "কাল", "gotokal" to "গতকাল",
         "agami" to "আগামী", "din" to "দিন", "raat" to "রাত", "sokal" to "সকাল",
-        "dupur" to "দুপুর", "bikel" to "বিকেল", "somoy" to "সময়", "shomoy" to "সময়",
+        "dupur" to "দুপুর", "somoy" to "সময়", "shomoy" to "সময়",
         "bangla" to "বাংলা", "bangladesh" to "বাংলাদেশ", "desh" to "দেশ", "bhasha" to "ভাষা",
         "manush" to "মানুষ", "bondhu" to "বন্ধু", "poribar" to "পরিবার", "ma" to "মা",
         "baba" to "বাবা", "bhai" to "ভাই", "bon" to "বোন", "dada" to "দাদা",
@@ -27,8 +27,8 @@ object BanglaWordSuggestions {
         "chai" to "চাই", "chao" to "চাও", "korbo" to "করব", "koro" to "করো",
         "korchi" to "করছি", "kore" to "করে", "kora" to "করা", "korechi" to "করেছি",
         "jacchi" to "যাচ্ছি", "jabo" to "যাব", "dao" to "দাও", "dibe" to "দেবে",
-        "hobe" to "হবে", "parbo" to "পারব", "pari" to "পারি", "parina" to "পারি না",
-        "ekhane" to "এখানে", "okhane" to "ওখানে", "bari" to "বাড়ি", "kaj" to "কাজ",
+        "hobe" to "হবে", "pari" to "পারি", "parina" to "পারি না",
+        "okhane" to "ওখানে", "bari" to "বাড়ি", "kaj" to "কাজ",
         "school" to "স্কুল", "phone" to "ফোন", "keyboard" to "কিবোর্ড", "app" to "অ্যাপ",
         "computer" to "কম্পিউটার", "shikkha" to "শিক্ষা", "porashona" to "পড়াশোনা",
         "jibon" to "জীবন", "shopno" to "স্বপ্ন", "mon" to "মন", "bhalobasha" to "ভালোবাসা",
@@ -45,7 +45,7 @@ object BanglaWordSuggestions {
         "moddhe" to "মধ্যে", "upore" to "উপরে", "niche" to "নিচে", "samne" to "সামনে",
         "pore" to "পরে", "age" to "আগে", "ekhane" to "এখানে", "sekhan" to "সেখানে",
         "kothao" to "কোথাও", "kono" to "কোনো", "kon" to "কোন", "keu" to "কেউ",
-        "kichuna" to "কিছু না", "hoyni" to "হয়নি", "hoyto" to "হয়তো", "mone" to "মনে",
+        "kichuna" to "কিছু না", "hoyni" to "হয়নি", "mone" to "মনে",
         "monehoy" to "মনে হয়", "janish" to "জানিস", "jani" to "জানি", "janina" to "জানি না",
         "bujhlam" to "বুঝলাম", "bujhina" to "বুঝি না", "bol" to "বল", "bolo" to "বলো",
         "bolchi" to "বলছি", "bolbo" to "বলব", "shono" to "শোনো", "dekho" to "দেখো",
@@ -101,7 +101,7 @@ object BanglaWordSuggestions {
     /**
      * Returns a small, deterministic candidate list for the current roman prefix.
      * Exact matches rank first; duplicate Bangla spellings are collapsed so the
-     * suggestion strip never wastes slots on aliases (for example, "ami"/"ami").
+     * suggestion strip never wastes slots on alternate Roman spellings (for example, "shob"/"sob").
      */
     fun suggest(prefix: String, limit: Int = 3): List<String> {
         val query = prefix.trim().lowercase()
