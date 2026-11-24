@@ -28,4 +28,27 @@ class NumericInputPolicyTest {
         assertEquals(NumericInputConfig(true, false, false),
             NumericInputPolicy.fromInputType(InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD))
     }
+
+    @Test fun numericFlagsOnTextFieldsDoNotEnableNumericMode() {
+        val inputType = InputType.TYPE_CLASS_TEXT or
+            InputType.TYPE_NUMBER_FLAG_DECIMAL or
+            InputType.TYPE_NUMBER_FLAG_SIGNED
+
+        assertEquals(NumericInputConfig(false, false, false),
+            NumericInputPolicy.fromInputType(inputType))
+    }
+
+    @Test fun nonNumberClassesNeverEnableNumericMode() {
+        val inputTypes = listOf(
+            InputType.TYPE_CLASS_PHONE,
+            InputType.TYPE_CLASS_DATETIME,
+            InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
+        )
+
+        inputTypes.forEach { inputType ->
+            assertEquals(NumericInputConfig(false, false, false),
+                NumericInputPolicy.fromInputType(inputType))
+        }
+    }
+
 }
