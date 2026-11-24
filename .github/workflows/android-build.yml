@@ -76,6 +76,11 @@ jobs:
     needs: debug-build
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        api-level: [30, 35]
+    name: IME smoke test (Android API ${{ matrix.api-level }})
     permissions:
       contents: read
     steps:
@@ -90,13 +95,13 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-      - name: Run IME smoke test on Android 11 emulator
+      - name: Run IME smoke test on Android API ${{ matrix.api-level }} emulator
         uses: reactivecircus/android-emulator-runner@v2
         timeout-minutes: 25
         env:
           ANDROID_I_WANT_MY_TCG: 'yes'
         with:
-          api-level: 30
+          api-level: ${{ matrix.api-level }}
           target: aosp_atd
           arch: x86_64
           profile: pixel_2
@@ -108,7 +113,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: moonmew-emulator-diagnostics
+          name: moonmew-emulator-diagnostics-api-${{ matrix.api-level }}
           path: emulator-diagnostics/
           if-no-files-found: ignore
           retention-days: 14
