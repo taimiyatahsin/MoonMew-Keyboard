@@ -1,6 +1,6 @@
 # MoonMew Keyboard
 
-A lightweight, offline-first Android keyboard with English, Bangla phonetic, and direct Bangla layouts.
+A lightweight offline Android keyboard with English, Bangla phonetic and direct Bangla layouts.
 
 ## Features
 
@@ -9,7 +9,7 @@ A lightweight, offline-first Android keyboard with English, Bangla phonetic, and
 - Hold Backspace to repeat deletions, with a short initial delay and faster repeat cadence for longer holds.
 - Drag horizontally across the spacebar to move the text cursor; a normal tap still inserts a space.
 - Bangla phonetic starter mode with live conversion preview and offline word suggestions.
-- Dedicated direct Bangla layout with independent vowels, vowel signs on long press, consonants, and alternate characters.
+- Dedicated direct Bangla layout with independent vowels, vowel signs on long press, consonants and alternate characters.
 - Emoji panel with categories and Unicode emoji.
 - Two-page symbol keyboard, including Bengali punctuation and additional Bangla signs.
 - Experimental English swipe typing with local word suggestions.
@@ -35,18 +35,9 @@ If the direct link does not start, open the [Latest Test Build page](https://git
 4. Open **MoonMew Keyboard** and follow the setup instructions.
 5. In Android keyboard settings, enable MoonMew and select it as the default keyboard.
 
-On Samsung, the setting is usually **Settings → General management → Keyboard list and default**. Menu names may vary by Android version and manufacturer.
+Open your device's **Settings** and look for **System**, **Language & input**, or **Keyboard** settings. Enable MoonMew in the available on-screen keyboard list, then select it as the default keyboard. Menu names and locations vary across Android versions and device interfaces.
 
-### Manufacturer setup tips
-
-The exact menu names vary by device and Android version. If the keyboard does not appear immediately:
-
-- **Samsung:** Open Settings → General management → Keyboard list and default. Enable MoonMew, then choose it under Default keyboard.
-- **Xiaomi / Redmi / POCO:** Open Settings → Additional settings → Languages & input → Manage keyboards. Enable MoonMew, then select it as the current keyboard.
-- **OPPO / realme:** Open Settings → Additional settings (or System settings) → Keyboard & input method → Manage keyboards. Enable and select MoonMew.
-- **vivo:** Open Settings → System management → Input method (menu wording may vary), then enable and select MoonMew.
-
-These are navigation hints, not permissions the app needs. MoonMew does not need background-running or battery-optimization exemptions to function as an input method.
+MoonMew does not need background-running or battery-optimization exemptions to function as an input method.
 
 ### Play Protect and sideloading
 
