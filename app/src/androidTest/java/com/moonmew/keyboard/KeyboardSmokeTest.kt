@@ -130,13 +130,16 @@ class KeyboardSmokeTest {
         try {
             surface.draw(Canvas(bitmap))
             val provider = surface.accessibilityNodeProvider
-            val firstKey = provider.createAccessibilityNodeInfo(0)
+            // Toolbar actions precede letter keys in the virtual-node list, so
+            // locate the q key by its accessible label instead of assuming ID 0.
+            val qKeyId = (0..40).firstOrNull { virtualId ->
+                provider.createAccessibilityNodeInfo(virtualId)?.text?.toString() == "q"
+            }
 
-            assertNotNull("First virtual keyboard key should be exposed", firstKey)
-            assertEquals("q", firstKey?.text?.toString())
+            assertNotNull("Q key should be exposed as a virtual accessibility node", qKeyId)
             assertTrue(
                 "Virtual keyboard key should support accessibility activation",
-                provider.performAction(0, AccessibilityNodeInfo.ACTION_CLICK, null)
+                provider.performAction(qKeyId!!, AccessibilityNodeInfo.ACTION_CLICK, null)
             )
             assertEquals(listOf("q"), activatedKeys)
         } finally {
