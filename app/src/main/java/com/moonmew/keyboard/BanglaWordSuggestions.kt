@@ -64,7 +64,7 @@ object BanglaWordSuggestions {
         "shotyi" to "সত্যি", "mittha" to "মিথ্যা", "shomossa" to "সমস্যা",
         "somossa" to "সমস্যা", "shomadhan" to "সমাধান", "uttor" to "উত্তর",
         "proshno" to "প্রশ্ন", "bikel" to "বিকেল", "rat" to "রাত", "shokal" to "সকাল",
-        // More everyday conversation, polite forms, and common mobile/computing terms.
+        // More everyday conversation, polite forms and common mobile/computing terms.
         "apnara" to "আপনারা", "apnader" to "আপনাদের", "oder" to "ওদের", "ora" to "ওরা",
         "tora" to "তোরা", "toder" to "তোদের", "amaderke" to "আমাদেরকে", "tomaderke" to "তোমাদেরকে",
         "ekhankar" to "এখানকার", "sekhaney" to "সেখানে", "okhankar" to "ওখানকার",

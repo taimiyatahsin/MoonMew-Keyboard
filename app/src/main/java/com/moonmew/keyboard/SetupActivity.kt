@@ -68,7 +68,7 @@ class SetupActivity : Activity() {
             setPadding(0, dp(24), 0, dp(8))
         }
         val testHint = TextView(this).apply {
-            this.text = "After selecting MoonMew, tap the box and try English, বাংলা, emoji, and your favourite theme."
+            this.text = "After selecting MoonMew, tap the box and try English, বাংলা, emoji and your favourite theme."
             textSize = 13f
             setTextColor(muted)
             setPadding(0, 0, 0, dp(8))
