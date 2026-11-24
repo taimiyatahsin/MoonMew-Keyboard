@@ -772,8 +772,6 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             MotionEvent.ACTION_MOVE -> {
                 val dx = event.x - lastTouchX
                 val dy = event.y - lastTouchY
-                lastTouchX = event.x
-                lastTouchY = event.y
                 invalidate()
                 if (spaceCursorGesture) {
                     cursorMoveRemainder += dx
@@ -794,6 +792,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                         appendSwipeSegment(lastTouchX, lastTouchY, event.x, event.y)
                     }
                 }
+                // Preserve the previous point until the full segment has been sampled.
                 lastTouchX = event.x
                 lastTouchY = event.y
                 if (deleteRepeatRunnable != null && bounds.getOrNull(downKeyIndex)?.contains(event.x, event.y) != true) cancelDeleteRepeat()
