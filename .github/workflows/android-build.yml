@@ -9,8 +9,9 @@ on:
   # Run CI for every PR target, including stacked feature branches.
   pull_request:
 
+# PR builds and tests need repository read access only.
 permissions:
-  contents: write
+  contents: read
 
 # Serialize main-branch builds so an older run cannot overwrite a newer APK
 # on the shared "latest" release after finishing late.
@@ -21,6 +22,8 @@ concurrency:
 jobs:
   debug-build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -67,8 +70,21 @@ jobs:
           name: moonmew-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
           retention-days: 90
+
+  # Only trusted pushes to the release branches receive write permission.
+  publish-test-apk:
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/codex/moonmew-foundation')
+    needs: debug-build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download successful debug APK
+        uses: actions/download-artifact@v4
+        with:
+          name: moonmew-debug-apk
+          path: release-assets
       - name: Publish latest test APK to GitHub Releases
-        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/codex/moonmew-foundation')
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
@@ -78,5 +94,5 @@ jobs:
             This is a test build, not a signed Play Store release.
           prerelease: true
           make_latest: false
-          files: app/build/outputs/apk/debug/app-debug.apk
+          files: release-assets/app-debug.apk
           overwrite_files: true
