@@ -90,6 +90,10 @@ jobs:
           gradle-version: '8.9'
       - name: Run IME smoke test on Android 15 emulator
         uses: reactivecircus/android-emulator-runner@v2
+        env:
+          # GitHub-hosted Linux runners do not expose KVM. Force the emulator's
+          # supported TCG software CPU mode instead of the unsupported -accel off.
+          ANDROID_I_WANT_MY_TCG: "yes"
         with:
           api-level: 35
           target: google_apis
