@@ -818,6 +818,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                     multiTouchCancelled = false
                     downKeyIndex = -1
                     downSuggestionIndex = -1
+                    invalidate()
                     spaceCursorGesture = false
                     spaceCursorMoved = false
                     cursorMoveRemainder = 0f
@@ -838,6 +839,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 if (spaceCursorGesture && spaceCursorMoved) {
                     downKeyIndex = -1
                     downSuggestionIndex = -1
+                    invalidate()
                     spaceCursorGesture = false
                     spaceCursorMoved = false
                     cursorMoveRemainder = 0f
@@ -860,6 +862,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                     listener.onKey("SWIPE:$swipePath")
                     downKeyIndex = -1
                     downSuggestionIndex = -1
+                    invalidate()
                     resetSwipeTracking()
                     performClick()
                     return true
@@ -895,6 +898,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 }
                 downKeyIndex = -1
                 downSuggestionIndex = -1
+                invalidate()
                 spaceCursorGesture = false
                 spaceCursorMoved = false
                 cursorMoveRemainder = 0f
@@ -907,6 +911,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 multiTouchCancelled = false
                 downKeyIndex = -1
                 downSuggestionIndex = -1
+                invalidate()
                 spaceCursorGesture = false
                 spaceCursorMoved = false
                 cursorMoveRemainder = 0f
