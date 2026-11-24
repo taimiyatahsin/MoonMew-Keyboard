@@ -90,6 +90,8 @@ jobs:
           gradle-version: '8.9'
       - name: Run IME smoke test on Android 11 emulator
         uses: reactivecircus/android-emulator-runner@v2
+        env:
+          ANDROID_I_WANT_MY_TCG: 'yes'
         with:
           api-level: 30
           target: google_apis
