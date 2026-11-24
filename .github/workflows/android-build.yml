@@ -6,6 +6,7 @@ on:
       - main
       - codex/moonmew-foundation
       - fix/ime-selection-sync
+      - test/android-emulator-ime-smoke
   # Run CI for every PR target, including stacked feature branches.
   pull_request:
 
@@ -104,6 +105,7 @@ jobs:
           disable-animations: true
           script: |
             set +e
+            mkdir -p emulator-diagnostics
             adb wait-for-device
             ready=0
             for attempt in $(seq 1 60); do
@@ -116,7 +118,7 @@ jobs:
             done
             if [ "$ready" -ne 1 ]; then
               echo "Emulator did not expose Android API 30 after boot."
-              adb logcat -d -v threadtime > emulator-diagnostics-logcat.txt || true
+              adb logcat -d -v threadtime > emulator-diagnostics/logcat.txt || true
               exit 1
             fi
             gradle connectedDebugAndroidTest
