@@ -75,7 +75,7 @@ class KeyboardSmokeTest {
                 imeState = runCatching {
                     device.executeShellCommand("dumpsys input_method")
                 }.getOrDefault("")
-                val currentMethod = Regex("""mCurMethodId=([^;\\s]+)""")
+                val currentMethod = Regex("""mCurMethodId=([^;\s]+)""")
                     .find(imeState)?.groupValues?.getOrNull(1)
                 val inputShown = Regex("""mInputShown=(true|false)""")
                     .find(imeState)?.groupValues?.getOrNull(1) == "true"
