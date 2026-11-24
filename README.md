@@ -1,6 +1,6 @@
 # MoonMew Keyboard
 
-A lightweight, offline-first Android keyboard with English, Bangla phonetic, and direct Bangla layouts.
+A lightweight offline Android keyboard with English, Bangla phonetic and direct Bangla layouts.
 
 ## Features
 
@@ -9,13 +9,13 @@ A lightweight, offline-first Android keyboard with English, Bangla phonetic, and
 - Hold Backspace to repeat deletions, with a short initial delay and faster repeat cadence for longer holds.
 - Drag horizontally across the spacebar to move the text cursor; a normal tap still inserts a space.
 - Bangla phonetic starter mode with live conversion preview and offline word suggestions.
-- Dedicated direct Bangla layout with independent vowels, vowel signs on long press, consonants, and alternate characters.
+- Dedicated direct Bangla layout with independent vowels, vowel signs on long press, consonants and alternate characters.
 - Emoji panel with categories and Unicode emoji.
 - Two-page symbol keyboard, including Bengali punctuation and additional Bangla signs.
 - Experimental English swipe typing with local word suggestions.
 - Adjustable keyboard height: **140–280 dp** (default: **210 dp**).
-- Seven themes: Pink Plush, Moonlit Blue, Lavender Dream, Glass Candy, Moon Garden, Midnight Fur, and Lavender Kitty Plush.
-- Soft gradients, glossy rounded keycaps, subtle moon/star details, and compact toolbar.
+- Seven themes: Pink Plush, Moonlit Blue, Lavender Dream, Glass Candy, Moon Garden, Midnight Fur and Lavender Kitty Plush.
+- Soft gradients, glossy rounded keycaps, subtle moon/star details and compact toolbar.
 - Optional key sounds and a separate light key-vibration toggle; Android's system haptic setting is still respected.
 - Optional **Reduce animations & visual effects** setting to skip decorative details and plush fur overlays on lower-end devices.
 - Releases optional rendering caches and plush textures when Android reports memory pressure.
@@ -35,18 +35,9 @@ If the direct link does not start, open the [Latest Test Build page](https://git
 4. Open **MoonMew Keyboard** and follow the setup instructions.
 5. In Android keyboard settings, enable MoonMew and select it as the default keyboard.
 
-On Samsung, the setting is usually **Settings → General management → Keyboard list and default**. Menu names may vary by Android version and manufacturer.
+Open your device's **Settings** and look for **System**, **Language & input**, or **Keyboard** settings. Enable MoonMew in the available on-screen keyboard list, then select it as the default keyboard. Menu names and locations vary across Android versions and device interfaces.
 
-### Manufacturer setup tips
-
-The exact menu names vary by device and Android version. If the keyboard does not appear immediately:
-
-- **Samsung:** Open Settings → General management → Keyboard list and default. Enable MoonMew, then choose it under Default keyboard.
-- **Xiaomi / Redmi / POCO:** Open Settings → Additional settings → Languages & input → Manage keyboards. Enable MoonMew, then select it as the current keyboard.
-- **OPPO / realme:** Open Settings → Additional settings (or System settings) → Keyboard & input method → Manage keyboards. Enable and select MoonMew.
-- **vivo:** Open Settings → System management → Input method (menu wording may vary), then enable and select MoonMew.
-
-These are navigation hints, not permissions the app needs. MoonMew does not need background-running or battery-optimization exemptions to function as an input method.
+MoonMew does not need background-running or battery-optimization exemptions to function as an input method.
 
 ### Play Protect and sideloading
 
@@ -63,7 +54,7 @@ Install only an APK downloaded from this project's official GitHub Releases page
 
 ### Bangla typing
 
-Phonetic mode is a small deterministic offline converter with a growing local dictionary. It is **not** a complete Avro-compatible engine; spelling rules, conjunct handling, vowel signs, and context-aware conversion still need further improvement. Direct Bangla mode is a compact character layout, not a full Gboard-style composition engine.
+Phonetic mode is a small deterministic offline converter with a growing local dictionary. It is **not** a complete Avro-compatible engine; spelling rules, conjunct handling, vowel signs and context-aware conversion still need further improvement. Direct Bangla mode is a compact character layout, not a full Gboard-style composition engine.
 
 ### Swipe typing
 
@@ -71,9 +62,9 @@ Swipe typing is an experimental English-only prototype using a small on-device w
 
 ### Device compatibility
 
-The project is built for Android 6.0+ and the keyboard limits its height instead of using the full screen. However, compatibility, touch accuracy, layout, and performance still need hands-on testing across manufacturers, Android versions, screen sizes, and apps. Automated CI tests cannot replace physical-device testing.
+The project is built for Android 6.0+ and the keyboard limits its height instead of using the full screen. However, compatibility, touch accuracy, layout and performance still need hands-on testing across manufacturers, Android versions, screen sizes and apps. Automated CI tests cannot replace physical-device testing.
 
-Use the [physical-device test checklist](docs/PHYSICAL_DEVICE_TEST_CHECKLIST.md) to record device details, setup, layout, typing, password/privacy, performance, and experimental swipe results. Do not mark a device or Android version as tested until it has been exercised on physical hardware.
+Use the [physical-device test checklist](docs/PHYSICAL_DEVICE_TEST_CHECKLIST.md) to record device details, setup, layout, typing, password/privacy, performance and experimental swipe results. Do not mark a device or Android version as tested until it has been exercised on physical hardware.
 
 ## Build from source
 
