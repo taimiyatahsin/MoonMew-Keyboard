@@ -112,7 +112,11 @@ class KeyboardSmokeTest {
     fun virtualAccessibilityKeyCanBeReadAndActivated() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val activatedKeys = mutableListOf<String>()
-        val surface = KeyboardSurface(context) { key -> activatedKeys.add(key) }
+        val surface = KeyboardSurface(context, object : KeyboardSurface.Listener {
+            override fun onKey(key: String) {
+                activatedKeys.add(key)
+            }
+        })
         val metrics = context.resources.displayMetrics
         val width = metrics.widthPixels.coerceAtLeast(1)
         val height = (210f * metrics.density).toInt().coerceAtLeast(1)
