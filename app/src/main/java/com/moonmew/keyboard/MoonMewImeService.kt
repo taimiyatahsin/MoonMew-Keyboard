@@ -240,7 +240,7 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
         }
         val manager = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
         val clip = manager.primaryClip
-        val captured = if (clip != null && clip.itemCount > 0) clip.getItemAt(0).text?.toString() else null
+        val captured = ClipboardTextPolicy.capture(clip?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.text)
         if (!captured.isNullOrBlank() && captured.length <= 1000) {
             val items = (listOf(captured) + loadClipboardItems().filterNot { it == captured }).take(5)
             saveClipboardItems(items)
