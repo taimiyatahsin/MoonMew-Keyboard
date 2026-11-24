@@ -166,7 +166,7 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
             key == "CLIP_CLEAR" -> { saveClipboardEntries(emptyList()); keyboard?.setClipboardItems(emptyList()) }
             key.startsWith("CLIP_ITEM:") -> {
                 val index = key.substringAfter(":").toIntOrNull() ?: -1
-                val item = loadClipboardItems().getOrNull(index)
+                val item = loadClipboardEntries().getOrNull(index)?.text
                 if (!passwordField && item != null) { commitPending(""); currentInputConnection?.commitText(item, 1); keyboard?.setClipboard(false) }
             }
             key == "SYMBOLS_MORE" -> keyboard?.nextSymbolsPage()
