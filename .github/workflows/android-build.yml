@@ -73,7 +73,7 @@ jobs:
 
   emulator-smoke:
     needs: debug-build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       contents: read
     steps:
@@ -90,15 +90,12 @@ jobs:
           gradle-version: '8.9'
       - name: Run IME smoke test on Android 15 emulator
         uses: reactivecircus/android-emulator-runner@v2
-        env:
-          # GitHub-hosted Linux runners do not expose KVM. Force the emulator's
-          # supported TCG software CPU mode instead of the unsupported -accel off.
-          ANDROID_I_WANT_MY_TCG: "yes"
         with:
           api-level: 35
           target: google_apis
           arch: x86_64
           profile: pixel_2
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
           disable-animations: true
           script: gradle connectedDebugAndroidTest
 
