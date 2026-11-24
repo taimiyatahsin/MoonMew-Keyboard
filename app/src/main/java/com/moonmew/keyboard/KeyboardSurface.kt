@@ -54,6 +54,9 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private var downSuggestionIndex = -1
     private var downTime = 0L
     private var lastShiftTapAt = 0L
+    private var spaceCursorGesture = false
+    private var spaceCursorMoved = false
+    private var cursorMoveRemainder = 0f
     private var deleteRepeatRunnable: Runnable? = null
     private var deleteRepeatStartedAt = 0L
     private var deleteRepeatFired = false
@@ -678,6 +681,9 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 multiTouchCancelled = false
                 downSuggestionIndex = suggestionBounds.indexOfFirst { it.contains(event.x, event.y) }
                 downKeyIndex = bounds.indexOfFirst { it.contains(event.x, event.y) }
+                spaceCursorGesture = mode == Mode.ENGLISH && !symbols && !emojiMode && !clipboardMode && !passwordField && flatKeys.getOrNull(downKeyIndex)?.value == "SPACE"
+                spaceCursorMoved = false
+                cursorMoveRemainder = 0f
                 downTime = SystemClock.elapsedRealtime()
                 deleteRepeatFired = false
                 startDeleteRepeat(downKeyIndex)
@@ -687,17 +693,29 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 swipeDetected = false
                 lastTouchX = event.x
                 lastTouchY = event.y
-                if (swipeEnabled && mode == Mode.ENGLISH && !symbols && !emojiMode && !clipboardMode) appendSwipeKey(event.x, event.y)
+                if (!spaceCursorGesture && swipeEnabled && mode == Mode.ENGLISH && !symbols && !emojiMode && !clipboardMode) appendSwipeKey(event.x, event.y)
             }
             MotionEvent.ACTION_MOVE -> {
                 val dx = event.x - lastTouchX
                 val dy = event.y - lastTouchY
-                swipeTravel += Math.hypot(dx.toDouble(), dy.toDouble()).toFloat()
-                if (swipeTravel >= dp(38f)) swipeDetected = true
-                // Track the path before the swipe threshold is crossed too; otherwise
-                // early letters can be lost when the gesture becomes a swipe later.
-                if (swipeEnabled && mode == Mode.ENGLISH && !symbols && !emojiMode && !clipboardMode) {
-                    appendSwipeSegment(lastTouchX, lastTouchY, event.x, event.y)
+                if (spaceCursorGesture) {
+                    cursorMoveRemainder += dx
+                    val stepPx = dp(SpacebarCursorPolicy.STEP_DP)
+                    val steps = SpacebarCursorPolicy.stepsForDistance(cursorMoveRemainder, stepPx)
+                    if (steps != 0) {
+                        val action = if (steps < 0) "CURSOR_LEFT" else "CURSOR_RIGHT"
+                        repeat(if (steps < 0) -steps else steps) { listener.onKey(action) }
+                        cursorMoveRemainder -= steps * stepPx
+                        spaceCursorMoved = true
+                    }
+                } else {
+                    swipeTravel += Math.hypot(dx.toDouble(), dy.toDouble()).toFloat()
+                    if (swipeTravel >= dp(38f)) swipeDetected = true
+                    // Track the path before the swipe threshold is crossed too; otherwise
+                    // early letters can be lost when the gesture becomes a swipe later.
+                    if (swipeEnabled && mode == Mode.ENGLISH && !symbols && !emojiMode && !clipboardMode) {
+                        appendSwipeSegment(lastTouchX, lastTouchY, event.x, event.y)
+                    }
                 }
                 lastTouchX = event.x
                 lastTouchY = event.y
@@ -711,6 +729,9 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 multiTouchCancelled = true
                 downKeyIndex = -1
                 downSuggestionIndex = -1
+                spaceCursorGesture = false
+                spaceCursorMoved = false
+                cursorMoveRemainder = 0f
                 resetSwipeTracking()
             }
             MotionEvent.ACTION_UP -> {
@@ -719,7 +740,20 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                     multiTouchCancelled = false
                     downKeyIndex = -1
                     downSuggestionIndex = -1
+                    spaceCursorGesture = false
+                    spaceCursorMoved = false
+                    cursorMoveRemainder = 0f
                     resetSwipeTracking()
+                    return true
+                }
+                if (spaceCursorGesture && spaceCursorMoved) {
+                    downKeyIndex = -1
+                    downSuggestionIndex = -1
+                    spaceCursorGesture = false
+                    spaceCursorMoved = false
+                    cursorMoveRemainder = 0f
+                    resetSwipeTracking()
+                    performClick()
                     return true
                 }
                 // Include the final segment in distance detection too. Some devices may
@@ -772,6 +806,9 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 }
                 downKeyIndex = -1
                 downSuggestionIndex = -1
+                spaceCursorGesture = false
+                spaceCursorMoved = false
+                cursorMoveRemainder = 0f
                 resetSwipeTracking()
                 performClick()
             }
@@ -781,6 +818,9 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 multiTouchCancelled = false
                 downKeyIndex = -1
                 downSuggestionIndex = -1
+                spaceCursorGesture = false
+                spaceCursorMoved = false
+                cursorMoveRemainder = 0f
                 resetSwipeTracking()
                 return true
             }
