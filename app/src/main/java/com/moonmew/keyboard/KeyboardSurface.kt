@@ -746,6 +746,17 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                     resetSwipeTracking()
                     return true
                 }
+                if (spaceCursorGesture) {
+                    cursorMoveRemainder += event.x - lastTouchX
+                    val stepPx = dp(SpacebarCursorPolicy.STEP_DP)
+                    val steps = SpacebarCursorPolicy.stepsForDistance(cursorMoveRemainder, stepPx)
+                    if (steps != 0) {
+                        val action = if (steps < 0) "CURSOR_LEFT" else "CURSOR_RIGHT"
+                        repeat(if (steps < 0) -steps else steps) { listener.onKey(action) }
+                        cursorMoveRemainder -= steps * stepPx
+                        spaceCursorMoved = true
+                    }
+                }
                 if (spaceCursorGesture && spaceCursorMoved) {
                     downKeyIndex = -1
                     downSuggestionIndex = -1
