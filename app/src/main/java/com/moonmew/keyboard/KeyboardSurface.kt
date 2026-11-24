@@ -1,6 +1,7 @@
 package com.moonmew.keyboard
 
 import android.content.Context
+import android.content.ComponentCallbacks2
 import android.graphics.Canvas
 import android.graphics.Bitmap
 import android.graphics.BitmapShader
@@ -346,6 +347,15 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         furTextureShader = null
         furTextureBitmap?.recycle()
         furTextureBitmap = null
+    }
+
+    /** Release optional rendering caches when Android reports memory pressure. */
+    fun onTrimMemory(level: Int) {
+        if (level < ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW) return
+        releaseFurTexture()
+        backgroundGradient = null
+        keyGradientCache.clear()
+        invalidate()
     }
 
     private fun furShader(): BitmapShader {
