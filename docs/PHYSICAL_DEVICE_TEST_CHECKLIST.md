@@ -38,7 +38,9 @@ Do not mark a version as tested unless it was exercised on a physical device.
 
 ## Accessibility
 
-- [ ] Enable TalkBack and navigate through the keyboard without relying on touch exploration alone.
+- [ ] With TalkBack enabled, swipe left/right through keyboard keys and confirm each focus change is announced.
+- [ ] Use touch exploration to locate keys and confirm the announced key matches the explored position.
+- [ ] Activate focused keys with the TalkBack activation gesture; confirm focus does not become stuck or jump unexpectedly.
 - [ ] Confirm letter keys expose useful spoken labels and can be activated by accessibility actions.
 - [ ] Confirm Backspace, Space, Shift, language switch, Enter and toolbar actions have clear labels.
 - [ ] Confirm long-press alternate characters are discoverable and activatable where supported.
