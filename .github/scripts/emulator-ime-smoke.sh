@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
-set +e
+set -euo pipefail
+
 mkdir -p emulator-diagnostics
+capture_diagnostics() {
+  adb logcat -d -v threadtime > emulator-diagnostics/logcat.txt 2>/dev/null || true
+}
+trap capture_diagnostics EXIT
+
 adb wait-for-device
 expected_api_level="${ANDROID_API_LEVEL:-30}"
 ready=0
@@ -14,16 +20,25 @@ for attempt in $(seq 1 60); do
 done
 if [[ "$ready" -ne 1 ]]; then
   echo "Emulator did not expose Android API $expected_api_level after boot (last reported API: ${api_level:-unknown})."
-  adb logcat -d -v threadtime > emulator-diagnostics/logcat.txt || true
   exit 1
 fi
-gradle connectedDebugAndroidTest
-test_status=$?
-adb logcat -d -v threadtime > emulator-diagnostics/logcat.txt || true
-if [[ -d app/build/outputs/androidTest-results ]]; then
-  cp -R app/build/outputs/androidTest-results emulator-diagnostics/
+
+# Install the APKs directly with adb and invoke AndroidJUnitRunner. This avoids
+# a ddmlib/UTP split-APK installation failure observed on the API 30 emulator.
+gradle assembleDebug assembleDebugAndroidTest
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+
+set +e
+adb shell am instrument -w -r \
+  com.moonmew.keyboard.test/androidx.test.runner.AndroidJUnitRunner 2>&1 \
+  | tee emulator-diagnostics/instrumentation.txt
+instrument_status=${PIPESTATUS[0]}
+set -e
+
+if [[ "$instrument_status" -ne 0 ]] || \
+   grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED|INSTRUMENTATION_CODE: -1' emulator-diagnostics/instrumentation.txt || \
+   ! grep -q 'OK (' emulator-diagnostics/instrumentation.txt; then
+  echo "Android instrumentation tests failed. See emulator-diagnostics/instrumentation.txt."
+  exit 1
 fi
-if [[ -d app/build/reports/androidTests ]]; then
-  cp -R app/build/reports/androidTests emulator-diagnostics/
-fi
-exit "$test_status"
