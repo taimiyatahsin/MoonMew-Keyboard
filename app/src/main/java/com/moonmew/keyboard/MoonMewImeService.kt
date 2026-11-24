@@ -216,7 +216,7 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
                 } else {
                     commitPending("")
                     currentInputConnection?.commitText(if (shifted) key.uppercase() else key, 1)
-                    if (shifted) { shifted = false; keyboard?.setShifted(false) }
+                    if (shifted && !capsLocked) { shifted = false; keyboard?.setShifted(false) }
                 }
             }
         }
