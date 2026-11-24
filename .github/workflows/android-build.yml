@@ -17,7 +17,8 @@ permissions:
 # on the shared "latest" release after finishing late.
 concurrency:
   group: moonmew-${{ github.ref }}
-  cancel-in-progress: false
+  # Cancel stale PR runs so a newer commit is not blocked by a stuck emulator.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   debug-build:
