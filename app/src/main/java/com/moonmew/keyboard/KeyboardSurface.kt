@@ -709,6 +709,12 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 paint.shader = keyShader(keyRectCount - 1, rect, topTint, base)
                 canvas.drawRoundRect(rect, radius, radius, paint)
                 paint.shader = null
+                // Subtle press feedback; only highlight while the pointer remains on this key.
+                if (downKeyIndex == keyRectCount - 1 &&
+                    bounds.getOrNull(downKeyIndex)?.contains(lastTouchX, lastTouchY) == true) {
+                    paint.color = 0x22FFFFFF
+                    canvas.drawRoundRect(rect, radius, radius, paint)
+                }
                 if (!reduceAnimations && (themeId == 5 || themeId == 6)) {
                     paint.shader = furShader()
                     paint.color = 0xFFFFFFFF.toInt()
@@ -760,11 +766,15 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 swipeDetected = false
                 lastTouchX = event.x
                 lastTouchY = event.y
+                invalidate()
                 if (!spaceCursorGesture && swipeEnabled && mode == Mode.ENGLISH && !symbols && !emojiMode && !clipboardMode) appendSwipeKey(event.x, event.y)
             }
             MotionEvent.ACTION_MOVE -> {
                 val dx = event.x - lastTouchX
                 val dy = event.y - lastTouchY
+                lastTouchX = event.x
+                lastTouchY = event.y
+                invalidate()
                 if (spaceCursorGesture) {
                     cursorMoveRemainder += dx
                     val stepPx = dp(SpacebarCursorPolicy.STEP_DP)
@@ -796,6 +806,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 multiTouchCancelled = true
                 downKeyIndex = -1
                 downSuggestionIndex = -1
+                invalidate()
                 spaceCursorGesture = false
                 spaceCursorMoved = false
                 cursorMoveRemainder = 0f
