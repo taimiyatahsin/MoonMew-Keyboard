@@ -46,4 +46,38 @@ class ClipboardHistoryPolicyTest {
         assertEquals(pruned, ClipboardHistoryPolicy.add("  ", existing, now))
         assertEquals(pruned, ClipboardHistoryPolicy.add("x".repeat(1001), existing, now))
     }
+
+    @Test fun pruneRejectsFutureDatedEntries() {
+        val entries = listOf(
+            ClipboardHistoryEntry(now + 1, "future"),
+            ClipboardHistoryEntry(now, "current"),
+            ClipboardHistoryEntry(now - 1, "past")
+        )
+
+        assertEquals(listOf("current", "past"), ClipboardHistoryPolicy.prune(entries, now).map { it.text })
+    }
+
+    @Test fun pruneKeepsNewestDuplicateAndSortsByTimestamp() {
+        val entries = listOf(
+            ClipboardHistoryEntry(now - 10, "duplicate"),
+            ClipboardHistoryEntry(now - 30, "older"),
+            ClipboardHistoryEntry(now - 5, "duplicate")
+        )
+
+        val result = ClipboardHistoryPolicy.prune(entries, now)
+
+        assertEquals(listOf("duplicate", "older"), result.map { it.text })
+        assertEquals(now - 5, result[0].timestampMillis)
+    }
+
+    @Test fun addNeverExceedsFiveItems() {
+        val existing = (1..5).map { ClipboardHistoryEntry(now - it.toLong(), "item$it") }
+
+        val result = ClipboardHistoryPolicy.add("new", existing, now)
+
+        assertEquals(5, result.size)
+        assertEquals("new", result.first().text)
+        assertEquals(listOf("item1", "item2", "item3", "item4"), result.drop(1).map { it.text })
+    }
+
 }
