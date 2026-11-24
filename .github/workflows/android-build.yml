@@ -98,7 +98,7 @@ jobs:
           arch: x86_64
           profile: pixel_2
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -memory 2048 -cores 2
-          disable-animations: true
+          disable-animations: false
           script: |
             set +e
             gradle connectedDebugAndroidTest
