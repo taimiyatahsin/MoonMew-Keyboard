@@ -1,6 +1,7 @@
 package com.moonmew.keyboard
 
 import android.content.Context
+import android.content.ComponentCallbacks2
 import android.graphics.Canvas
 import android.graphics.Bitmap
 import android.graphics.BitmapShader
@@ -28,6 +29,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     // One tiny reusable tiled fiber texture; allocated lazily only for plush themes.
     private var furTextureBitmap: Bitmap? = null
     private var furTextureShader: BitmapShader? = null
+    private var memoryFallback = false
     private var backgroundGradient: android.graphics.LinearGradient? = null
     private var backgroundGradientWidth = -1
     private var backgroundGradientHeight = -1
@@ -283,6 +285,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         themeId = preferences.getInt("theme_id", if (preferences.getBoolean("rose_theme", true)) 0 else 1).coerceIn(0, 6)
         keySound = preferences.getBoolean("key_sound", false)
         keyHaptics = preferences.getBoolean("key_haptics", true)
+        memoryFallback = false
         if (themeId < 5) releaseFurTexture()
         // If clipboard history was switched off in Settings while this IME was alive,
         // immediately discard the in-memory panel contents as well as the saved data.
@@ -595,6 +598,17 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         super.onDetachedFromWindow()
     }
 
+    /** Release optional rendering resources when Android reports memory pressure. */
+    fun onTrimMemory(level: Int) {
+        if (level >= ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW) {
+            memoryFallback = true
+            releaseFurTexture()
+            backgroundGradient = null
+            keyGradientCache.clear()
+            invalidate()
+        }
+    }
+
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         if (rows.isEmpty()) return
@@ -693,7 +707,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 paint.shader = keyShader(keyRectCount - 1, rect, topTint, base)
                 canvas.drawRoundRect(rect, radius, radius, paint)
                 paint.shader = null
-                if (themeId == 5 || themeId == 6) {
+                if ((themeId == 5 || themeId == 6) && !memoryFallback) {
                     paint.shader = furShader()
                     paint.color = 0xFFFFFFFF.toInt()
                     paint.alpha = if (themeId == 5) 42 else 30
