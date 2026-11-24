@@ -12,6 +12,7 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
     private var keyboard: KeyboardSurface? = null
     private var mode = KeyboardSurface.Mode.ENGLISH
     private var shifted = false
+    private var capsLocked = false
     private var composing = ""
     private var passwordField = false
     private var modeBeforePassword = KeyboardSurface.Mode.ENGLISH
@@ -67,6 +68,7 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
         keyboard?.setSuggestions(emptyList())
         // Keep the service's typing state in sync with the visual shift key.
         shifted = false
+        capsLocked = false
         keyboard?.setShifted(false)
         keyboard?.setMode(mode)
         keyboard?.setEditorAction(attribute?.imeOptions ?: 0)
@@ -148,7 +150,8 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
                 currentInputConnection?.commitText(key.removePrefix("LONG:"), 1)
             }
             key == "TOOLBAR_BRAND" -> Unit
-            key == "SHIFT" -> { shifted = !shifted; keyboard?.setShifted(shifted) }
+            key == "SHIFT" -> { if (!capsLocked) shifted = !shifted; keyboard?.setShifted(shifted) }
+            key == "CAPS_LOCK_TOGGLE" -> { capsLocked = !capsLocked; shifted = capsLocked; keyboard?.setShifted(shifted) }
             key == "SYMBOLS" -> { commitPending(""); keyboard?.setSymbols(true) }
             key == "EMOJI" -> { commitPending(""); keyboard?.setEmoji(true) }
             key == "EMOJI_BACK" -> keyboard?.setEmoji(false)
@@ -208,7 +211,7 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
             else -> {
                 if (mode == KeyboardSurface.Mode.BANGLA_PHONETIC && !passwordField && key.length == 1 && key[0].isLetter()) {
                     composing += if (shifted) key.uppercase() else key.lowercase()
-                    if (shifted) { shifted = false; keyboard?.setShifted(false) }
+                    if (shifted && !capsLocked) { shifted = false; keyboard?.setShifted(false) }
                     updateComposition()
                 } else {
                     commitPending("")
