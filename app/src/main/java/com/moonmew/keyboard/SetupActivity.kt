@@ -135,7 +135,7 @@ class SetupActivity : Activity() {
             val selectedId = id.coerceIn(themeColors.indices)
             val pair = themeColors[selectedId]
             themePreview.text = "🐱   Aa   ♥   ☾   🎀"
-            themePreview.setTextColor(if (selectedId == 0 || selectedId == 3 || selectedId == 6) 0xFF49334E.toInt() else 0xFFF8F2FF.toInt())
+            themePreview.setTextColor(ThemeContrast.foregroundFor(pair.first, pair.second))
             themePreview.background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(pair.first, pair.second)).apply { cornerRadius = dp(18).toFloat() }
         }
         fun selectedTheme(): Int = preferences.getInt("theme_id", if (preferences.getBoolean("rose_theme", true)) 0 else 1).coerceIn(themeNames.indices)
@@ -152,7 +152,7 @@ class SetupActivity : Activity() {
                 val option = TextView(this).apply {
                     this.text = (if (selectedTheme() == index) "✓  " else "") + "🐱  " + name + "     Aa  ♥  ☾  🎀"
                     textSize = 16f; gravity = Gravity.CENTER_VERTICAL
-                    setTextColor(if (index == 0 || index == 3 || index == 6) 0xFF49334E.toInt() else 0xFFF8F2FF.toInt())
+                    setTextColor(ThemeContrast.foregroundFor(pair.first, pair.second))
                     setPadding(dp(14), dp(17), dp(14), dp(17))
                     background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(pair.first, pair.second)).apply { cornerRadius = dp(16).toFloat() }
                     setOnClickListener {
