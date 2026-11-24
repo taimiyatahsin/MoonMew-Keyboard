@@ -132,15 +132,18 @@ class SetupActivity : Activity() {
             0xFFD8C2E8.toInt() to 0xFFF4D7E8.toInt()
         )
         fun updateThemePreview(id: Int) {
-            val pair = themeColors[id.coerceIn(0, 6)]
+            val selectedId = id.coerceIn(themeColors.indices)
+            val pair = themeColors[selectedId]
             themePreview.text = "🐱   Aa   ♥   ☾   🎀"
-            themePreview.setTextColor(if (id == 0 || id == 3 || id == 6) 0xFF49334E.toInt() else 0xFFF8F2FF.toInt())
+            themePreview.setTextColor(if (selectedId == 0 || selectedId == 3 || selectedId == 6) 0xFF49334E.toInt() else 0xFFF8F2FF.toInt())
             themePreview.background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(pair.first, pair.second)).apply { cornerRadius = dp(18).toFloat() }
         }
-        fun selectedTheme(): Int = preferences.getInt("theme_id", if (preferences.getBoolean("rose_theme", true)) 0 else 1).coerceIn(0, 6)
+        fun selectedTheme(): Int = preferences.getInt("theme_id", if (preferences.getBoolean("rose_theme", true)) 0 else 1).coerceIn(themeNames.indices)
+        fun themeButtonLabel(name: String = themeNames[selectedTheme()]): String =
+            "🎨  Browse all ${themeNames.size} themes  ·  " + name
         updateThemePreview(selectedTheme())
         lateinit var themeButton: Button
-        themeButton = actionButton("🎨  Browse all 7 themes  ·  " + themeNames[selectedTheme()]) {
+        themeButton = actionButton(themeButtonLabel()) {
             val choices = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), dp(8), dp(16), dp(8)) }
             val dialog = AlertDialog.Builder(this).setTitle("Choose your MoonMew look")
                 .setView(ScrollView(this).apply { addView(choices) }).setNegativeButton("Close", null).create()
@@ -155,7 +158,7 @@ class SetupActivity : Activity() {
                     setOnClickListener {
                         preferences.edit().putInt("theme_id", index).putBoolean("rose_theme", index == 0).apply()
                         updateThemePreview(index)
-                        themeButton.text = "🎨  Browse all 7 themes  ·  " + name
+                        themeButton.text = themeButtonLabel(name)
                         dialog.dismiss()
                     }
                 }
