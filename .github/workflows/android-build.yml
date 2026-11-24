@@ -73,7 +73,8 @@ jobs:
 
   emulator-smoke:
     needs: debug-build
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
     permissions:
       contents: read
     steps:
@@ -90,14 +91,13 @@ jobs:
           gradle-version: '8.9'
       - name: Run IME smoke test on Android 11 emulator
         uses: reactivecircus/android-emulator-runner@v2
-        env:
-          ANDROID_I_WANT_MY_TCG: 'yes'
+        timeout-minutes: 20
         with:
           api-level: 30
           target: google_apis
           arch: x86_64
           profile: pixel_2
-          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -memory 2048 -cores 2
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -memory 4096 -cores 2
           disable-animations: false
           script: |
             set +e
