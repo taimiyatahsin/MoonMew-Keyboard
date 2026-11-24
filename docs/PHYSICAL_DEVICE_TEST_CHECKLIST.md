@@ -38,25 +38,25 @@ Do not mark a version as tested unless it was exercised on a physical device.
 
 ## Typing and editing
 
-Test in a notes app, messaging app, browser search field, and a multiline text field.
+Test in a notes app, messaging app, browser search field and a multiline text field.
 
-- [ ] English letters, uppercase, one-shot Shift, and double-tap Caps Lock.
-- [ ] Bangla phonetic conversion, suggestions, punctuation, digits, and repeated spaces.
-- [ ] Direct Bangla letters, vowel signs, conjuncts, and Bengali punctuation.
+- [ ] English letters, uppercase, one-shot Shift and double-tap Caps Lock.
+- [ ] Bangla phonetic conversion, suggestions, punctuation, digits and repeated spaces.
+- [ ] Direct Bangla letters, vowel signs, conjuncts and Bengali punctuation.
 - [ ] Space inserts one space; horizontal spacebar drag moves the cursor both directions.
-- [ ] Backspace tap, hold-repeat, selection deletion, Bangla conjunct deletion, and emoji deletion.
+- [ ] Backspace tap, hold-repeat, selection deletion, Bangla conjunct deletion and emoji deletion.
 - [ ] Long-press alternate characters; move the pointer off a held key and confirm repeat/highlight stops.
 - [ ] Emoji categories and every page's navigation.
-- [ ] Symbols pages, Enter/newline, and app-specific Go/Search/Send/Next/Done actions.
+- [ ] Symbols pages, Enter/newline and app-specific Go/Search/Send/Next/Done actions.
 - [ ] Suggestions can be selected without inserting unintended neighboring text.
 
 ## Password and privacy checks
 
 Use dummy values only.
 
-- [ ] Password, visible-password, web-password, and numeric-password fields switch to English.
+- [ ] Password, visible-password, web-password and numeric-password fields switch to English.
 - [ ] Swipe suggestions and clipboard history are unavailable in password fields.
-- [ ] Ordinary email, phone, and numeric fields are not incorrectly treated as password fields.
+- [ ] Ordinary email, phone and numeric fields are not incorrectly treated as password fields.
 - [ ] Clipboard history is off by default.
 - [ ] If explicitly enabled, clipboard history reads only after the clipboard button is tapped and can be cleared by turning it off.
 - [ ] Confirm no unexpected network permission or network activity is introduced in the tested build.
@@ -80,11 +80,11 @@ On the lowest-spec device available:
 Swipe typing is English-only and experimental. Use a fixed set of at least 20 common words and short phrases.
 
 - [ ] Swipe each item 3 times at a normal speed and 3 times quickly.
-- [ ] Record the suggested word, whether the path was captured, and perceived delay.
-- [ ] Include short words, repeated letters, diagonal paths, and paths that cross between rows.
+- [ ] Record the suggested word, whether the path was captured and perceived delay.
+- [ ] Include short words, repeated letters, diagonal paths and paths that cross between rows.
 - [ ] Confirm no swipe text is inserted into password fields.
 - [ ] Record false suggestions and missed paths; do not expand the dictionary based on a single device/session.
 
 ## Reporting a failure
 
-Include device model, Android version, app/field type, keyboard height, steps to reproduce, expected behavior, actual behavior, and whether it repeats. Attach a screenshot or screen recording only after removing personal text and notifications. Never include typed private content.
+Include device model, Android version, app/field type, keyboard height, steps to reproduce, expected behavior, actual behavior and whether it repeats. Attach a screenshot or screen recording only after removing personal text and notifications. Never include typed private content.
