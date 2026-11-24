@@ -78,4 +78,13 @@ class BanglaTransliteratorTest {
         assertEquals(expanded.size, expanded.distinct().size)
         assertTrue(expanded.size <= 5)
     }
+
+    @Test fun uppercaseInputUsesLocaleIndependentDictionaryLookup() {
+        assertEquals("আমি", BanglaTransliterator.convert("AMI"))
+    }
+
+    @Test fun punctuationDigitsAndRepeatedSpacesArePreserved() {
+        assertEquals("আমি, তুমি! 123", BanglaTransliterator.convert("ami, tumi! 123"))
+        assertEquals("আমি  তুমি", BanglaTransliterator.convert("ami  tumi"))
+    }
 }
