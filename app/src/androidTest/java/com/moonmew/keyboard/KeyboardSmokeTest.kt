@@ -186,4 +186,44 @@ class KeyboardSmokeTest {
         }
     }
 
+    @Test
+    fun alternateCharacterCanBeActivatedWithAccessibilityLongClick() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val activatedKeys = mutableListOf<String>()
+        val surface = KeyboardSurface(context, object : KeyboardSurface.Listener {
+            override fun onKey(key: String) {
+                activatedKeys.add(key)
+            }
+        })
+        val metrics = context.resources.displayMetrics
+        val width = metrics.widthPixels.coerceAtLeast(1)
+        val height = (210f * metrics.density).toInt().coerceAtLeast(1)
+
+        surface.measure(
+            View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY)
+        )
+        surface.layout(0, 0, width, height)
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        try {
+            surface.draw(Canvas(bitmap))
+            val provider = surface.accessibilityNodeProvider
+            val alternateKeyId = (0..80).firstOrNull { virtualId ->
+                provider.createAccessibilityNodeInfo(virtualId)?.isLongClickable == true
+            }
+
+            assertNotNull("At least one alternate-character key should expose long-click", alternateKeyId)
+            assertTrue(
+                "Alternate character should support accessibility long-click",
+                provider.performAction(alternateKeyId!!, AccessibilityNodeInfo.ACTION_LONG_CLICK, null)
+            )
+            assertTrue(
+                "Long-click should dispatch the alternate character",
+                activatedKeys.singleOrNull()?.startsWith("LONG:") == true
+            )
+        } finally {
+            bitmap.recycle()
+        }
+    }
+
 }
