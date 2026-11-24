@@ -64,10 +64,25 @@ class KeyboardSmokeTest {
             assertNotNull("Test editor was not available", editor)
             editor.click()
 
-            assertTrue(
-                "MoonMew keyboard keys did not appear after focusing the test editor",
-                device.wait(Until.hasObject(By.desc("Backspace")), 15_000)
+            val keyboardVisible = device.wait(
+                Until.hasObject(By.desc("MoonMew keyboard")),
+                15_000
             )
+            if (!keyboardVisible) {
+                val activeIme = runCatching {
+                    device.executeShellCommand("settings get secure default_input_method")
+                }.getOrDefault("unavailable")
+                val imeState = runCatching {
+                    device.executeShellCommand("dumpsys input_method")
+                        .lineSequence()
+                        .filter { it.contains("mCurMethodId") || it.contains("mInputShown") || it.contains("mShowRequested") }
+                        .take(12)
+                        .joinToString("; ")
+                }.getOrDefault("unavailable")
+                throw AssertionError(
+                    "MoonMew keyboard view did not appear. Active IME: $activeIme. Input method state: $imeState"
+                )
+            }
         } finally {
             runCatching { device.pressBack() }
             runCatching { device.executeShellCommand("ime reset") }
