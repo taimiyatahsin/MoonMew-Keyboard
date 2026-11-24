@@ -40,6 +40,11 @@ class BanglaTransliteratorTest {
         assertEquals("শুভ সকাল", BanglaTransliterator.convert("shubhosokal"))
     }
 
+    @Test fun gechoUsesNaturalBanglaSpelling() {
+        assertEquals("গেছো", BanglaTransliterator.convert("gecho"))
+        assertTrue(BanglaWordSuggestions.suggest("gec").contains("গেছো"))
+    }
+
     @Test fun newerWordsAreAvailableAsPrefixSuggestions() {
         assertTrue(BanglaWordSuggestions.suggest("down").contains("ডাউনলোড"))
         assertTrue(BanglaWordSuggestions.suggest("pass").contains("পাসওয়ার্ড"))
