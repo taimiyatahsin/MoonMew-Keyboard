@@ -46,8 +46,6 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
         setExtractViewShown(false)
         val wasPasswordField = passwordField
         val type = attribute?.inputType ?: InputType.TYPE_CLASS_TEXT
-        val cls = type and InputType.TYPE_MASK_CLASS
-        val variation = type and InputType.TYPE_MASK_VARIATION
         val numericConfig = NumericInputPolicy.fromInputType(type)
         numericInput = numericConfig.enabled
         numericDecimal = numericConfig.decimal
