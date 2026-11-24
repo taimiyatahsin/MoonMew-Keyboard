@@ -57,7 +57,7 @@ object BanglaWordSuggestions {
         "hmm" to "হুম", "accha" to "আচ্ছা", "acha" to "আচ্ছা", "oboshshoi" to "অবশ্যই",
         "dorkar" to "দরকার", "lagbe" to "লাগবে", "lagena" to "লাগে না", "parbe" to "পারবে",
         "parbo" to "পারব", "korben" to "করবেন", "korbenna" to "করবেন না",
-        "asbo" to "আসব", "ashbo" to "আসব", "gechi" to "গেছি", "gecho" to "গেছ",
+        "asbo" to "আসব", "ashbo" to "আসব", "gechi" to "গেছি", "gecho" to "গেছো",
         "bosh" to "বস", "bosho" to "বসো", "uthho" to "উঠো", "cholo" to "চলো",
         "chol" to "চল", "dhire" to "ধীরে", "taratari" to "তাড়াতাড়ি",
         "ekshathe" to "একসাথে", "ekshathei" to "একসাথেই", "shotti" to "সত্যি",
