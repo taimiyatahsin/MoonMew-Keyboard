@@ -14,8 +14,8 @@ A lightweight offline Android keyboard with English, Bangla phonetic and direct 
 - Two-page symbol keyboard, including Bengali punctuation and additional Bangla signs.
 - Experimental English swipe typing with local word suggestions.
 - Adjustable keyboard height: **140–280 dp** (default: **210 dp**).
-- Seven themes: Pink Plush, Moonlit Blue, Lavender Dream, Glass Candy, Moon Garden, Midnight Fur, and Lavender Kitty Plush.
-- Soft gradients, glossy rounded keycaps, subtle moon/star details, and compact toolbar.
+- Seven themes: Pink Plush, Moonlit Blue, Lavender Dream, Glass Candy, Moon Garden, Midnight Fur and Lavender Kitty Plush.
+- Soft gradients, glossy rounded keycaps, subtle moon/star details and compact toolbar.
 - Optional key sounds and a separate light key-vibration toggle; Android's system haptic setting is still respected.
 - Optional **Reduce animations & visual effects** setting to skip decorative details and plush fur overlays on lower-end devices.
 - Releases optional rendering caches and plush textures when Android reports memory pressure.
@@ -54,7 +54,7 @@ Install only an APK downloaded from this project's official GitHub Releases page
 
 ### Bangla typing
 
-Phonetic mode is a small deterministic offline converter with a growing local dictionary. It is **not** a complete Avro-compatible engine; spelling rules, conjunct handling, vowel signs, and context-aware conversion still need further improvement. Direct Bangla mode is a compact character layout, not a full Gboard-style composition engine.
+Phonetic mode is a small deterministic offline converter with a growing local dictionary. It is **not** a complete Avro-compatible engine; spelling rules, conjunct handling, vowel signs and context-aware conversion still need further improvement. Direct Bangla mode is a compact character layout, not a full Gboard-style composition engine.
 
 ### Swipe typing
 
@@ -62,9 +62,9 @@ Swipe typing is an experimental English-only prototype using a small on-device w
 
 ### Device compatibility
 
-The project is built for Android 6.0+ and the keyboard limits its height instead of using the full screen. However, compatibility, touch accuracy, layout, and performance still need hands-on testing across manufacturers, Android versions, screen sizes, and apps. Automated CI tests cannot replace physical-device testing.
+The project is built for Android 6.0+ and the keyboard limits its height instead of using the full screen. However, compatibility, touch accuracy, layout and performance still need hands-on testing across manufacturers, Android versions, screen sizes and apps. Automated CI tests cannot replace physical-device testing.
 
-Use the [physical-device test checklist](docs/PHYSICAL_DEVICE_TEST_CHECKLIST.md) to record device details, setup, layout, typing, password/privacy, performance, and experimental swipe results. Do not mark a device or Android version as tested until it has been exercised on physical hardware.
+Use the [physical-device test checklist](docs/PHYSICAL_DEVICE_TEST_CHECKLIST.md) to record device details, setup, layout, typing, password/privacy, performance and experimental swipe results. Do not mark a device or Android version as tested until it has been exercised on physical hardware.
 
 ## Build from source
 
