@@ -50,6 +50,12 @@ class BanglaTransliteratorTest {
         assertTrue(BanglaWordSuggestions.suggest("pass").contains("পাসওয়ার্ড"))
     }
 
+    @Test fun alternateRomanSpellingsResolveConsistently() {
+        assertEquals("সময়", BanglaTransliterator.convert("somoy"))
+        assertEquals("সময়", BanglaTransliterator.convert("shomoy"))
+        assertEquals("কোথায়", BanglaTransliterator.convert("kothay"))
+    }
+
     @Test fun suggestionsAreLocalAndPrefixMatched() {
         val suggestions = BanglaWordSuggestions.suggest("am")
         assertEquals(listOf("আমি", "আমার", "আমরা"), suggestions)
