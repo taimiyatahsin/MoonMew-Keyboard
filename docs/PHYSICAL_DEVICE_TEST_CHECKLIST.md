@@ -36,6 +36,17 @@ Do not mark a version as tested unless it was exercised on a physical device.
 - [ ] Rotate the device and reopen the keyboard; confirm it remains correctly sized.
 - [ ] Switch away from and back to MoonMew; confirm no stale pressed key or panel remains.
 
+## Accessibility
+
+- [ ] With TalkBack enabled, swipe left/right through keyboard keys and confirm each focus change is announced.
+- [ ] Use touch exploration to locate keys and confirm the announced key matches the explored position.
+- [ ] Activate focused keys with the TalkBack activation gesture; confirm focus does not become stuck or jump unexpectedly.
+- [ ] Confirm letter keys expose useful spoken labels and can be activated by accessibility actions.
+- [ ] Confirm Backspace, Space, Shift, language switch, Enter and toolbar actions have clear labels.
+- [ ] Confirm long-press alternate characters are discoverable and activatable where supported.
+- [ ] Confirm suggestion buttons are announced as suggestions and activate the intended word.
+- [ ] Check focus order and ensure decorative elements do not create confusing focus stops.
+
 ## Typing and editing
 
 Test in a notes app, messaging app, browser search field and a multiline text field.
