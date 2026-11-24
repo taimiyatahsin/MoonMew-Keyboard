@@ -36,31 +36,35 @@ class KeyboardSmokeTest {
         device.executeShellCommand("ime set $component")
         device.executeShellCommand("settings put secure show_ime_with_hard_keyboard 1")
 
-        val launch = context.packageManager.getLaunchIntentForPackage(context.packageName)
-            ?: error("MoonMew launcher activity was not found")
-        launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-        context.startActivity(launch)
-
-        assertTrue(
-            "Setup screen did not appear",
-            device.wait(Until.hasObject(By.text("☾  MoonMew Keyboard")), 10_000)
-        )
-        val testButton = device.findObject(By.text("Try typing in the test box"))
-        assertNotNull("Keyboard test button was not shown", testButton)
-        testButton.click()
-
-        assertTrue(
-            "MoonMew input view did not appear",
-            device.wait(Until.hasObject(By.desc("MoonMew keyboard")), 10_000)
-        )
-        assertTrue(
-            "Keyboard accessibility keys were not exposed",
-            device.wait(Until.hasObject(By.desc("Backspace")), 5_000)
-        )
-
-        // Leave the emulator in a clean state for subsequent tests.
-        device.pressBack()
-        device.executeShellCommand("ime reset")
-        device.executeShellCommand("settings delete secure show_ime_with_hard_keyboard")
+        try {
+            val launch = context.packageManager.getLaunchIntentForPackage(context.packageName)
+                ?: error("MoonMew launcher activity was not found")
+            launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            context.startActivity(launch)
+    
+            assertTrue(
+                "Setup screen did not appear",
+                device.wait(Until.hasObject(By.text("☾  MoonMew Keyboard")), 10_000)
+            )
+            val testButton = device.findObject(By.text("Try typing in the test box"))
+            assertNotNull("Keyboard test button was not shown", testButton)
+            testButton.click()
+    
+            assertTrue(
+                "MoonMew input view did not appear",
+                device.wait(Until.hasObject(By.desc("MoonMew keyboard")), 10_000)
+            )
+            assertTrue(
+                "Keyboard accessibility keys were not exposed",
+                device.wait(Until.hasObject(By.desc("Backspace")), 5_000)
+            )
+    
+    
+        } finally {
+            // Restore the emulator input method even when an assertion fails.
+            runCatching { device.pressBack() }
+            runCatching { device.executeShellCommand("ime reset") }
+            runCatching { device.executeShellCommand("settings delete secure show_ime_with_hard_keyboard") }
+        }
     }
 }
