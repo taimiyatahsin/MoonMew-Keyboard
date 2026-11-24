@@ -49,6 +49,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private var themeId = preferences.getInt("theme_id", if (preferences.getBoolean("rose_theme", true)) 0 else 1)
     private var keySound = preferences.getBoolean("key_sound", false)
     private var keyHaptics = preferences.getBoolean("key_haptics", true)
+    private var reduceAnimations = preferences.getBoolean("reduce_animations", false)
     private var mode = Mode.ENGLISH
     private var shifted = false
     private var symbols = false
@@ -284,6 +285,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         themeId = preferences.getInt("theme_id", if (preferences.getBoolean("rose_theme", true)) 0 else 1).coerceIn(0, 6)
         keySound = preferences.getBoolean("key_sound", false)
         keyHaptics = preferences.getBoolean("key_haptics", true)
+        reduceAnimations = preferences.getBoolean("reduce_animations", false)
         if (themeId < 5) releaseFurTexture()
         // If clipboard history was switched off in Settings while this IME was alive,
         // immediately discard the in-memory panel contents as well as the saved data.
@@ -611,14 +613,16 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         paint.shader = backgroundShader()
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
         paint.shader = null
-        paint.color = accentColor()
-        paint.alpha = 58
-        starPoints.forEachIndexed { index, point ->
-            canvas.drawCircle(width * point.first, height * point.second, dp(if (index % 2 == 0) 1.4f else 1f), paint)
+        if (!reduceAnimations) {
+            paint.color = accentColor()
+            paint.alpha = 58
+            starPoints.forEachIndexed { index, point ->
+                canvas.drawCircle(width * point.first, height * point.second, dp(if (index % 2 == 0) 1.4f else 1f), paint)
+            }
+            paint.alpha = 255
         }
-        paint.alpha = 255
         // Decorative candy dots and tiny bow-like accents for the kawaii palettes.
-        if (themeId == 0 || themeId == 3) {
+        if (!reduceAnimations && (themeId == 0 || themeId == 3)) {
             candyAccentPoints.forEachIndexed { index, point ->
                 val cx = width * point.first
                 val cy = height * point.second
@@ -645,11 +649,13 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             }
             paint.alpha = 255
         }
-        val moonX = width - dp(18f)
-        val moonY = dp(12f)
-        canvas.drawCircle(moonX, moonY, dp(6f), paint)
-        paint.color = backgroundTopColor()
-        canvas.drawCircle(moonX + dp(3f), moonY - dp(2f), dp(5.5f), paint)
+        if (!reduceAnimations) {
+            val moonX = width - dp(18f)
+            val moonY = dp(12f)
+            canvas.drawCircle(moonX, moonY, dp(6f), paint)
+            paint.color = backgroundTopColor()
+            canvas.drawCircle(moonX + dp(3f), moonY - dp(2f), dp(5.5f), paint)
+        }
         val pad = dp(5f)
         val top = dp(7f)
         val previewHeight = if (composition.isNotEmpty()) dp(49f) else dp(5f)
@@ -703,7 +709,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 paint.shader = keyShader(keyRectCount - 1, rect, topTint, base)
                 canvas.drawRoundRect(rect, radius, radius, paint)
                 paint.shader = null
-                if (themeId == 5 || themeId == 6) {
+                if (!reduceAnimations && (themeId == 5 || themeId == 6)) {
                     paint.shader = furShader()
                     paint.color = 0xFFFFFFFF.toInt()
                     paint.alpha = if (themeId == 5) 42 else 30
