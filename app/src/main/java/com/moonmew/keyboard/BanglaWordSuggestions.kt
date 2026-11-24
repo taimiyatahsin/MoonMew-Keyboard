@@ -68,7 +68,7 @@ object BanglaWordSuggestions {
         "apnara" to "আপনারা", "apnader" to "আপনাদের", "oder" to "ওদের", "ora" to "ওরা",
         "tora" to "তোরা", "toder" to "তোদের", "amaderke" to "আমাদেরকে", "tomaderke" to "তোমাদেরকে",
         "ekhankar" to "এখানকার", "sekhaney" to "সেখানে", "okhankar" to "ওখানকার",
-        "kothay" to "কোথায়", "kothaycho" to "কোথায়ছো", "kothayachen" to "কোথায় আছেন",
+        "kothaycho" to "কোথায়ছো", "kothayachen" to "কোথায় আছেন",
         "ashole" to "আসলে", "asole" to "আসলে", "monekor" to "মনে কর",
         "bhabchi" to "ভাবছি", "vabchi" to "ভাবছি", "bhabna" to "ভাবনা",
         "chinta" to "চিন্তা", "chinta koro" to "চিন্তা করো", "oshubidha" to "অসুবিধা",
