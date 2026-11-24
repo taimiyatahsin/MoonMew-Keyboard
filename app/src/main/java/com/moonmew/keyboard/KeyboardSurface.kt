@@ -759,8 +759,11 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                                 }
                             } else {
                                 lastShiftTapAt = 0L
-                                val held = SystemClock.elapsedRealtime() - downTime >= 450L
-                                listener.onKey(if (held && key.longPressValue != null) "LONG:${key.longPressValue}" else key.value)
+                                // Backspace repeat already deleted while held; do not delete again on release.
+                                if (!(key.value == "DELETE" && deleteRepeatFired)) {
+                                    val held = SystemClock.elapsedRealtime() - downTime >= 450L
+                                    listener.onKey(if (held && key.longPressValue != null) "LONG:${key.longPressValue}" else key.value)
+                                }
                             }
                         }
                     }
