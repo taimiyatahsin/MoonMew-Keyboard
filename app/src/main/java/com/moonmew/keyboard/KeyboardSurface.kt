@@ -772,7 +772,8 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             MotionEvent.ACTION_MOVE -> {
                 val dx = event.x - lastTouchX
                 val dy = event.y - lastTouchY
-                invalidate()
+                val wasPressedKeyHighlighted =
+                    bounds.getOrNull(downKeyIndex)?.contains(lastTouchX, lastTouchY) == true
                 if (spaceCursorGesture) {
                     cursorMoveRemainder += dx
                     val stepPx = dp(SpacebarCursorPolicy.STEP_DP)
@@ -795,6 +796,11 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 // Preserve the previous point until the full segment has been sampled.
                 lastTouchX = event.x
                 lastTouchY = event.y
+                // Pointer events can arrive faster than display frames. Redraw only
+                // when the pressed-key highlight actually changes, not for every move.
+                val isPressedKeyHighlighted =
+                    bounds.getOrNull(downKeyIndex)?.contains(lastTouchX, lastTouchY) == true
+                if (wasPressedKeyHighlighted != isPressedKeyHighlighted) invalidate()
                 if (deleteRepeatRunnable != null && bounds.getOrNull(downKeyIndex)?.contains(event.x, event.y) != true) cancelDeleteRepeat()
             }
             MotionEvent.ACTION_POINTER_DOWN -> {
