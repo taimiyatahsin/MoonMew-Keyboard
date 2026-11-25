@@ -53,8 +53,33 @@ fi
 # Install the APKs directly with adb and invoke AndroidJUnitRunner. This avoids
 # a ddmlib/UTP split-APK installation failure observed on the API 30 emulator.
 gradle assembleDebug assembleDebugAndroidTest
-adb install -r app/build/outputs/apk/debug/app-debug.apk
-adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+
+# These are disposable CI emulators, not user devices. AOSP emulator package
+# verification has intermittently timed out during adb installs (API 35), so
+# disable only the emulator's package-verifier checks for this instrumentation
+# run. This does not change the APK or any setting on a physical device.
+adb shell settings put global package_verifier_enable 0 || true
+adb shell settings put global verifier_verify_adb_installs 0 || true
+
+install_apk() {
+  local apk_path="$1"
+  local attempt
+  for attempt in 1 2 3; do
+    echo "Installing $apk_path (attempt $attempt/3)."
+    if adb install --no-streaming -r "$apk_path"; then
+      return 0
+    fi
+    echo "APK installation attempt $attempt failed."
+    if [[ "$attempt" -lt 3 ]]; then
+      sleep 5
+    fi
+  done
+  echo "Unable to install $apk_path after 3 attempts."
+  return 1
+}
+
+install_apk app/build/outputs/apk/debug/app-debug.apk
+install_apk app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
 
 set +e
 adb shell am instrument -w -r \
