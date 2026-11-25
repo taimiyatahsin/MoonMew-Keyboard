@@ -7,15 +7,25 @@ capture_diagnostics() {
 }
 trap capture_diagnostics EXIT
 
-adb wait-for-device
+# Keep adb readiness waits bounded even if the emulator runner reports a
+# device connection before the Android userspace is actually responsive.
+if ! timeout 900s adb wait-for-device; then
+  echo "Emulator did not become available to adb within 15 minutes."
+  exit 1
+fi
 expected_api_level="${ANDROID_API_LEVEL:-30}"
 ready=0
+api_level=""
 for attempt in $(seq 1 90); do
-  api_level=$(adb shell getprop ro.build.version.sdk 2>/dev/null | tr -d '\r')
-  if [[ "$api_level" == "$expected_api_level" ]]; then
-    ready=1
-    break
+  if api_level=$(timeout 5s adb shell getprop ro.build.version.sdk 2>/dev/null | tr -d '\r'); then
+    if [[ "$api_level" == "$expected_api_level" ]]; then
+      ready=1
+      break
+    fi
+  else
+    api_level=""
   fi
+  echo "Waiting for Android API $expected_api_level to become readable (attempt $attempt/90)."
   sleep 2
 done
 if [[ "$ready" -ne 1 ]]; then
