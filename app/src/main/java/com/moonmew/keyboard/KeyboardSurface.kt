@@ -446,10 +446,16 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         compositionPreviewText = if (composition.isEmpty()) "" else "$composition  →  $preview"
     }
     fun setComposition(value: String) {
+        val wasShowingComposition = composition.isNotEmpty()
         composition = value
         updateCompositionPreviewText()
-        suggestionBounds.clear()
-        advanceAccessibilityGeneration()
+        // The preview text itself is not a virtual node. Keep stable key/suggestion
+        // IDs while typing; only invalidate geometry when the preview row appears
+        // or disappears and changes the key layout.
+        if (wasShowingComposition != value.isNotEmpty()) {
+            suggestionBounds.clear()
+            advanceAccessibilityGeneration()
+        }
         invalidate()
     }
     fun setPreview(value: String) {
@@ -457,7 +463,17 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         updateCompositionPreviewText()
         invalidate()
     }
-    fun setSuggestions(value: List<String>) { suggestions = value.take(3); suggestionBounds.clear(); advanceAccessibilityGeneration(); invalidate() }
+    fun setSuggestions(value: List<String>) {
+        val nextSuggestions = value.take(3)
+        if (suggestions != nextSuggestions) {
+            suggestions = nextSuggestions
+            suggestionBounds.clear()
+            // Suggestion labels/actions changed, so delayed accessibility actions
+            // must not resolve against the newly displayed words.
+            advanceAccessibilityGeneration()
+        }
+        invalidate()
+    }
 
     private fun rebuild() {
         cancelDeleteRepeat()
