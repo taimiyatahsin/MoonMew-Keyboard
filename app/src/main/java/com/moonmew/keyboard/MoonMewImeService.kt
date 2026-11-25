@@ -148,7 +148,10 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
                 commitPending("")
                 currentInputConnection?.commitText(key.removePrefix("LONG:"), 1)
             }
-            key == "TOOLBAR_BRAND" -> Unit
+            key == "TOOLBAR_BRAND" -> keyboard?.playBrandSparkle()
+            key == "MORE" -> keyboard?.setMoreMenu(true)
+            key == "MORE_CLOSE" -> keyboard?.setMoreMenu(false)
+            key == "MORE_CLIP" -> openClipboardHistory()
             key == "SHIFT" -> { if (!capsLocked) shifted = !shifted; keyboard?.setShifted(shifted) }
             key == "CAPS_LOCK_TOGGLE" -> { capsLocked = !capsLocked; shifted = capsLocked; keyboard?.setShifted(shifted) }
             key == "SYMBOLS" -> { commitPending(""); keyboard?.setSymbols(true) }
@@ -308,7 +311,8 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
             keyboard?.setSuggestions(emptyList())
         }
         if (composing.isNotEmpty()) {
-            val result = BanglaTransliterator.convert(composing).ifEmpty { composing }
+            // Preserve ordinary English words; known Banglish words are converted.
+            val result = BanglaWordSuggestions.exact(composing) ?: composing
             currentInputConnection?.setComposingText(result, 1)
             currentInputConnection?.finishComposingText()
             clearComposition()
