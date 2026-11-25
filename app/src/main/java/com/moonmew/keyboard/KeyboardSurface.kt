@@ -161,15 +161,19 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                     setSource(this@KeyboardSurface)
                     val parentView = this@KeyboardSurface.parent
                     if (parentView is View) setParent(parentView)
-                    for (index in bounds.indices) addChild(this@KeyboardSurface, index)
-                    for (index in suggestionBounds.indices) addChild(this@KeyboardSurface, flatKeys.size + index)
+                    for (index in bounds.indices) addChild(this@KeyboardSurface, accessibilityNodeId(index))
+                    for (index in suggestionBounds.indices) {
+                        addChild(this@KeyboardSurface, accessibilityNodeId(flatKeys.size + index))
+                    }
                 }
             }
-            val suggestionIndex = virtualViewId - flatKeys.size
+            if (virtualViewId < 0 || virtualViewId / ACCESSIBILITY_ID_STRIDE != accessibilityGeneration) return null
+            val localIndex = virtualViewId % ACCESSIBILITY_ID_STRIDE
+            val suggestionIndex = localIndex - flatKeys.size
             val isSuggestion = suggestionIndex >= 0
-            val rect = if (isSuggestion) suggestionBounds.getOrNull(suggestionIndex) else bounds.getOrNull(virtualViewId)
+            val rect = if (isSuggestion) suggestionBounds.getOrNull(suggestionIndex) else bounds.getOrNull(localIndex)
             if (rect == null) return null
-            val key = if (isSuggestion) null else flatKeys.getOrNull(virtualViewId)
+            val key = if (isSuggestion) null else flatKeys.getOrNull(localIndex)
             val label = if (isSuggestion) suggestions.getOrNull(suggestionIndex) else key?.let { accessibilityLabel(it) }
             return AccessibilityNodeInfo.obtain().apply {
                 setSource(this@KeyboardSurface, virtualViewId)
@@ -198,9 +202,11 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             }
             if (action != AccessibilityNodeInfo.ACTION_CLICK &&
                 action != AccessibilityNodeInfo.ACTION_LONG_CLICK) return false
-            if (virtualViewId >= flatKeys.size) {
+            if (virtualViewId < 0 || virtualViewId / ACCESSIBILITY_ID_STRIDE != accessibilityGeneration) return false
+            val localIndex = virtualViewId % ACCESSIBILITY_ID_STRIDE
+            if (localIndex >= flatKeys.size) {
                 if (action == AccessibilityNodeInfo.ACTION_LONG_CLICK) return false
-                val word = suggestions.getOrNull(virtualViewId - flatKeys.size) ?: return false
+                val word = suggestions.getOrNull(localIndex - flatKeys.size) ?: return false
                 listener.onKey("SUGGEST:$word")
             } else {
                 val key = flatKeys.getOrNull(localIndex) ?: return false
