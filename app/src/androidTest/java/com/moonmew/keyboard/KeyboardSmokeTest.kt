@@ -24,6 +24,21 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class KeyboardSmokeTest {
+    private fun findVirtualNodeId(
+        provider: android.view.accessibility.AccessibilityNodeProvider,
+        matches: (AccessibilityNodeInfo) -> Boolean
+    ): Int? {
+        // IDs carry a generation in the high bits and a small local index.
+        for (generation in 0..16) {
+            val base = generation * 4096
+            for (index in 0..200) {
+                val node = provider.createAccessibilityNodeInfo(base + index) ?: continue
+                if (matches(node)) return base + index
+            }
+        }
+        return null
+    }
+
     @Test
     fun setupScreenAndInputMethodWindowShowsOnEmulator() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
@@ -132,13 +147,20 @@ class KeyboardSmokeTest {
             val provider = surface.accessibilityNodeProvider
             // Toolbar actions precede letter keys in the virtual-node list, so
             // locate the q key by its accessible label instead of assuming ID 0.
-            val qKeyId = (0..40).firstOrNull { virtualId ->
-                provider.createAccessibilityNodeInfo(virtualId)?.text?.toString() == "q"
-            }
+            val qKeyId = findVirtualNodeId(provider) { it.text?.toString() == "q" }
 
             assertNotNull("Q key should be exposed as a virtual accessibility node", qKeyId)
             assertTrue(
                 "Virtual keyboard key should support accessibility activation",
+                provider.performAction(qKeyId!!, AccessibilityNodeInfo.ACTION_CLICK, null)
+            )
+            assertEquals(listOf("q"), activatedKeys)
+
+            // A delayed TalkBack action from the old layout must not activate
+            // whatever key now occupies the same local index.
+            surface.setSymbols(true)
+            assertFalse(
+                "A stale key node must be rejected after a layout rebuild",
                 provider.performAction(qKeyId!!, AccessibilityNodeInfo.ACTION_CLICK, null)
             )
             assertEquals(listOf("q"), activatedKeys)
@@ -172,14 +194,21 @@ class KeyboardSmokeTest {
         try {
             surface.draw(Canvas(bitmap))
             val provider = surface.accessibilityNodeProvider
-            val suggestionId = (0..80).firstOrNull { virtualId ->
-                provider.createAccessibilityNodeInfo(virtualId)?.contentDescription
-                    ?.toString() == "Suggestion: hello"
+            val suggestionId = findVirtualNodeId(provider) {
+                it.contentDescription?.toString() == "Suggestion: hello"
             }
 
             assertNotNull("Suggestion should be exposed with a spoken label", suggestionId)
             assertTrue(
                 "Suggestion should support accessibility activation",
+                provider.performAction(suggestionId!!, AccessibilityNodeInfo.ACTION_CLICK, null)
+            )
+            assertEquals(listOf("SUGGEST:hello"), activatedKeys)
+
+            // Replacing suggestions invalidates their old virtual IDs too.
+            surface.setSuggestions(listOf("world"))
+            assertFalse(
+                "A stale suggestion node must be rejected after suggestions change",
                 provider.performAction(suggestionId!!, AccessibilityNodeInfo.ACTION_CLICK, null)
             )
             assertEquals(listOf("SUGGEST:hello"), activatedKeys)
@@ -210,9 +239,7 @@ class KeyboardSmokeTest {
         try {
             surface.draw(Canvas(bitmap))
             val provider = surface.accessibilityNodeProvider
-            val alternateKeyId = (0..80).firstOrNull { virtualId ->
-                provider.createAccessibilityNodeInfo(virtualId)?.isLongClickable == true
-            }
+            val alternateKeyId = findVirtualNodeId(provider) { it.isLongClickable }
 
             assertNotNull("At least one alternate-character key should expose long-click", alternateKeyId)
             assertTrue(
