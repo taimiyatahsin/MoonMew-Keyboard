@@ -211,6 +211,11 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
             }
             else -> {
                 if (mode == KeyboardSurface.Mode.BANGLA_PHONETIC && !passwordField && key.length == 1 && key[0].isLetter()) {
+                    // Keep repeated transliteration and selection validation bounded.
+                    // Commit a completed long sequence before accepting another letter.
+                    if (CompositionPolicy.shouldCommitBeforeAppend(composing.length)) {
+                        commitPending("")
+                    }
                     composing += if (shifted) key.uppercase() else key.lowercase()
                     if (shifted && !capsLocked) { shifted = false; keyboard?.setShifted(false) }
                     updateComposition()
