@@ -156,6 +156,8 @@ class KeyboardSmokeTest {
                 activatedKeys.add(key)
             }
         })
+        // Suggestions are rendered only while a composition is active.
+        surface.setComposition("he")
         surface.setSuggestions(listOf("hello", "help"))
         val metrics = context.resources.displayMetrics
         val width = metrics.widthPixels.coerceAtLeast(1)
