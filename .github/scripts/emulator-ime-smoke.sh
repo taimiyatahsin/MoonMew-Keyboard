@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+mkdir -p emulator-diagnostics
+capture_diagnostics() {
+  adb logcat -d -v threadtime > emulator-diagnostics/logcat.txt 2>/dev/null || true
+}
+trap capture_diagnostics EXIT
+
+# Bound the combined startup probes well below the emulator job's 25-minute
+# timeout, leaving time for Gradle, APK installation and instrumentation.
+if ! timeout 300s adb wait-for-device; then
+  echo "Emulator did not become available to adb within 5 minutes."
+  exit 1
+fi
+expected_api_level="${ANDROID_API_LEVEL:-30}"
+ready=0
+api_level=""
+for attempt in $(seq 1 30); do
+  if api_level=$(timeout 5s adb shell getprop ro.build.version.sdk 2>/dev/null | tr -d '\r'); then
+    if [[ "$api_level" == "$expected_api_level" ]]; then
+      ready=1
+      break
+    fi
+  else
+    api_level=""
+  fi
+  echo "Waiting for Android API $expected_api_level to become readable (attempt $attempt/30)."
+  sleep 2
+done
+if [[ "$ready" -ne 1 ]]; then
+  echo "Emulator did not expose Android API $expected_api_level after boot (last reported API: ${api_level:-unknown})."
+  exit 1
+fi
+
+# A boot-complete property alone is not sufficient on a cold API 35 image:
+# system_server may still be initializing PackageManager. Keep this bounded
+# so startup checks leave time for APK installation and instrumentation.
+package_manager_ready=0
+for attempt in $(seq 1 30); do
+  if timeout 5s adb shell cmd package list packages >/dev/null 2>&1; then
+    package_manager_ready=1
+    break
+  fi
+  echo "Waiting for Android PackageManager to become responsive (attempt $attempt/30)."
+  sleep 2
+done
+if [[ "$package_manager_ready" -ne 1 ]]; then
+  echo "Android PackageManager did not become responsive after emulator boot."
+  exit 1
+fi
+
+# Install the APKs directly with adb and invoke AndroidJUnitRunner. This avoids
+# a ddmlib/UTP split-APK installation failure observed on the API 30 emulator.
+gradle assembleDebug assembleDebugAndroidTest
+
+# These are disposable CI emulators, not user devices. AOSP emulator package
+# verification has intermittently timed out during adb installs (API 35), so
+# disable only the emulator's package-verifier checks for this instrumentation
+# run. This does not change the APK or any setting on a physical device.
+adb shell settings put global package_verifier_enable 0 || true
+adb shell settings put global verifier_verify_adb_installs 0 || true
+
+install_apk() {
+  local apk_path="$1"
+  local attempt
+  for attempt in 1 2 3; do
+    echo "Installing $apk_path (attempt $attempt/3)."
+    if adb install --no-streaming -r "$apk_path"; then
+      return 0
+    fi
+    echo "APK installation attempt $attempt failed."
+    if [[ "$attempt" -lt 3 ]]; then
+      sleep 5
+    fi
+  done
+  echo "Unable to install $apk_path after 3 attempts."
+  return 1
+}
+
+install_apk app/build/outputs/apk/debug/app-debug.apk
+install_apk app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+
+set +e
+adb shell am instrument -w -r \
+  com.moonmew.keyboard.test/androidx.test.runner.AndroidJUnitRunner 2>&1 \
+  | tee emulator-diagnostics/instrumentation.txt
+instrument_status=${PIPESTATUS[0]}
+set -e
+
+# AndroidJUnitRunner may print INSTRUMENTATION_CODE: -1 after a successful
+# run on some platform versions. Use the process exit status and test summary
+# to decide success; explicit failure markers still fail the smoke test.
+if [[ "$instrument_status" -ne 0 ]] || \
+   grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED' emulator-diagnostics/instrumentation.txt || \
+   ! grep -q 'OK (' emulator-diagnostics/instrumentation.txt; then
+  echo "Android instrumentation tests failed. See emulator-diagnostics/instrumentation.txt."
+  exit 1
+fi

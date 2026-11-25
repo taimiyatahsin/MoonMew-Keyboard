@@ -71,6 +71,53 @@ jobs:
           path: app/build/outputs/apk/debug/app-debug.apk
           retention-days: 90
 
+  emulator-smoke:
+    needs: debug-build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        api-level: [30, 35]
+    name: IME smoke test (Android API ${{ matrix.api-level }})
+    permissions:
+      contents: read
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Run IME smoke test on Android API ${{ matrix.api-level }} emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        timeout-minutes: 25
+        env:
+          ANDROID_I_WANT_MY_TCG: 'yes'
+          ANDROID_API_LEVEL: ${{ matrix.api-level }}
+        with:
+          api-level: ${{ matrix.api-level }}
+          target: aosp_atd
+          arch: x86_64
+          profile: pixel_2
+          emulator-boot-timeout: 900
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -memory 4096 -cores 4
+          disable-animations: true
+          script: bash .github/scripts/emulator-ime-smoke.sh
+      - name: Upload emulator diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: moonmew-emulator-diagnostics-api-${{ matrix.api-level }}
+          path: emulator-diagnostics/
+          if-no-files-found: ignore
+          retention-days: 14
+
   # Only trusted pushes to the release branches receive write permission.
   publish-test-apk:
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/codex/moonmew-foundation')
