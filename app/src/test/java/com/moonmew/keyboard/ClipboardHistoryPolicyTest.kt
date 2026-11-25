@@ -80,4 +80,14 @@ class ClipboardHistoryPolicyTest {
         assertEquals(listOf("item1", "item2", "item3", "item4"), result.drop(1).map { it.text })
     }
 
+    @Test fun pruneRejectsBlankAndOversizedPersistedEntries() {
+        val entries = listOf(
+            ClipboardHistoryEntry(now, "valid"),
+            ClipboardHistoryEntry(now - 1, "  "),
+            ClipboardHistoryEntry(now - 2, "x".repeat(ClipboardHistoryPolicy.MAX_TEXT_LENGTH + 1))
+        )
+
+        assertEquals(listOf("valid"), ClipboardHistoryPolicy.prune(entries, now).map { it.text })
+    }
+
 }
