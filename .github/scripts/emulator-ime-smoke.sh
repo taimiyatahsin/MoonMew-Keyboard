@@ -24,15 +24,15 @@ if [[ "$ready" -ne 1 ]]; then
 fi
 
 # A boot-complete property alone is not sufficient on a cold API 35 image:
-# system_server may still be initializing PackageManager. Probe the actual
-# package service before spending time compiling the instrumentation APKs.
+# system_server may still be initializing PackageManager. Keep this bounded
+# so the probe cannot consume the emulator action's entire 25-minute budget.
 package_manager_ready=0
-for attempt in $(seq 1 90); do
-  if timeout 15s adb shell cmd package list packages >/dev/null 2>&1; then
+for attempt in $(seq 1 30); do
+  if timeout 5s adb shell cmd package list packages >/dev/null 2>&1; then
     package_manager_ready=1
     break
   fi
-  echo "Waiting for Android PackageManager to become responsive (attempt $attempt/90)."
+  echo "Waiting for Android PackageManager to become responsive (attempt $attempt/30)."
   sleep 2
 done
 if [[ "$package_manager_ready" -ne 1 ]]; then
