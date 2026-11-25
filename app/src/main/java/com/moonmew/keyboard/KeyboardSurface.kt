@@ -730,8 +730,21 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             canvas.drawCircle(moonX + dp(3f), moonY - dp(2f), dp(5.5f), paint)
         }
         val pad = dp(5f)
-        val top = dp(7f)
+        // A slim kawaii character ribbon gives the pink theme a plush themed-keyboard feel
+        // while keeping the typing area compact.
+        val ribbonHeight = if (themeId == 0 || themeId == 3) dp(19f) else dp(7f)
+        val top = ribbonHeight
         val previewHeight = if (composition.isNotEmpty()) dp(49f) else dp(5f)
+        if ((themeId == 0 || themeId == 3) && !emojiMode && !clipboardMode && !moreMenu) {
+            val ribbon = RectF(pad, dp(2f), width - pad, ribbonHeight - dp(2f))
+            paint.color = 0x66FFFFFF
+            canvas.drawRoundRect(ribbon, dp(9f), dp(9f), paint)
+            paint.color = 0xFFFFB5CF.toInt()
+            paint.textSize = dp(10f)
+            paint.typeface = keyTypeface
+            paint.textAlign = Paint.Align.CENTER
+            canvas.drawText("🐰   ✦   🎀   ✧   🐰   ✦   🎀", width / 2f, ribbon.centerY() - (paint.ascent() + paint.descent()) / 2f, paint)
+        }
         var suggestionRectCount = 0
         if (composition.isNotEmpty()) {
             paint.color = accentColor()
@@ -772,11 +785,16 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                     set(x, top + previewHeight + rowIndex * rowHeight + dp(2f),
                         x + w, top + previewHeight + (rowIndex + 1) * rowHeight - dp(3f))
                 }
-                val radius = dp(if (themeId == 3) 13f else 10f)
-                // Soft offset edge gives the keycap a tactile, raised appearance.
-                paint.color = if (themeId == 1 || themeId == 2) 0x66000000 else 0x55B65F83
-                shadowRect.set(rect.left, rect.top + dp(2f), rect.right, rect.bottom + dp(2f))
+                val radius = dp(if (themeId == 3) 14f else 11f)
+                // Plush 3D keycap: soft pink drop shadow, pale raised rim and glossy face.
+                paint.color = if (themeId == 1 || themeId == 2) 0x66000000 else 0x668E4564
+                shadowRect.set(rect.left, rect.top + dp(3f), rect.right, rect.bottom + dp(3f))
                 canvas.drawRoundRect(shadowRect, radius, radius, paint)
+                if (themeId == 0 || themeId == 3) {
+                    paint.color = 0xFFFFFDFE.toInt()
+                    val outer = RectF(rect.left - dp(0.5f), rect.top - dp(0.5f), rect.right + dp(0.5f), rect.bottom + dp(0.5f))
+                    canvas.drawRoundRect(outer, radius + dp(1f), radius + dp(1f), paint)
+                }
                 val base = keyColor(special = key.special, modeKey = key.value == "MODE")
                 val topTint = if (themeId == 1 || themeId == 2) 0xFF64718A.toInt() else 0xFFFFFFFF.toInt()
                 paint.shader = keyShader(keyRectCount - 1, rect, topTint, base)
@@ -801,11 +819,16 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 highlightRect.set(rect.left + dp(3f), rect.top + dp(2f), rect.right - dp(3f), rect.top + dp(5f))
                 canvas.drawRoundRect(highlightRect, dp(3f), dp(3f), paint)
                 paint.style = Paint.Style.STROKE
-                paint.strokeWidth = dp(if (themeId == 3) 1.2f else 0.8f)
-                paint.color = accentColor()
-                paint.alpha = if (key.special) 190 else 125
+                paint.strokeWidth = dp(if (themeId == 0 || themeId == 3) 1.35f else 0.8f)
+                paint.color = if (themeId == 0 || themeId == 3) 0xFFFFA9C7.toInt() else accentColor()
+                paint.alpha = if (key.special) 210 else 155
                 canvas.drawRoundRect(rect, radius, radius, paint)
                 paint.style = Paint.Style.FILL
+                if (themeId == 0 || themeId == 3) {
+                    paint.color = 0x66FFFFFF
+                    highlightRect.set(rect.left + dp(5f), rect.bottom - dp(5f), rect.right - dp(5f), rect.bottom - dp(3f))
+                    canvas.drawRoundRect(highlightRect, dp(2f), dp(2f), paint)
+                }
                 paint.alpha = 255
                 paint.color = keyTextColor()
                 paint.textAlign = Paint.Align.CENTER
