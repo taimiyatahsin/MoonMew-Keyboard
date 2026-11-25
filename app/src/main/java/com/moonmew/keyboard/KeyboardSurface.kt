@@ -134,6 +134,23 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         while (pool.size > used) pool.removeAt(pool.lastIndex)
     }
 
+    // Virtual IDs include a layout generation so a delayed TalkBack action can
+    // never target a different key after the keyboard or suggestion row changes.
+    private companion object {
+        const val ACCESSIBILITY_ID_STRIDE = 4096
+    }
+    private var accessibilityGeneration = 0
+    private fun advanceAccessibilityGeneration() {
+        accessibilityGeneration = if (accessibilityGeneration >= Int.MAX_VALUE / ACCESSIBILITY_ID_STRIDE - 1) {
+            0
+        } else {
+            accessibilityGeneration + 1
+        }
+        sendAccessibilityEvent(android.view.accessibility.AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED)
+    }
+    private fun accessibilityNodeId(localIndex: Int): Int =
+        accessibilityGeneration * ACCESSIBILITY_ID_STRIDE + localIndex
+
     private val keyboardAccessibilityProvider = object : AccessibilityNodeProvider() {
         override fun createAccessibilityNodeInfo(virtualViewId: Int): AccessibilityNodeInfo? {
             if (virtualViewId == HOST_VIEW_ID) {
@@ -186,7 +203,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 val word = suggestions.getOrNull(virtualViewId - flatKeys.size) ?: return false
                 listener.onKey("SUGGEST:$word")
             } else {
-                val key = flatKeys.getOrNull(virtualViewId) ?: return false
+                val key = flatKeys.getOrNull(localIndex) ?: return false
                 if (action == AccessibilityNodeInfo.ACTION_LONG_CLICK) {
                     val alternate = key.longPressValue ?: return false
                     listener.onKey("LONG:$alternate")
@@ -432,7 +449,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         updateCompositionPreviewText()
         invalidate()
     }
-    fun setSuggestions(value: List<String>) { suggestions = value.take(3); suggestionBounds.clear(); invalidate() }
+    fun setSuggestions(value: List<String>) { suggestions = value.take(3); suggestionBounds.clear(); advanceAccessibilityGeneration(); invalidate() }
 
     private fun rebuild() {
         cancelDeleteRepeat()
