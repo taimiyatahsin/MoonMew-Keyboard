@@ -82,4 +82,21 @@ class BackspaceDeletionTest {
         val flag = "\uD83C\uDFF4\uDB40\uDC67\uDB40\uDC62\uDB40\uDC7F"
         assertEquals(flag.length, BackspaceDeletion.utf16UnitsBeforeCursor(flag))
     }
+
+    @Test fun isolatedSurrogatesUseAValidUtf16DeletionLength() {
+        assertEquals(1, BackspaceDeletion.utf16UnitsBeforeCursor("\\uD83D"))
+        assertEquals(1, BackspaceDeletion.utf16UnitsBeforeCursor("\\uDE00"))
+        assertEquals(2, BackspaceDeletion.utf16UnitsBeforeCursor("x\\uD83D\\uDE00"))
+    }
+
+    @Test fun malformedUtf16InputNeverProducesAnOutOfRangeDeletionLength() {
+        val random = java.util.Random(0x4D4F4F4EL)
+        repeat(500) {
+            val length = 1 + random.nextInt(64)
+            val value = CharArray(length) { random.nextInt(0x10000).toChar() }.concatToString()
+            val deletionLength = BackspaceDeletion.utf16UnitsBeforeCursor(value)
+            assertTrue("Deletion length must be positive", deletionLength >= 1)
+            assertTrue("Deletion length must not exceed available UTF-16 text", deletionLength <= value.length)
+        }
+    }
 }
