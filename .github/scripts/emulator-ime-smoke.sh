@@ -10,7 +10,7 @@ trap capture_diagnostics EXIT
 adb wait-for-device
 expected_api_level="${ANDROID_API_LEVEL:-30}"
 ready=0
-for attempt in $(seq 1 60); do
+for attempt in $(seq 1 90); do
   api_level=$(adb shell getprop ro.build.version.sdk 2>/dev/null | tr -d '\r')
   if [[ "$api_level" == "$expected_api_level" ]]; then
     ready=1
@@ -20,6 +20,23 @@ for attempt in $(seq 1 60); do
 done
 if [[ "$ready" -ne 1 ]]; then
   echo "Emulator did not expose Android API $expected_api_level after boot (last reported API: ${api_level:-unknown})."
+  exit 1
+fi
+
+# A boot-complete property alone is not sufficient on a cold API 35 image:
+# system_server may still be initializing PackageManager. Probe the actual
+# package service before spending time compiling the instrumentation APKs.
+package_manager_ready=0
+for attempt in $(seq 1 90); do
+  if timeout 15s adb shell cmd package list packages >/dev/null 2>&1; then
+    package_manager_ready=1
+    break
+  fi
+  echo "Waiting for Android PackageManager to become responsive (attempt $attempt/90)."
+  sleep 2
+done
+if [[ "$package_manager_ready" -ne 1 ]]; then
+  echo "Android PackageManager did not become responsive after emulator boot."
   exit 1
 fi
 
