@@ -284,6 +284,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             resetSwipeTracking()
             bounds.clear()
             suggestionBounds.clear()
+            advanceAccessibilityGeneration()
         }
     }
 
@@ -448,6 +449,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         composition = value
         updateCompositionPreviewText()
         suggestionBounds.clear()
+        advanceAccessibilityGeneration()
         invalidate()
     }
     fun setPreview(value: String) {
@@ -465,6 +467,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         downKeyIndex = -1
         downSuggestionIndex = -1
         resetSwipeTracking()
+        advanceAccessibilityGeneration()
         rows.clear()
         flatKeys.clear()
         // Old hitboxes must not point at a newly rebuilt key list before the next draw.
