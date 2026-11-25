@@ -85,9 +85,9 @@ class BackspaceDeletionTest {
     }
 
     @Test fun isolatedSurrogatesUseAValidUtf16DeletionLength() {
-        assertEquals(1, BackspaceDeletion.utf16UnitsBeforeCursor("\\uD83D"))
-        assertEquals(1, BackspaceDeletion.utf16UnitsBeforeCursor("\\uDE00"))
-        assertEquals(2, BackspaceDeletion.utf16UnitsBeforeCursor("x\\uD83D\\uDE00"))
+        assertEquals(1, BackspaceDeletion.utf16UnitsBeforeCursor("\uD83D"))
+        assertEquals(1, BackspaceDeletion.utf16UnitsBeforeCursor("\uDE00"))
+        assertEquals(2, BackspaceDeletion.utf16UnitsBeforeCursor("x\uD83D\uDE00"))
     }
 
     @Test fun malformedUtf16InputNeverProducesAnOutOfRangeDeletionLength() {
