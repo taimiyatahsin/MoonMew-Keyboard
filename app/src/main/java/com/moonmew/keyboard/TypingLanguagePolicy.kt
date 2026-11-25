@@ -26,7 +26,7 @@ object TypingLanguagePolicy {
         "website", "password", "account", "save", "share", "search", "open", "close", "copy", "paste",
         "delete", "send", "receive", "button", "number", "symbol", "language", "english", "bangla",
         "english", "keyboard", "typing", "write", "writing", "read", "reading", "learn", "learning",
-        "school", "student", "teacher", "book", "paper", "table", "chair", "water", "food", "coffee",
+        "student", "teacher", "book", "paper", "table", "chair", "water", "food", "coffee",
         "tea", "house", "room", "door", "window", "car", "bus", "train", "road", "street", "city",
         "country", "phone", "mobile", "computer", "laptop", "screen", "app", "application", "system",
         "version", "build", "error", "issue", "problem", "fixed", "fix", "working", "works", "noted",
@@ -39,8 +39,8 @@ object TypingLanguagePolicy {
         val trimmed = roman.trim()
         if (trimmed.isEmpty()) return trimmed
         val normalized = trimmed.lowercase()
+        if (normalized in commonEnglish) return trimmed
         return BanglaWordSuggestions.exact(normalized)
-            ?: if (normalized in commonEnglish) trimmed
-            else BanglaTransliterator.convert(trimmed).ifEmpty { trimmed }
+            ?: BanglaTransliterator.convert(trimmed).ifEmpty { trimmed }
     }
 }
