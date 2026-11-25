@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - codex/moonmew-foundation
+      - codex/moonmew-smart-language-cute-toolbar
       - fix/ime-selection-sync
   # Run CI for every PR target, including stacked feature branches.
   pull_request:
