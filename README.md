@@ -25,9 +25,9 @@ A lightweight offline Android keyboard with English, Bangla phonetic and direct 
 
 ## Download and install
 
-**[Download the latest MoonMew test APK](https://github.com/taimiyatahsin0-png/MoonMew-Keyboard/releases/download/latest/app-debug.apk)**
+**[Download the latest MoonMew test APK](https://github.com/taimiyatahsin/MoonMew-Keyboard/releases/download/latest/app-debug.apk)**
 
-If the direct link does not start, open the [Latest Test Build page](https://github.com/taimiyatahsin0-png/MoonMew-Keyboard/releases/tag/latest) and choose `app-debug.apk` under **Assets**.
+If the direct link does not start, open the [Latest Test Build page](https://github.com/taimiyatahsin/MoonMew-Keyboard/releases/tag/latest) and choose `app-debug.apk` under **Assets**.
 
 1. Download `app-debug.apk` on your Android phone.
 2. Open the downloaded file. If Android asks, allow installation from that browser or file manager.
