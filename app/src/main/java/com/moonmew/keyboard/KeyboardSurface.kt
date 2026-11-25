@@ -134,6 +134,23 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         while (pool.size > used) pool.removeAt(pool.lastIndex)
     }
 
+    // Virtual IDs include a layout generation so a delayed TalkBack action can
+    // never target a different key after the keyboard or suggestion row changes.
+    private companion object {
+        const val ACCESSIBILITY_ID_STRIDE = 4096
+    }
+    private var accessibilityGeneration = 0
+    private fun advanceAccessibilityGeneration() {
+        accessibilityGeneration = if (accessibilityGeneration >= Int.MAX_VALUE / ACCESSIBILITY_ID_STRIDE - 1) {
+            0
+        } else {
+            accessibilityGeneration + 1
+        }
+        sendAccessibilityEvent(android.view.accessibility.AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED)
+    }
+    private fun accessibilityNodeId(localIndex: Int): Int =
+        accessibilityGeneration * ACCESSIBILITY_ID_STRIDE + localIndex
+
     private val keyboardAccessibilityProvider = object : AccessibilityNodeProvider() {
         override fun createAccessibilityNodeInfo(virtualViewId: Int): AccessibilityNodeInfo? {
             if (virtualViewId == HOST_VIEW_ID) {
@@ -144,15 +161,19 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                     setSource(this@KeyboardSurface)
                     val parentView = this@KeyboardSurface.parent
                     if (parentView is View) setParent(parentView)
-                    for (index in bounds.indices) addChild(this@KeyboardSurface, index)
-                    for (index in suggestionBounds.indices) addChild(this@KeyboardSurface, flatKeys.size + index)
+                    for (index in bounds.indices) addChild(this@KeyboardSurface, accessibilityNodeId(index))
+                    for (index in suggestionBounds.indices) {
+                        addChild(this@KeyboardSurface, accessibilityNodeId(flatKeys.size + index))
+                    }
                 }
             }
-            val suggestionIndex = virtualViewId - flatKeys.size
+            if (virtualViewId < 0 || virtualViewId / ACCESSIBILITY_ID_STRIDE != accessibilityGeneration) return null
+            val localIndex = virtualViewId % ACCESSIBILITY_ID_STRIDE
+            val suggestionIndex = localIndex - flatKeys.size
             val isSuggestion = suggestionIndex >= 0
-            val rect = if (isSuggestion) suggestionBounds.getOrNull(suggestionIndex) else bounds.getOrNull(virtualViewId)
+            val rect = if (isSuggestion) suggestionBounds.getOrNull(suggestionIndex) else bounds.getOrNull(localIndex)
             if (rect == null) return null
-            val key = if (isSuggestion) null else flatKeys.getOrNull(virtualViewId)
+            val key = if (isSuggestion) null else flatKeys.getOrNull(localIndex)
             val label = if (isSuggestion) suggestions.getOrNull(suggestionIndex) else key?.let { accessibilityLabel(it) }
             return AccessibilityNodeInfo.obtain().apply {
                 setSource(this@KeyboardSurface, virtualViewId)
@@ -181,12 +202,14 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             }
             if (action != AccessibilityNodeInfo.ACTION_CLICK &&
                 action != AccessibilityNodeInfo.ACTION_LONG_CLICK) return false
-            if (virtualViewId >= flatKeys.size) {
+            if (virtualViewId < 0 || virtualViewId / ACCESSIBILITY_ID_STRIDE != accessibilityGeneration) return false
+            val localIndex = virtualViewId % ACCESSIBILITY_ID_STRIDE
+            if (localIndex >= flatKeys.size) {
                 if (action == AccessibilityNodeInfo.ACTION_LONG_CLICK) return false
-                val word = suggestions.getOrNull(virtualViewId - flatKeys.size) ?: return false
+                val word = suggestions.getOrNull(localIndex - flatKeys.size) ?: return false
                 listener.onKey("SUGGEST:$word")
             } else {
-                val key = flatKeys.getOrNull(virtualViewId) ?: return false
+                val key = flatKeys.getOrNull(localIndex) ?: return false
                 if (action == AccessibilityNodeInfo.ACTION_LONG_CLICK) {
                     val alternate = key.longPressValue ?: return false
                     listener.onKey("LONG:$alternate")
@@ -261,6 +284,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             resetSwipeTracking()
             bounds.clear()
             suggestionBounds.clear()
+            advanceAccessibilityGeneration()
         }
     }
 
@@ -422,9 +446,16 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         compositionPreviewText = if (composition.isEmpty()) "" else "$composition  →  $preview"
     }
     fun setComposition(value: String) {
+        val wasShowingComposition = composition.isNotEmpty()
         composition = value
         updateCompositionPreviewText()
-        suggestionBounds.clear()
+        // The preview text itself is not a virtual node. Keep stable key/suggestion
+        // IDs while typing; only invalidate geometry when the preview row appears
+        // or disappears and changes the key layout.
+        if (wasShowingComposition != value.isNotEmpty()) {
+            suggestionBounds.clear()
+            advanceAccessibilityGeneration()
+        }
         invalidate()
     }
     fun setPreview(value: String) {
@@ -432,7 +463,17 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         updateCompositionPreviewText()
         invalidate()
     }
-    fun setSuggestions(value: List<String>) { suggestions = value.take(3); suggestionBounds.clear(); invalidate() }
+    fun setSuggestions(value: List<String>) {
+        val nextSuggestions = value.take(3)
+        if (suggestions != nextSuggestions) {
+            suggestions = nextSuggestions
+            suggestionBounds.clear()
+            // Suggestion labels/actions changed, so delayed accessibility actions
+            // must not resolve against the newly displayed words.
+            advanceAccessibilityGeneration()
+        }
+        invalidate()
+    }
 
     private fun rebuild() {
         cancelDeleteRepeat()
@@ -442,6 +483,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         downKeyIndex = -1
         downSuggestionIndex = -1
         resetSwipeTracking()
+        advanceAccessibilityGeneration()
         rows.clear()
         flatKeys.clear()
         // Old hitboxes must not point at a newly rebuilt key list before the next draw.
