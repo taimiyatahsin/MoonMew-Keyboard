@@ -57,6 +57,8 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private var emojiCategory = 0
     private var emojiPage = 0
     private var clipboardMode = false
+    private var moreMenu = false
+    private var brandSparkleUntil = 0L
     private var clipboardItems = emptyList<String>()
     private var downKeyIndex = -1
     private var downSuggestionIndex = -1
@@ -439,7 +441,9 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     fun setEmoji(value: Boolean) { emojiMode = value; if (value) { emojiCategory = 0; emojiPage = 0 }; clipboardMode = false; symbols = false; rebuild(); invalidate() }
     fun setEmojiCategory(value: Int) { emojiCategory = value.coerceIn(0, 7); emojiPage = 0; if (emojiMode) { rebuild(); invalidate() } }
     fun moveEmojiPage(delta: Int) { if (emojiMode) { emojiPage = (emojiPage + delta).coerceAtLeast(0); rebuild(); invalidate() } }
-    fun setClipboard(value: Boolean) { clipboardMode = value; emojiMode = false; symbols = false; rebuild(); invalidate() }
+    fun setClipboard(value: Boolean) { clipboardMode = value; moreMenu = false; emojiMode = false; symbols = false; rebuild(); invalidate() }
+    fun setMoreMenu(value: Boolean) { moreMenu = value; clipboardMode = false; emojiMode = false; symbols = false; rebuild(); invalidate() }
+    fun playBrandSparkle() { brandSparkleUntil = SystemClock.elapsedRealtime() + 720L; invalidate() }
     fun setClipboardItems(value: List<String>) { clipboardItems = value.take(5); if (clipboardMode) rebuild(); invalidate() }
     fun nextSymbolsPage() { if (symbols) { symbolsPage = 1 - symbolsPage; rebuild(); invalidate() } }
     private fun updateCompositionPreviewText() {
@@ -490,7 +494,9 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         bounds.clear()
         suggestionBounds.clear()
         keyGradientCache.clear()
-        if (clipboardMode) {
+        if (moreMenu) {
+            rows.add(listOf(Key("📋 Clipboard", "MORE_CLIP", 1.5f, true), Key("ABC", "MORE_CLOSE", 1f, true)))
+        } else if (clipboardMode) {
             if (clipboardItems.isEmpty()) {
                 val enabled = preferences.getBoolean("clipboard_history_enabled", false)
                 rows.add(listOf(Key(
@@ -597,8 +603,16 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             rows.add(buildList {
                 add(Key("🐱 MoonMew", "TOOLBAR_BRAND", 2.1f, true))
                 add(Key("😊", "EMOJI", 0.9f, true))
-                if (!passwordField) add(Key("📋", "CLIP", 0.9f, true))
+                add(Key("⋯", "MORE", 0.8f, true))
                 add(Key("বাংলা", "MODE", 1.1f, true))
+            })
+            rows.add("1234567890".map { ch ->
+                val alternate = when (ch) {
+                    '0' -> "⁰"; '1' -> "¹"; '2' -> "²"; '3' -> "³"; '4' -> "⁴"
+                    '5' -> "⁵"; '6' -> "⁶"; '7' -> "⁷"; '8' -> "⁸"; '9' -> "⁹"
+                    else -> null
+                }
+                Key(ch.toString(), ch.toString(), longPressValue = alternate)
             })
             listOf("qwertyuiop", "asdfghjkl", "zxcvbnm").forEach { line ->
                 rows.add(line.map { ch ->
@@ -693,6 +707,22 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             paint.alpha = 255
         }
         if (!reduceAnimations) {
+            val now = SystemClock.elapsedRealtime()
+            if (now < brandSparkleUntil) {
+                val progress = 1f - (brandSparkleUntil - now) / 720f
+                paint.color = 0xFFFFF4A8.toInt()
+                paint.alpha = (220 * (1f - progress * 0.45f)).toInt().coerceIn(0, 255)
+                val cx = dp(70f)
+                val cy = dp(13f)
+                for (i in 0 until 7) {
+                    val angle = i * (Math.PI * 2.0 / 7.0) + progress * 1.8
+                    val radius = dp(8f + progress * 16f)
+                    canvas.drawCircle(cx + kotlin.math.cos(angle).toFloat() * radius,
+                        cy + kotlin.math.sin(angle).toFloat() * radius, dp(1.5f), paint)
+                }
+                paint.alpha = 255
+                postInvalidateDelayed(32L)
+            }
             val moonX = width - dp(18f)
             val moonY = dp(12f)
             canvas.drawCircle(moonX, moonY, dp(6f), paint)
