@@ -7,16 +7,16 @@ capture_diagnostics() {
 }
 trap capture_diagnostics EXIT
 
-# Keep adb readiness waits bounded even if the emulator runner reports a
-# device connection before the Android userspace is actually responsive.
-if ! timeout 900s adb wait-for-device; then
-  echo "Emulator did not become available to adb within 15 minutes."
+# Bound the combined startup probes well below the emulator job's 25-minute
+# timeout, leaving time for Gradle, APK installation and instrumentation.
+if ! timeout 300s adb wait-for-device; then
+  echo "Emulator did not become available to adb within 5 minutes."
   exit 1
 fi
 expected_api_level="${ANDROID_API_LEVEL:-30}"
 ready=0
 api_level=""
-for attempt in $(seq 1 90); do
+for attempt in $(seq 1 30); do
   if api_level=$(timeout 5s adb shell getprop ro.build.version.sdk 2>/dev/null | tr -d '\r'); then
     if [[ "$api_level" == "$expected_api_level" ]]; then
       ready=1
@@ -25,7 +25,7 @@ for attempt in $(seq 1 90); do
   else
     api_level=""
   fi
-  echo "Waiting for Android API $expected_api_level to become readable (attempt $attempt/90)."
+  echo "Waiting for Android API $expected_api_level to become readable (attempt $attempt/30)."
   sleep 2
 done
 if [[ "$ready" -ne 1 ]]; then
@@ -35,7 +35,7 @@ fi
 
 # A boot-complete property alone is not sufficient on a cold API 35 image:
 # system_server may still be initializing PackageManager. Keep this bounded
-# so the probe cannot consume the emulator action's entire 25-minute budget.
+# so startup checks leave time for APK installation and instrumentation.
 package_manager_ready=0
 for attempt in $(seq 1 30); do
   if timeout 5s adb shell cmd package list packages >/dev/null 2>&1; then
