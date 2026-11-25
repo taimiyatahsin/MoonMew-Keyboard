@@ -33,7 +33,9 @@ class KeyboardSmokeTest {
             val base = generation * 4096
             for (index in 0..200) {
                 val node = provider.createAccessibilityNodeInfo(base + index) ?: continue
-                if (matches(node)) return base + index
+                val matched = matches(node)
+                node.recycle()
+                if (matched) return base + index
             }
         }
         return null
