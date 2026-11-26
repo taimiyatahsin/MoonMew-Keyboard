@@ -607,12 +607,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 add(Key("বাংলা", "MODE", 1.1f, true))
             })
             rows.add("1234567890".map { ch ->
-                val alternate = when (ch) {
-                    '0' -> "⁰"; '1' -> "¹"; '2' -> "²"; '3' -> "³"; '4' -> "⁴"
-                    '5' -> "⁵"; '6' -> "⁶"; '7' -> "⁷"; '8' -> "⁸"; '9' -> "⁹"
-                    else -> null
-                }
-                Key(ch.toString(), ch.toString(), longPressValue = alternate)
+                Key(ch.toString(), ch.toString(), longPressValue = NumberLongPressPolicy.alternateFor(ch))
             })
             listOf("qwertyuiop", "asdfghjkl", "zxcvbnm").forEach { line ->
                 rows.add(line.map { ch ->
@@ -712,8 +707,10 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 val progress = 1f - (brandSparkleUntil - now) / 720f
                 paint.color = 0xFFFFF4A8.toInt()
                 paint.alpha = (220 * (1f - progress * 0.45f)).toInt().coerceIn(0, 255)
-                val cx = dp(70f)
-                val cy = dp(13f)
+                val brandIndex = flatKeys.indexOfFirst { it.value == "TOOLBAR_BRAND" }
+                val brandBounds = bounds.getOrNull(brandIndex)
+                val cx = brandBounds?.centerX() ?: dp(70f)
+                val cy = brandBounds?.centerY() ?: dp(13f)
                 for (i in 0 until 7) {
                     val angle = i * (Math.PI * 2.0 / 7.0) + progress * 1.8
                     val radius = dp(8f + progress * 16f)
