@@ -32,7 +32,32 @@ object TypingLanguagePolicy {
         "version", "build", "error", "issue", "problem", "fixed", "fix", "working", "works", "noted",
         "sure", "right", "wrong", "true", "false", "okay", "cool", "wow", "awesome", "amazing",
         "congratulations", "welcome", "goodbye", "bye", "goodnight", "goodbye", "dear", "please",
-        "kind", "kindly", "hope", "wish", "today's", "tomorrow's"
+        "kind", "kindly", "hope", "wish", "today's", "tomorrow's",
+        // Frequent everyday English words that should remain English in phonetic mode.
+        "go", "come", "get", "make", "take", "give", "think", "know", "see", "look", "use",
+        "find", "tell", "ask", "try", "call", "keep", "let", "put", "mean", "become", "leave",
+        "feel", "seem", "help", "talk", "turn", "start", "show", "hear", "run", "move", "live",
+        "believe", "bring", "happen", "provide", "sit", "stand", "lose", "pay", "meet", "include",
+        "continue", "set", "change", "lead", "understand", "watch", "follow", "stop", "create",
+        "speak", "allow", "add", "spend", "grow", "walk", "win", "offer", "remember", "consider",
+        "appear", "buy", "wait", "serve", "send", "expect", "stay", "fall", "cut", "reach",
+        "remain", "suggest", "raise", "pass", "sell", "require", "decide", "pull", "return",
+        "explain", "develop", "carry", "break", "agree", "support", "produce", "eat", "cover",
+        "catch", "draw", "choose", "cause", "point", "listen", "realize", "place", "increase",
+        "deal", "throw", "fill", "protect", "plan", "finish", "check", "answer", "question",
+        "though", "although", "while", "during", "through", "without", "between", "under", "over",
+        "around", "against", "since", "until", "unless", "probably", "actually", "already", "yet",
+        "even", "ever", "often", "usually", "together", "almost", "enough", "quite", "rather",
+        "else", "everywhere", "someone", "anyone", "everyone", "nobody", "anything", "something",
+        "everything", "nothing", "which", "whose", "whom", "then", "than", "soon", "late", "early",
+        "first", "last", "second", "third", "same", "different", "another", "other", "own", "such",
+        "either", "neither", "few", "several", "less", "least", "lot", "lots", "one", "two", "three",
+        "four", "five", "six", "seven", "eight", "nine", "ten", "young", "big", "small", "long",
+        "short", "high", "low", "worst", "ready", "free", "busy", "easy", "hard", "simple",
+        "important", "possible", "impossible", "pretty", "sweet", "funny", "fun", "interesting",
+        "boring", "angry", "tired", "hungry", "thirsty", "sick", "healthy", "strong", "weak",
+        "hot", "cold", "warm", "clean", "dirty", "dark", "bright", "soft", "quick", "careful",
+        "polite", "rude", "smart", "clever", "stupid", "wonderful", "perfect", "fine", "congrats"
     )
 
     fun resolvePhoneticWord(roman: String): String {
