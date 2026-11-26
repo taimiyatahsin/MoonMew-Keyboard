@@ -116,53 +116,110 @@ class SetupActivity : Activity() {
                 override fun onStopTrackingTouch(seekBar: SeekBar?) {}
             })
         }
-        val themePreview = TextView(this).apply {
-            textSize = 21f
-            gravity = Gravity.CENTER
-            setPadding(dp(14), dp(16), dp(14), dp(16))
-        }
         val themeNames = listOf("Pink Plush", "Moonlit Blue", "Lavender Dream", "Glass Candy", "Moon Garden", "Midnight Fur", "Lavender Kitty Plush")
-        val themeColors = listOf(
-            0xFFFFD5E2.toInt() to 0xFFFFF8F5.toInt(),
-            0xFF416B8B.toInt() to 0xFF1D2B3E.toInt(),
-            0xFF795A99.toInt() to 0xFF302541.toInt(),
-            0xFFFF83BA.toInt() to 0xFFFFF8FC.toInt(),
-            0xFF7866C8.toInt() to 0xFF292743.toInt(),
-            0xFF17151B.toInt() to 0xFF09090F.toInt(),
-            0xFFD8C2E8.toInt() to 0xFFF4D7E8.toInt()
+        val themePalettes = listOf(
+            intArrayOf(0xFFFFEAF1.toInt(), 0xFFF7C9DA.toInt(), 0xFFFFF8F5.toInt(), 0xFFFFD5E3.toInt(), 0xFF805365.toInt(), 0xFFFF8FB9.toInt()),
+            intArrayOf(0xFF172B43.toInt(), 0xFF0B1422.toInt(), 0xFF1D2B3E.toInt(), 0xFF2B405B.toInt(), 0xFFEAF5FF.toInt(), 0xFFB9DFFF.toInt()),
+            intArrayOf(0xFF30213F.toInt(), 0xFF171020.toInt(), 0xFF302541.toInt(), 0xFF49365F.toInt(), 0xFFF4EAFF.toInt(), 0xFFE0C8FF.toInt()),
+            intArrayOf(0xFFFFD9EC.toInt(), 0xFFFFB9D9.toInt(), 0xFFFFF8FC.toInt(), 0xFFFFC4E0.toInt(), 0xFF713B60.toInt(), 0xFFFFFFFF.toInt()),
+            intArrayOf(0xFF24213D.toInt(), 0xFF111329.toInt(), 0xFF292743.toInt(), 0xFF39365D.toInt(), 0xFFF0ECFF.toInt(), 0xFFB9A7FF.toInt()),
+            intArrayOf(0xFF17151B.toInt(), 0xFF09090F.toInt(), 0xFF211F29.toInt(), 0xFF39313D.toInt(), 0xFFF7EAF0.toInt(), 0xFFF4DCE6.toInt()),
+            intArrayOf(0xFFD8C2E8.toInt(), 0xFFF4D7E8.toInt(), 0xFFFFF8FC.toInt(), 0xFFDCC8EC.toInt(), 0xFF49334E.toInt(), 0xFFC7A9E2.toInt())
         )
-        fun updateThemePreview(id: Int) {
-            val selectedId = id.coerceIn(themeColors.indices)
-            val pair = themeColors[selectedId]
-            themePreview.text = "🐱   Aa   ♥   ☾   🎀"
-            themePreview.setTextColor(ThemeContrast.foregroundFor(pair.first, pair.second))
-            themePreview.background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(pair.first, pair.second)).apply { cornerRadius = dp(18).toFloat() }
-        }
         fun selectedTheme(): Int = preferences.getInt("theme_id", if (preferences.getBoolean("rose_theme", true)) 0 else 1).coerceIn(themeNames.indices)
-        fun themeButtonLabel(name: String = themeNames[selectedTheme()]): String =
-            "🎨  Browse all ${themeNames.size} themes  ·  " + name
-        updateThemePreview(selectedTheme())
+        fun previewKey(label: String, palette: IntArray, special: Boolean = false): TextView {
+            val fill = if (special) palette[3] else palette[2]
+            return TextView(this).apply {
+                text = label
+                textSize = 10f
+                gravity = Gravity.CENTER
+                setTextColor(palette[4])
+                setPadding(dp(2), dp(5), dp(2), dp(5))
+                background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(
+                    if (special) palette[5] else ColorMath.blend(palette[2], 0xFFFFFFFF.toInt(), 0.28f),
+                    fill
+                )).apply {
+                    cornerRadius = dp(7).toFloat()
+                    setStroke(dp(1), palette[5])
+                }
+                elevation = dp(2).toFloat()
+            }
+        }
+        fun keyboardPreview(id: Int, compact: Boolean = false): LinearLayout {
+            val p = themePalettes[id.coerceIn(themePalettes.indices)]
+            val sample = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp(if (compact) 7 else 10), dp(if (compact) 7 else 10), dp(if (compact) 7 else 10), dp(if (compact) 7 else 10))
+                background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(p[0], p[1])).apply { cornerRadius = dp(14).toFloat() }
+            }
+            val top = LinearLayout(this).apply { gravity = Gravity.CENTER; orientation = LinearLayout.HORIZONTAL }
+            listOf("☾ MoonMew", "✦", "🎀").forEach { label ->
+                val v = TextView(this).apply { text = label; textSize = if (compact) 9f else 11f; setTextColor(p[4]); gravity = Gravity.CENTER; setPadding(dp(4), dp(2), dp(4), dp(4)) }
+                top.addView(v, LinearLayout.LayoutParams(0, -2, if (label.startsWith("☾")) 2f else 0.6f))
+            }
+            sample.addView(top)
+            val lines = listOf("1234567890", "QWERTYUIOP", "ASDFGHJKL", "⇧ZXCVBNM⌫", "☻  ,      English     ↵")
+            lines.forEachIndexed { rowIndex, line ->
+                val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER }
+                val chars = when (rowIndex) {
+                    0 -> line.map { it.toString() }
+                    1 -> line.map { it.toString() }
+                    2 -> line.map { it.toString() }
+                    3 -> listOf("⇧") + "ZXCVBNM".map { it.toString() } + listOf("⌫")
+                    else -> listOf("☻", ",", "English", "↵")
+                }
+                chars.forEachIndexed { index, label ->
+                    val special = rowIndex == 4 || (rowIndex == 3 && (index == 0 || index == chars.lastIndex))
+                    row.addView(previewKey(label, p, special), LinearLayout.LayoutParams(0, -2, when {
+                        rowIndex == 4 && label == "English" -> 3f
+                        special -> 1.25f
+                        else -> 1f
+                    }).apply { setMargins(dp(2), dp(2), dp(2), dp(2)) })
+                }
+                sample.addView(row)
+            }
+            return sample
+        }
+        val themePreview = keyboardPreview(selectedTheme())
+        fun updateThemePreview(id: Int) {
+            val parent = themePreview.parent
+            if (parent is LinearLayout) {
+                val index = parent.indexOfChild(themePreview)
+                parent.removeViewAt(index)
+                parent.addView(keyboardPreview(id), index, matchWithTop(dp(8)))
+            }
+        }
+        fun themeButtonLabel(): String = "🎨  Explore & preview all ${themeNames.size} themes"
         lateinit var themeButton: Button
         themeButton = actionButton(themeButtonLabel()) {
-            val choices = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), dp(8), dp(16), dp(8)) }
-            val dialog = AlertDialog.Builder(this).setTitle("Choose your MoonMew look")
+            val choices = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(14), dp(8), dp(14), dp(8)) }
+            val dialog = AlertDialog.Builder(this).setTitle("Explore MoonMew themes")
                 .setView(ScrollView(this).apply { addView(choices) }).setNegativeButton("Close", null).create()
             themeNames.forEachIndexed { index, name ->
-                val pair = themeColors[index]
-                val option = TextView(this).apply {
-                    this.text = (if (selectedTheme() == index) "✓  " else "") + "🐱  " + name + "     Aa  ♥  ☾  🎀"
-                    textSize = 16f; gravity = Gravity.CENTER_VERTICAL
-                    setTextColor(ThemeContrast.foregroundFor(pair.first, pair.second))
-                    setPadding(dp(14), dp(17), dp(14), dp(17))
-                    background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(pair.first, pair.second)).apply { cornerRadius = dp(16).toFloat() }
-                    setOnClickListener {
-                        preferences.edit().putInt("theme_id", index).putBoolean("rose_theme", index == 0).apply()
-                        updateThemePreview(index)
-                        themeButton.text = themeButtonLabel(name)
-                        dialog.dismiss()
+                val card = LinearLayout(this).apply {
+                    orientation = LinearLayout.VERTICAL
+                    setPadding(dp(10), dp(10), dp(10), dp(10))
+                    background = GradientDrawable().apply {
+                        setColor(0x18FFFFFF)
+                        cornerRadius = dp(16).toFloat()
+                        setStroke(dp(1), if (selectedTheme() == index) 0xFFFF8FB9.toInt() else 0x33777777)
                     }
                 }
-                choices.addView(option, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(9) })
+                val heading = TextView(this).apply {
+                    text = (if (selectedTheme() == index) "✓  " else "") + name
+                    textSize = 15f
+                    setTextColor(0xFFF7EAF0.toInt())
+                    setPadding(dp(4), dp(2), dp(4), dp(7))
+                }
+                card.addView(heading)
+                card.addView(keyboardPreview(index, true), LinearLayout.LayoutParams(-1, -2))
+                card.setOnClickListener {
+                    preferences.edit().putInt("theme_id", index).putBoolean("rose_theme", index == 0).apply()
+                    updateThemePreview(index)
+                    themeButton.text = themeButtonLabel() + " · " + name
+                    dialog.dismiss()
+                }
+                choices.addView(card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(10) })
             }
             dialog.show()
         }
