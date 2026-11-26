@@ -427,8 +427,9 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     fun setPasswordField(value: Boolean) {
         passwordField = value
         if (value) {
-            // A panel opened in the previous field must never survive into a password field.
+            // Private fields must never retain clipboard content or an open tools panel.
             clipboardMode = false
+            moreMenu = false
             clipboardItems = emptyList()
         }
         rebuild()
@@ -442,7 +443,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     fun setEmojiCategory(value: Int) { emojiCategory = value.coerceIn(0, 7); emojiPage = 0; if (emojiMode) { rebuild(); invalidate() } }
     fun moveEmojiPage(delta: Int) { if (emojiMode) { emojiPage = (emojiPage + delta).coerceAtLeast(0); rebuild(); invalidate() } }
     fun setClipboard(value: Boolean) { clipboardMode = value; moreMenu = false; emojiMode = false; symbols = false; rebuild(); invalidate() }
-    fun setMoreMenu(value: Boolean) { moreMenu = value; clipboardMode = false; emojiMode = false; symbols = false; rebuild(); invalidate() }
+    fun setMoreMenu(value: Boolean) { moreMenu = value && !passwordField; clipboardMode = false; emojiMode = false; symbols = false; rebuild(); invalidate() }
     fun playBrandSparkle() { brandSparkleUntil = SystemClock.elapsedRealtime() + 720L; invalidate() }
     fun setClipboardItems(value: List<String>) { clipboardItems = value.take(5); if (clipboardMode) rebuild(); invalidate() }
     fun nextSymbolsPage() { if (symbols) { symbolsPage = 1 - symbolsPage; rebuild(); invalidate() } }
@@ -603,7 +604,7 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             rows.add(buildList {
                 add(Key("🐱 MoonMew", "TOOLBAR_BRAND", 2.1f, true))
                 add(Key("😊", "EMOJI", 0.9f, true))
-                add(Key("⋯", "MORE", 0.8f, true))
+                if (!passwordField) add(Key("⋯", "MORE", 0.8f, true))
                 add(Key("বাংলা", "MODE", 1.1f, true))
             })
             rows.add("1234567890".map { ch ->
