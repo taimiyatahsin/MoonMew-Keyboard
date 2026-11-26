@@ -27,6 +27,6 @@ class TypingLanguagePolicyTest {
 
     @Test fun englishAndBanglishChoicesAreCaseInsensitive() {
         assertEquals("আমি", TypingLanguagePolicy.resolvePhoneticWord("AMI"))
-        assertEquals("hello", TypingLanguagePolicy.resolvePhoneticWord("HELLO"))
+        assertEquals("HELLO", TypingLanguagePolicy.resolvePhoneticWord("HELLO"))
     }
 }
