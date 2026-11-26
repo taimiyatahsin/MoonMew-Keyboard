@@ -136,7 +136,7 @@ class SetupActivity : Activity() {
                 setTextColor(palette[4])
                 setPadding(dp(2), dp(5), dp(2), dp(5))
                 background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(
-                    if (special) palette[5] else palette[5],
+                    fill,
                     fill
                 )).apply {
                     cornerRadius = dp(7).toFloat()
@@ -179,6 +179,12 @@ class SetupActivity : Activity() {
                 sample.addView(row)
             }
             return sample
+        }
+        val themePreviewLabel = TextView(this).apply {
+            text = "LIVE KEYBOARD PREVIEW  ·  changes when you choose a theme"
+            textSize = 11f
+            setTextColor(0xFFFFD5E2.toInt())
+            setPadding(dp(2), dp(12), dp(2), dp(2))
         }
         var themePreview = keyboardPreview(selectedTheme())
         fun updateThemePreview(id: Int) {
@@ -285,7 +291,8 @@ class SetupActivity : Activity() {
         root.addView(heightLabel, matchWithTop(dp(4)))
         root.addView(heightControl, match())
         root.addView(themeButton, matchWithTop(dp(6)))
-        root.addView(themePreview, matchWithTop(dp(8)))
+        root.addView(themePreviewLabel, matchWithTop(dp(6)))
+        root.addView(themePreview, matchWithTop(dp(4)))
         root.addView(soundSwitch, matchWithTop(dp(6)))
         root.addView(reduceEffectsSwitch, matchWithTop(dp(8)))
         root.addView(hapticSwitch, matchWithTop(dp(4)))
