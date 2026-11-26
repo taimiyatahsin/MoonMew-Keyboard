@@ -57,6 +57,8 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     private var emojiCategory = 0
     private var emojiPage = 0
     private var clipboardMode = false
+    private var moreMenu = false
+    private var brandSparkleUntil = 0L
     private var clipboardItems = emptyList<String>()
     private var downKeyIndex = -1
     private var downSuggestionIndex = -1
@@ -439,7 +441,9 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
     fun setEmoji(value: Boolean) { emojiMode = value; if (value) { emojiCategory = 0; emojiPage = 0 }; clipboardMode = false; symbols = false; rebuild(); invalidate() }
     fun setEmojiCategory(value: Int) { emojiCategory = value.coerceIn(0, 7); emojiPage = 0; if (emojiMode) { rebuild(); invalidate() } }
     fun moveEmojiPage(delta: Int) { if (emojiMode) { emojiPage = (emojiPage + delta).coerceAtLeast(0); rebuild(); invalidate() } }
-    fun setClipboard(value: Boolean) { clipboardMode = value; emojiMode = false; symbols = false; rebuild(); invalidate() }
+    fun setClipboard(value: Boolean) { clipboardMode = value; moreMenu = false; emojiMode = false; symbols = false; rebuild(); invalidate() }
+    fun setMoreMenu(value: Boolean) { moreMenu = value; clipboardMode = false; emojiMode = false; symbols = false; rebuild(); invalidate() }
+    fun playBrandSparkle() { brandSparkleUntil = SystemClock.elapsedRealtime() + 720L; invalidate() }
     fun setClipboardItems(value: List<String>) { clipboardItems = value.take(5); if (clipboardMode) rebuild(); invalidate() }
     fun nextSymbolsPage() { if (symbols) { symbolsPage = 1 - symbolsPage; rebuild(); invalidate() } }
     private fun updateCompositionPreviewText() {
@@ -490,7 +494,9 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
         bounds.clear()
         suggestionBounds.clear()
         keyGradientCache.clear()
-        if (clipboardMode) {
+        if (moreMenu) {
+            rows.add(listOf(Key("📋 Clipboard", "MORE_CLIP", 1.5f, true), Key("ABC", "MORE_CLOSE", 1f, true)))
+        } else if (clipboardMode) {
             if (clipboardItems.isEmpty()) {
                 val enabled = preferences.getBoolean("clipboard_history_enabled", false)
                 rows.add(listOf(Key(
@@ -597,8 +603,16 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             rows.add(buildList {
                 add(Key("🐱 MoonMew", "TOOLBAR_BRAND", 2.1f, true))
                 add(Key("😊", "EMOJI", 0.9f, true))
-                if (!passwordField) add(Key("📋", "CLIP", 0.9f, true))
+                add(Key("⋯", "MORE", 0.8f, true))
                 add(Key("বাংলা", "MODE", 1.1f, true))
+            })
+            rows.add("1234567890".map { ch ->
+                val alternate = when (ch) {
+                    '0' -> "⁰"; '1' -> "¹"; '2' -> "²"; '3' -> "³"; '4' -> "⁴"
+                    '5' -> "⁵"; '6' -> "⁶"; '7' -> "⁷"; '8' -> "⁸"; '9' -> "⁹"
+                    else -> null
+                }
+                Key(ch.toString(), ch.toString(), longPressValue = alternate)
             })
             listOf("qwertyuiop", "asdfghjkl", "zxcvbnm").forEach { line ->
                 rows.add(line.map { ch ->
@@ -693,6 +707,22 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             paint.alpha = 255
         }
         if (!reduceAnimations) {
+            val now = SystemClock.elapsedRealtime()
+            if (now < brandSparkleUntil) {
+                val progress = 1f - (brandSparkleUntil - now) / 720f
+                paint.color = 0xFFFFF4A8.toInt()
+                paint.alpha = (220 * (1f - progress * 0.45f)).toInt().coerceIn(0, 255)
+                val cx = dp(70f)
+                val cy = dp(13f)
+                for (i in 0 until 7) {
+                    val angle = i * (Math.PI * 2.0 / 7.0) + progress * 1.8
+                    val radius = dp(8f + progress * 16f)
+                    canvas.drawCircle(cx + kotlin.math.cos(angle).toFloat() * radius,
+                        cy + kotlin.math.sin(angle).toFloat() * radius, dp(1.5f), paint)
+                }
+                paint.alpha = 255
+                postInvalidateDelayed(32L)
+            }
             val moonX = width - dp(18f)
             val moonY = dp(12f)
             canvas.drawCircle(moonX, moonY, dp(6f), paint)
@@ -700,8 +730,21 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
             canvas.drawCircle(moonX + dp(3f), moonY - dp(2f), dp(5.5f), paint)
         }
         val pad = dp(5f)
-        val top = dp(7f)
+        // A slim kawaii character ribbon gives the pink theme a plush themed-keyboard feel
+        // while keeping the typing area compact.
+        val ribbonHeight = if (themeId == 0 || themeId == 3) dp(19f) else dp(7f)
+        val top = ribbonHeight
         val previewHeight = if (composition.isNotEmpty()) dp(49f) else dp(5f)
+        if ((themeId == 0 || themeId == 3) && !emojiMode && !clipboardMode && !moreMenu) {
+            val ribbon = RectF(pad, dp(2f), width - pad, ribbonHeight - dp(2f))
+            paint.color = 0x66FFFFFF
+            canvas.drawRoundRect(ribbon, dp(9f), dp(9f), paint)
+            paint.color = 0xFFFFB5CF.toInt()
+            paint.textSize = dp(10f)
+            paint.typeface = keyTypeface
+            paint.textAlign = Paint.Align.CENTER
+            canvas.drawText("🐰   ✦   🎀   ✧   🐰   ✦   🎀", width / 2f, ribbon.centerY() - (paint.ascent() + paint.descent()) / 2f, paint)
+        }
         var suggestionRectCount = 0
         if (composition.isNotEmpty()) {
             paint.color = accentColor()
@@ -742,11 +785,16 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                     set(x, top + previewHeight + rowIndex * rowHeight + dp(2f),
                         x + w, top + previewHeight + (rowIndex + 1) * rowHeight - dp(3f))
                 }
-                val radius = dp(if (themeId == 3) 13f else 10f)
-                // Soft offset edge gives the keycap a tactile, raised appearance.
-                paint.color = if (themeId == 1 || themeId == 2) 0x66000000 else 0x55B65F83
-                shadowRect.set(rect.left, rect.top + dp(2f), rect.right, rect.bottom + dp(2f))
+                val radius = dp(if (themeId == 3) 14f else 11f)
+                // Plush 3D keycap: soft pink drop shadow, pale raised rim and glossy face.
+                paint.color = if (themeId == 1 || themeId == 2) 0x66000000 else 0x668E4564
+                shadowRect.set(rect.left, rect.top + dp(3f), rect.right, rect.bottom + dp(3f))
                 canvas.drawRoundRect(shadowRect, radius, radius, paint)
+                if (themeId == 0 || themeId == 3) {
+                    paint.color = 0xFFFFFDFE.toInt()
+                    val outer = RectF(rect.left - dp(0.5f), rect.top - dp(0.5f), rect.right + dp(0.5f), rect.bottom + dp(0.5f))
+                    canvas.drawRoundRect(outer, radius + dp(1f), radius + dp(1f), paint)
+                }
                 val base = keyColor(special = key.special, modeKey = key.value == "MODE")
                 val topTint = if (themeId == 1 || themeId == 2) 0xFF64718A.toInt() else 0xFFFFFFFF.toInt()
                 paint.shader = keyShader(keyRectCount - 1, rect, topTint, base)
@@ -771,11 +819,16 @@ class KeyboardSurface(context: Context, private val listener: Listener) : View(c
                 highlightRect.set(rect.left + dp(3f), rect.top + dp(2f), rect.right - dp(3f), rect.top + dp(5f))
                 canvas.drawRoundRect(highlightRect, dp(3f), dp(3f), paint)
                 paint.style = Paint.Style.STROKE
-                paint.strokeWidth = dp(if (themeId == 3) 1.2f else 0.8f)
-                paint.color = accentColor()
-                paint.alpha = if (key.special) 190 else 125
+                paint.strokeWidth = dp(if (themeId == 0 || themeId == 3) 1.35f else 0.8f)
+                paint.color = if (themeId == 0 || themeId == 3) 0xFFFFA9C7.toInt() else accentColor()
+                paint.alpha = if (key.special) 210 else 155
                 canvas.drawRoundRect(rect, radius, radius, paint)
                 paint.style = Paint.Style.FILL
+                if (themeId == 0 || themeId == 3) {
+                    paint.color = 0x66FFFFFF
+                    highlightRect.set(rect.left + dp(5f), rect.bottom - dp(5f), rect.right - dp(5f), rect.bottom - dp(3f))
+                    canvas.drawRoundRect(highlightRect, dp(2f), dp(2f), paint)
+                }
                 paint.alpha = 255
                 paint.color = keyTextColor()
                 paint.textAlign = Paint.Align.CENTER

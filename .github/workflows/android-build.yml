@@ -5,9 +5,12 @@ on:
     branches:
       - main
       - codex/moonmew-foundation
+      - codex/moonmew-smart-language-cute-toolbar
       - fix/ime-selection-sync
   # Run CI for every PR target, including stacked feature branches.
   pull_request:
+  # Allow a maintainer to rerun validation after GitHub App-authored commits.
+  workflow_dispatch:
 
 # PR builds and tests need repository read access only.
 permissions:

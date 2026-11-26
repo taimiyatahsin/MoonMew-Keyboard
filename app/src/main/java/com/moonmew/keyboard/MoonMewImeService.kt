@@ -98,7 +98,9 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
             return
         }
 
-        val expectedText = BanglaTransliterator.convert(composing).ifEmpty { composing }
+        val expectedText = if (mode == KeyboardSurface.Mode.BANGLA_PHONETIC) {
+            TypingLanguagePolicy.resolvePhoneticWord(composing)
+        } else composing
         val beforeCursor = currentInputConnection
             ?.getTextBeforeCursor(expectedText.length, 0)
             ?.toString()
@@ -148,7 +150,10 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
                 commitPending("")
                 currentInputConnection?.commitText(key.removePrefix("LONG:"), 1)
             }
-            key == "TOOLBAR_BRAND" -> Unit
+            key == "TOOLBAR_BRAND" -> keyboard?.playBrandSparkle()
+            key == "MORE" -> keyboard?.setMoreMenu(true)
+            key == "MORE_CLOSE" -> keyboard?.setMoreMenu(false)
+            key == "MORE_CLIP" -> openClipboardHistory()
             key == "SHIFT" -> { if (!capsLocked) shifted = !shifted; keyboard?.setShifted(shifted) }
             key == "CAPS_LOCK_TOGGLE" -> { capsLocked = !capsLocked; shifted = capsLocked; keyboard?.setShifted(shifted) }
             key == "SYMBOLS" -> { commitPending(""); keyboard?.setSymbols(true) }
@@ -285,7 +290,9 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
 
     private fun updateComposition() {
         swipePending = false
-        val converted = BanglaTransliterator.convert(composing)
+        val converted = if (mode == KeyboardSurface.Mode.BANGLA_PHONETIC) {
+            TypingLanguagePolicy.resolvePhoneticWord(composing)
+        } else composing
         currentInputConnection?.setComposingText(converted, 1)
         keyboard?.setComposition(composing)
         keyboard?.setPreview(converted)
@@ -308,7 +315,11 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
             keyboard?.setSuggestions(emptyList())
         }
         if (composing.isNotEmpty()) {
-            val result = BanglaTransliterator.convert(composing).ifEmpty { composing }
+            // Resolve the whole word once: English remains English, Banglish is
+            // transliterated to Bangla, and direct/English modes keep their own script.
+            val result = if (mode == KeyboardSurface.Mode.BANGLA_PHONETIC) {
+                TypingLanguagePolicy.resolvePhoneticWord(composing)
+            } else composing
             currentInputConnection?.setComposingText(result, 1)
             currentInputConnection?.finishComposingText()
             clearComposition()
