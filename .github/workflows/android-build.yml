@@ -67,11 +67,19 @@ jobs:
           gradle-version: '8.9'
       - name: Run unit tests and build debug APK
         run: gradle testDebugUnitTest assembleDebug
-      - name: Upload debug APK artifact
+      - name: Generate and verify APK SHA-256 checksum
+        run: |
+          cd app/build/outputs/apk/debug
+          sha256sum app-debug.apk | tee app-debug.apk.sha256
+          sha256sum --check app-debug.apk.sha256
+      - name: Upload debug APK and checksum artifact
         uses: actions/upload-artifact@v4
         with:
           name: moonmew-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: |
+            app/build/outputs/apk/debug/app-debug.apk
+            app/build/outputs/apk/debug/app-debug.apk.sha256
+          if-no-files-found: error
           retention-days: 90
 
   emulator-smoke:
@@ -144,5 +152,7 @@ jobs:
             This is a test build, not a signed Play Store release.
           prerelease: true
           make_latest: false
-          files: release-assets/app-debug.apk
+          files: |
+            release-assets/app-debug.apk
+            release-assets/app-debug.apk.sha256
           overwrite_files: true
