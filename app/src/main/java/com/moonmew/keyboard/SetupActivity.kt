@@ -130,13 +130,13 @@ class SetupActivity : Activity() {
         fun previewKey(label: String, palette: IntArray, special: Boolean = false): TextView {
             val fill = if (special) palette[3] else palette[2]
             return TextView(this).apply {
-                text = label
+                this.text = label
                 textSize = 10f
                 gravity = Gravity.CENTER
                 setTextColor(palette[4])
                 setPadding(dp(2), dp(5), dp(2), dp(5))
                 background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(
-                    fill,
+                    palette[5],
                     fill
                 )).apply {
                     cornerRadius = dp(7).toFloat()
@@ -154,7 +154,7 @@ class SetupActivity : Activity() {
             }
             val top = LinearLayout(this).apply { gravity = Gravity.CENTER; orientation = LinearLayout.HORIZONTAL }
             listOf("☾ MoonMew", "✦", "🎀").forEach { label ->
-                val v = TextView(this).apply { text = label; textSize = if (compact) 9f else 11f; setTextColor(p[4]); gravity = Gravity.CENTER; setPadding(dp(4), dp(2), dp(4), dp(4)) }
+                val v = TextView(this).apply { this.text = label; textSize = if (compact) 9f else 11f; setTextColor(p[4]); gravity = Gravity.CENTER; setPadding(dp(4), dp(2), dp(4), dp(4)) }
                 top.addView(v, LinearLayout.LayoutParams(0, -2, if (label.startsWith("☾")) 2f else 0.6f))
             }
             sample.addView(top)
@@ -181,7 +181,7 @@ class SetupActivity : Activity() {
             return sample
         }
         val themePreviewLabel = TextView(this).apply {
-            text = "LIVE KEYBOARD PREVIEW  ·  changes when you choose a theme"
+            this.text = "LIVE KEYBOARD PREVIEW  ·  changes when you choose a theme"
             textSize = 11f
             setTextColor(0xFFFFD5E2.toInt())
             setPadding(dp(2), dp(12), dp(2), dp(2))
@@ -205,15 +205,15 @@ class SetupActivity : Activity() {
                     orientation = LinearLayout.VERTICAL
                     setPadding(dp(10), dp(10), dp(10), dp(10))
                     background = GradientDrawable().apply {
-                        setColor(0x18FFFFFF)
+                        setColor(0xFFFFF7FB.toInt())
                         cornerRadius = dp(16).toFloat()
-                        setStroke(dp(1), if (selectedTheme() == index) 0xFFFF8FB9.toInt() else 0x33777777)
+                        setStroke(dp(1), if (selectedTheme() == index) 0xFFFF8FB9.toInt() else 0xFFFFE0EB.toInt())
                     }
                 }
                 val heading = TextView(this).apply {
-                    text = (if (selectedTheme() == index) "✓  " else "") + name
+                    this.text = (if (selectedTheme() == index) "✓  " else "") + name
                     textSize = 15f
-                    setTextColor(0xFFF7EAF0.toInt())
+                    setTextColor(0xFF70495D.toInt())
                     setPadding(dp(4), dp(2), dp(4), dp(7))
                 }
                 card.addView(heading)
