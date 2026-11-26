@@ -1,6 +1,7 @@
 package com.moonmew.keyboard
 
 import android.content.Context
+import android.content.ComponentName
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.view.View
@@ -110,6 +111,38 @@ class KeyboardSmokeTest {
             runCatching { device.pressBack() }
             runCatching { device.executeShellCommand("ime reset") }
         }
+    }
+
+
+    @Test
+    fun appRequestsNoRuntimePermissionsAndProtectsExportedInputMethod() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val packageManager = context.packageManager
+        val packageInfo = packageManager.getPackageInfo(
+            context.packageName,
+            PackageManager.GET_PERMISSIONS
+        )
+
+        assertTrue(
+            "MoonMew should not request runtime or network permissions",
+            packageInfo.requestedPermissions.orEmpty().isEmpty()
+        )
+        assertEquals(
+            "App data must not be included in Android cloud/device backups",
+            0,
+            context.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_ALLOW_BACKUP
+        )
+
+        val serviceInfo = packageManager.getServiceInfo(
+            ComponentName(context, MoonMewImeService::class.java),
+            0
+        )
+        assertTrue("Input method service must be explicitly exported for Android IME binding", serviceInfo.exported)
+        assertEquals(
+            "Exported input method must be protected by Android's system binding permission",
+            "android.permission.BIND_INPUT_METHOD",
+            serviceInfo.permission
+        )
     }
 
     private fun findFirstEditText(view: View): EditText? {
