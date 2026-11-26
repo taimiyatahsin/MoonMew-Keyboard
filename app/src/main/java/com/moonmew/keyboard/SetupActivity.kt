@@ -136,7 +136,7 @@ class SetupActivity : Activity() {
                 setTextColor(palette[4])
                 setPadding(dp(2), dp(5), dp(2), dp(5))
                 background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(
-                    if (special) palette[5] else ColorMath.blend(palette[2], 0xFFFFFFFF.toInt(), 0.28f),
+                    if (special) palette[5] else palette[5],
                     fill
                 )).apply {
                     cornerRadius = dp(7).toFloat()
@@ -180,14 +180,13 @@ class SetupActivity : Activity() {
             }
             return sample
         }
-        val themePreview = keyboardPreview(selectedTheme())
+        var themePreview = keyboardPreview(selectedTheme())
         fun updateThemePreview(id: Int) {
-            val parent = themePreview.parent
-            if (parent is LinearLayout) {
-                val index = parent.indexOfChild(themePreview)
-                parent.removeViewAt(index)
-                parent.addView(keyboardPreview(id), index, matchWithTop(dp(8)))
-            }
+            val parent = themePreview.parent as? LinearLayout ?: return
+            val index = parent.indexOfChild(themePreview)
+            parent.removeViewAt(index)
+            themePreview = keyboardPreview(id)
+            parent.addView(themePreview, index, matchWithTop(dp(8)))
         }
         fun themeButtonLabel(): String = "🎨  Explore & preview all ${themeNames.size} themes"
         lateinit var themeButton: Button
