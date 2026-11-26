@@ -24,7 +24,7 @@ class ThemeContrastTest {
         assertEquals(0xFFF8F2FF.toInt(), midnight)
     }
 
-    @Test fun newlyAddedBrightOrDarkPalettesChooseTheirOwnForeground() {
+    @Test fun newBrightAndDarkPalettesChooseReadableForegrounds() {
         assertEquals(
             0xFF49334E.toInt(),
             ThemeContrast.foregroundFor(0xFFFFFFFF.toInt(), 0xFFEFEFEF.toInt())
@@ -33,5 +33,11 @@ class ThemeContrastTest {
             0xFFF8F2FF.toInt(),
             ThemeContrast.foregroundFor(0xFF101010.toInt(), 0xFF202020.toInt())
         )
+    }
+
+    @Test fun resultIsStableRegardlessOfColorOrder() {
+        val first = ThemeContrast.foregroundFor(0xFFFFD5E2.toInt(), 0xFF17151B.toInt())
+        val reversed = ThemeContrast.foregroundFor(0xFF17151B.toInt(), 0xFFFFD5E2.toInt())
+        assertEquals(first, reversed)
     }
 }
