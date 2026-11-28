@@ -133,7 +133,7 @@ class SetupActivity : Activity() {
                 this.text = label
                 textSize = 10f
                 gravity = Gravity.CENTER
-                setTextColor(palette[4])
+                setTextColor(ThemeContrast.foregroundFor(palette[5], fill))
                 setPadding(dp(2), dp(5), dp(2), dp(5))
                 background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(
                     palette[5],
@@ -154,7 +154,7 @@ class SetupActivity : Activity() {
             }
             val top = LinearLayout(this).apply { gravity = Gravity.CENTER; orientation = LinearLayout.HORIZONTAL }
             listOf("☾ MoonMew", "✦", "🎀").forEach { label ->
-                val v = TextView(this).apply { this.text = label; textSize = if (compact) 9f else 11f; setTextColor(p[4]); gravity = Gravity.CENTER; setPadding(dp(4), dp(2), dp(4), dp(4)) }
+                val v = TextView(this).apply { this.text = label; textSize = if (compact) 9f else 11f; setTextColor(ThemeContrast.foregroundFor(p[0], p[1])); gravity = Gravity.CENTER; setPadding(dp(4), dp(2), dp(4), dp(4)) }
                 top.addView(v, LinearLayout.LayoutParams(0, -2, if (label.startsWith("☾")) 2f else 0.6f))
             }
             sample.addView(top)
