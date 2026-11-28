@@ -94,6 +94,10 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
         // text independently; retaining stale composition would duplicate text.
         if (composing.isEmpty() || newSelStart < 0 || newSelEnd < 0) return
         if (newSelStart != newSelEnd) {
+            // The host editor moved to a selection while our composing span was
+            // active. Finish that span before dropping the local buffer so the
+            // next key cannot inherit stale composing state.
+            currentInputConnection?.finishComposingText()
             clearComposition()
             return
         }
@@ -108,6 +112,9 @@ class MoonMewImeService : InputMethodService(), KeyboardSurface.Listener {
         // Some InputConnection implementations return null for surrounding text.
         // In that case keep the composition rather than destroying valid input.
         if (beforeCursor != null && !beforeCursor.endsWith(expectedText)) {
+            // The text/cursor no longer matches our composing buffer. Remove the
+            // editor's composing span as well as the local state.
+            currentInputConnection?.finishComposingText()
             clearComposition()
         }
     }
