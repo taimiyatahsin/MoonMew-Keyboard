@@ -35,6 +35,15 @@ class ThemeContrastTest {
         )
     }
 
+    @Test fun mixedGradientChoosesForegroundWithBestWorstCaseContrast() {
+        // The average luminance favours light text here, but light text has
+        // weaker contrast at the lighter endpoint than dark text does at black.
+        assertEquals(
+            0xFF49334E.toInt(),
+            ThemeContrast.foregroundFor(0xFF000000.toInt(), 0xFFB9B9B9.toInt())
+        )
+    }
+
     @Test fun resultIsStableRegardlessOfColorOrder() {
         val first = ThemeContrast.foregroundFor(0xFFFFD5E2.toInt(), 0xFF17151B.toInt())
         val reversed = ThemeContrast.foregroundFor(0xFF17151B.toInt(), 0xFFFFD5E2.toInt())
