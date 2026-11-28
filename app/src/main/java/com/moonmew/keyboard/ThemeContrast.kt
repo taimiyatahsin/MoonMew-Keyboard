@@ -10,11 +10,26 @@ object ThemeContrast {
     private const val LIGHT_TEXT = 0xFFF8F2FF.toInt()
 
     fun foregroundFor(topColor: Int, bottomColor: Int): Int {
-        val luminance = (relativeLuminance(topColor) + relativeLuminance(bottomColor)) / 2.0
-        val darkLuminance = relativeLuminance(DARK_TEXT)
-        val darkContrast = (luminance + 0.05) / (darkLuminance + 0.05)
-        val lightContrast = 1.05 / (luminance + 0.05)
+        // A single label is drawn over the entire gradient. Optimizing the
+        // average can make it unreadable at one end, so maximize the weaker
+        // contrast against the two actual background endpoints instead.
+        val darkContrast = minOf(
+            contrastRatio(DARK_TEXT, topColor),
+            contrastRatio(DARK_TEXT, bottomColor)
+        )
+        val lightContrast = minOf(
+            contrastRatio(LIGHT_TEXT, topColor),
+            contrastRatio(LIGHT_TEXT, bottomColor)
+        )
         return if (darkContrast >= lightContrast) DARK_TEXT else LIGHT_TEXT
+    }
+
+    private fun contrastRatio(foreground: Int, background: Int): Double {
+        val foregroundLuminance = relativeLuminance(foreground)
+        val backgroundLuminance = relativeLuminance(background)
+        val lighter = maxOf(foregroundLuminance, backgroundLuminance)
+        val darker = minOf(foregroundLuminance, backgroundLuminance)
+        return (lighter + 0.05) / (darker + 0.05)
     }
 
     private fun relativeLuminance(color: Int): Double {
