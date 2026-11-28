@@ -23,6 +23,12 @@ class EmojiCatalogTest {
         assertTrue(all.contains("👋🏿"))
     }
 
+    @Test fun eachCategoryContainsUniqueEmojiEntries() {
+        EmojiCatalog.categories.forEach { category ->
+            assertEquals("A category should not repeat the same emoji", category.size, category.toSet().size)
+        }
+    }
+
     @Test fun categoriesContainNoBlankEmojiEntries() {
         assertFalse(EmojiCatalog.categories.flatten().any { it.isBlank() })
     }
